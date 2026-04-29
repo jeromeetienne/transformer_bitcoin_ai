@@ -20,6 +20,8 @@ backend: chronos      # 'chronos' or 'timesfm' — no default; pick one explicit
 hub_model_name: amazon/chronos-2
                       # chronos: amazon/chronos-2 | autogluon/chronos-2-small | autogluon/chronos-2-synth
                       # timesfm: google/timesfm-2.5-200m-pytorch
+# backend: 'timesfm'
+# hub_model_name: google/timesfm-2.5-200m-pytorch
 
 model:
   input_chunk_length: 256       # bars of history fed to the foundation model
