@@ -203,7 +203,6 @@ dependencies = [
     { name = "numpy", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
     { name = "optuna", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
     { name = "optuna-dashboard", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "optuna-integration", extra = ["pytorch-lightning"], marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
     { name = "pandas", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
     { name = "pyarrow", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
     { name = "pyyaml", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
@@ -226,7 +225,6 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.4.4" },
     { name = "optuna", specifier = ">=4.0.0" },
     { name = "optuna-dashboard", specifier = ">=0.16.0" },
-    { name = "optuna-integration", extras = ["pytorch-lightning"], specifier = ">=4.0.0" },
     { name = "pandas", specifier = ">=3.0.2" },
     { name = "pyarrow", specifier = ">=24.0.0" },
     { name = "pyyaml", specifier = ">=6.0.3" },
@@ -1063,26 +1061,6 @@ wheels = [
 ]
 
 [[package]]
-name = "lightning"
-version = "2.6.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "fsspec", extra = ["http"], marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "lightning-utilities", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "packaging", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "pytorch-lightning", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "pyyaml", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "torch", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "torchmetrics", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "tqdm", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-    { name = "typing-extensions", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/15/ad/a1c91a795521be252209d45fb080f28a4f1e7244d3b37121fcc6e3e43034/lightning-2.6.1.tar.gz", hash = "sha256:859104b98c61add6fe60d0c623abf749baf25f2950a66ebdfb4bd18aa7decba9", size = 663175 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/6d/42640e15a8c34b57dc7ea922152440c0c6692214a08d5282b6e3eb46ddf4/lightning-2.6.1-py3-none-any.whl", hash = "sha256:30e1adac23004c713663928541bd72ecb1371b7abc9aff9f46b7fd2644988d30", size = 853631 },
-]
-
-[[package]]
 name = "lightning-utilities"
 version = "0.15.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1780,23 +1758,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a6/c5/5fc8e8327f40c1406dbe4a1ac052e05751a5bd4f594d9a517f1ca905c03b/optuna_dashboard-0.20.0.tar.gz", hash = "sha256:52a6da480a2500b6993c8fa61c81063b0dbe730edbd9f651c81b318393cca71d", size = 8378143 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a8/5a/90ffcd3e6ad99863a18cf3d4aa8289ce997ccf6f2b9d0f8f291af4075729/optuna_dashboard-0.20.0-py3-none-any.whl", hash = "sha256:7fe92a6b1ba8f1f77d29ff8a86fa09a01cd736e411e354d0c96c05cd4a86c289", size = 8400813 },
-]
-
-[[package]]
-name = "optuna-integration"
-version = "4.8.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "optuna", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/8f/d9/bdfd6ac94dd733a4df90e9e5b59273e18978132320949c0ca111a1d579db/optuna_integration-4.8.0.tar.gz", hash = "sha256:9f1e3053500a5a6a23f302cbd7ac371f6dd1010372b4b4374c538b8988bd0603", size = 89695 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/57/cb/c209dbb41829dc856b2bdd5b58e877a6480752bd595d4b55f4a8c514efd5/optuna_integration-4.8.0-py3-none-any.whl", hash = "sha256:bb5c038702f744386b9032b12b993779b02e39e6893c324637178df68998f33d", size = 103151 },
-]
-
-[package.optional-dependencies]
-pytorch-lightning = [
-    { name = "lightning", marker = "platform_machine == 'x86_64' or platform_system != 'Linux' or sys_platform != 'darwin'" },
 ]
 
 [[package]]

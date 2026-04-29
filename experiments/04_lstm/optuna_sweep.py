@@ -6,10 +6,35 @@ from pathlib import Path
 from typing import Any
 
 import optuna
-from optuna.integration import PyTorchLightningPruningCallback
+from pytorch_lightning import LightningModule, Trainer
+from pytorch_lightning.callbacks import Callback
 from run import train_and_evaluate
 
 from btc_ai.config import load_yaml
+
+
+class PruningCallback(Callback):
+	# Native pytorch_lightning Callback that reports val_loss to an Optuna trial each epoch
+	# and raises TrialPruned if the trial should be pruned. We can't reuse
+	# optuna.integration.PyTorchLightningPruningCallback because Darts pins the legacy
+	# `pytorch_lightning` package, while optuna-integration's callback subclasses the
+	# new-namespace `lightning.pytorch.Callback`; the Trainer's isinstance check then
+	# rejects it with "Expected a parent". This non-DDP-only mirror sidesteps the split.
+	def __init__(self, trial: optuna.Trial, monitor: str) -> None:
+		super().__init__()
+		self._trial = trial
+		self._monitor = monitor
+
+	def on_validation_end(self, trainer: Trainer, pl_module: LightningModule) -> None:
+		if trainer.sanity_checking:
+			return
+		score = trainer.callback_metrics.get(self._monitor)
+		if score is None:
+			return
+		epoch = pl_module.current_epoch
+		self._trial.report(float(score.item()), step=epoch)
+		if self._trial.should_prune():
+			raise optuna.TrialPruned(f'pruned at epoch {epoch}')
 
 EXPERIMENT_DIR = Path(__file__).parent
 DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
@@ -36,25 +61,29 @@ def require(d: dict[str, Any], key: str, ctx: str) -> Any:
 def suggest(trial: optuna.Trial, name: str, spec: dict[str, Any]) -> Any:
 	# Dispatches on spec['type'] to the matching trial.suggest_* call. Keeps the YAML
 	# search-space declarative so adding a knob is a config edit, not a code edit.
-	t = require(spec, 'type', f'optuna.search_space.{name}')
+	ctx = f'optuna.search_space.{name}'
+	t = require(spec, 'type', ctx)
 	if t == 'categorical':
-		return trial.suggest_categorical(name, require(spec, 'choices', f'optuna.search_space.{name}'))
+		return trial.suggest_categorical(name, require(spec, 'choices', ctx))
 	if t == 'int':
 		return trial.suggest_int(
 			name,
-			int(require(spec, 'low', f'optuna.search_space.{name}')),
-			int(require(spec, 'high', f'optuna.search_space.{name}')),
+			int(require(spec, 'low', ctx)),
+			int(require(spec, 'high', ctx)),
 			step=int(spec.get('step', 1)),
 			log=bool(spec.get('log', False)),
 		)
 	if t == 'float':
 		return trial.suggest_float(
 			name,
-			float(require(spec, 'low', f'optuna.search_space.{name}')),
-			float(require(spec, 'high', f'optuna.search_space.{name}')),
+			float(require(spec, 'low', ctx)),
+			float(require(spec, 'high', ctx)),
 			log=bool(spec.get('log', False)),
 		)
-	raise ValueError(f'unknown search-space type {t!r} for {name!r}; expected categorical/int/float')
+	raise ValueError(
+		f'unknown search-space type {t!r} for {name!r}; '
+		'expected categorical/int/float',
+	)
 
 
 def build_objective(
@@ -70,7 +99,7 @@ def build_objective(
 
 	def objective(trial: optuna.Trial) -> float:
 		overrides = {name: suggest(trial, name, spec) for name, spec in search_space.items()}
-		pruning_cb = PyTorchLightningPruningCallback(trial, monitor='val_loss')
+		pruning_cb = PruningCallback(trial, monitor='val_loss')
 		try:
 			metrics, _ = train_and_evaluate(
 				cfg,
@@ -98,7 +127,10 @@ def main() -> None:
 	logging.basicConfig(level=logging.WARNING, format='%(levelname)s %(name)s: %(message)s')
 
 	parser = argparse.ArgumentParser(
-		description='Optuna hyperparameter search for BlockRNN-LSTM on the same data slice as run.py.',
+		description=(
+			'Optuna hyperparameter search for BlockRNN-LSTM '
+			'on the same data slice as run.py.'
+		),
 	)
 	parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
 	args = parser.parse_args()
@@ -112,7 +144,9 @@ def main() -> None:
 		timeout_seconds = float(timeout_seconds)
 	direction = require(opt_cfg, 'direction', 'optuna')
 	if direction not in VALID_DIRECTIONS:
-		raise ValueError(f'optuna.direction={direction!r} must be one of {sorted(VALID_DIRECTIONS)}')
+		raise ValueError(
+			f'optuna.direction={direction!r} must be one of {sorted(VALID_DIRECTIONS)}',
+		)
 	seed = int(require(opt_cfg, 'seed', 'optuna'))
 
 	RESULTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -159,7 +193,7 @@ def main() -> None:
 	print(json.dumps(best_json, indent=2))
 	print(f'\nwrote {trials_csv}')
 	print(f'wrote {RESULTS_DIR / "optuna_best.json"}')
-	print(f'\nlaunch dashboard: make 04_lstm_optuna_dashboard')
+	print('\nlaunch dashboard: make 04_lstm_optuna_dashboard')
 
 
 if __name__ == '__main__':
