@@ -25,12 +25,12 @@ From [experiments/02_arima/config.yaml](../../experiments/02_arima/config.yaml):
 | symbol | `BTCUSDT` |
 | interval | `1h` |
 | start | `2024-01-01` UTC (inclusive) |
-| end | `2024-04-01` UTC (exclusive) |
+| end | `2024-12-01` UTC (exclusive) |
 | period | `monthly` |
 | test_fraction | `0.2` |
 | order | **`[1, 1, 1]`** (Box-Jenkins default) |
 
-Total bars: **2 184**. Train: **1 747**. Test: **437**.
+Total bars: **8 040**. Train: **6 432**. Test: **1 608**.
 
 ## Results — single fit, ARIMA(1, 1, 1)
 
@@ -38,72 +38,78 @@ From [experiments/02_arima/results/metrics.json](../../experiments/02_arima/resu
 
 | Metric | Value |
 |---|---|
-| AIC | 24 870.62 |
-| BIC | 24 887.02 |
-| MAE | **338.15** USD |
-| RMSE | 471.49 USD |
-| MAPE | 0.5028 % |
-| Directional accuracy | **0.4920** |
+| AIC | 93 381.54 |
+| BIC | 93 401.85 |
+| MAE | **260.50** USD |
+| RMSE | 396.97 USD |
+| MAPE | 0.3407 % |
+| Directional accuracy | **0.5336** |
+| Cumulative return | **+53.02 %** |
+| Annualized Sharpe | **+7.28** |
 
 ## Cross-experiment comparison
 
 Same data slice, same split, same metrics:
 
-| Experiment | MAE | RMSE | MAPE | dir_acc | vs naive |
-|---|---|---|---|---|---|
-| 01_baseline_naive | **337.89** | 471.54 | 0.502 % | NaN | — |
-| 01b_moving_average (window=24) | 1012.86 | 1356.63 | 1.506 % | 0.483 | +674.97 |
-| **02_arima (1, 1, 1)** | **338.15** | **471.49** | 0.503 % | 0.492 | **+0.27** |
-| 03_gradient_boosting (default) | 354.60 | 493.14 | 0.528 % | **0.519** | +16.71 |
+| Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
+|---|---|---|---|---|---|---|
+| 01_baseline_naive | **260.50** | 396.97 | 0.341 % | NaN | — | — |
+| 01b_moving_average (window=24) | 756.19 | 1 100.93 | 0.990 % | 0.5143 | +25.67 % | +4.33 |
+| **02_arima (1, 1, 1)** | **260.50** | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
+| 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
+| 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
 
-ARIMA ties naive within $0.30 on MAE — within sample noise on a 437-bar test set. 03_gradient_boosting trades $17 of MAE for the first `dir_acc > 0.5` reading in the lineup.
+ARIMA ties naive **to the cent** on MAE and **leads the leaderboard** on every directional metric over Jan–Nov 2024. This is a sharp inversion of the Q1-only result, where ARIMA was a draw with naive across the board (dir_acc 0.492, Sharpe +0.45). Same model, same order; the difference is the test window covers more regime variation.
 
 ## Order sweep
 
 From [experiments/02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) — same data slice, 12 orders:
 
-| order | what | AIC | BIC | MAE | RMSE | MAPE | dir_acc |
-|---|---|---|---|---|---|---|---|
-| (3, 1, 3) | richer ARMA | 24871.7 | 24910.0 | **337.02** | 471.71 | 0.501 % | 0.508 |
-| (0, 1, 0) | random walk = naive | 24867.4 | 24872.8 | 337.89 | 471.54 | 0.502 % | NaN |
-| (1, 1, 0) | AR(1) on diffs | 24869.0 | 24879.9 | 338.10 | 471.57 | 0.503 % | 0.510 |
-| (0, 1, 1) | MA(1) on diffs (exp smooth) | 24868.9 | 24879.9 | 338.11 | 471.57 | 0.503 % | **0.513** |
-| (1, 1, 1) | Box-Jenkins default | 24870.6 | 24887.0 | 338.15 | **471.49** | 0.503 % | 0.492 |
-| (1, 0, 1) | ARMA on **raw** price (no diff) | 24895.2 | 24917.0 | 338.21 | 471.49 | 0.503 % | 0.503 |
-| (0, 1, 2) | MA(2) | 24870.1 | 24886.5 | 338.23 | **471.42** | 0.503 % | 0.497 |
-| (2, 1, 0) | AR(2) | 24870.1 | 24886.5 | 338.26 | 471.44 | 0.503 % | 0.503 |
-| (5, 1, 0) | AR(5) | 24872.2 | 24905.0 | 339.75 | 472.20 | 0.505 % | 0.503 |
-| (0, 1, 5) | MA(5) | 24871.9 | 24904.7 | 339.91 | 472.19 | 0.505 % | 0.501 |
-| (5, 1, 5) | rich both | 24869.7 | 24929.8 | 341.11 | 476.14 | 0.507 % | 0.499 |
-| (2, 1, 2) | AIC favourite | **24863.2** | 24890.5 | 345.79 | 481.21 | 0.514 % | 0.478 |
+| order | what | AIC | BIC | MAE | RMSE | dir_acc | cum_ret | sharpe |
+|---|---|---|---|---|---|---|---|---|
+| **(1, 1, 0)** | AR(1) on diffs | 93 379.5 | 93 393.1 | **260.49** | **396.96** | **0.5373** | **+53.50 %** | **+7.52** |
+| **(0, 1, 1)** | MA(1) on diffs (exp smooth) | 93 379.5 | 93 393.1 | **260.49** | **396.96** | **0.5373** | **+53.50 %** | **+7.52** |
+| (1, 1, 1) | Box-Jenkins default | 93 381.5 | 93 401.8 | 260.50 | 396.97 | 0.5336 | +53.02 % | +7.28 |
+| (0, 1, 0) | random walk = naive | **93 377.5** | **93 384.3** | 260.50 | 396.97 | NaN | 0.000 % | NaN |
+| (2, 1, 0) | AR(2) | 93 379.5 | 93 399.8 | 260.59 | 397.20 | 0.5019 | +10.09 % | +1.73 |
+| (0, 1, 2) | MA(2) | 93 379.5 | 93 399.8 | 260.59 | 397.19 | 0.5025 | +10.76 % | +1.83 |
+| (2, 1, 2) | richer ARMA | 93 383.3 | 93 417.2 | 260.67 | 397.25 | 0.4876 | +15.16 % | +2.38 |
+| (5, 1, 0) | AR(5) | 93 385.0 | 93 425.6 | 260.68 | 397.21 | 0.4956 | +17.87 % | +2.89 |
+| (0, 1, 5) | MA(5) | 93 385.1 | 93 425.7 | 260.67 | 397.21 | 0.4975 | +18.38 % | +2.96 |
+| (3, 1, 3) | richer ARMA | 93 386.8 | 93 434.2 | 260.77 | 397.28 | 0.4882 | +18.48 % | +2.89 |
+| (5, 1, 5) | rich both | 93 379.1 | 93 453.6 | 261.24 | 397.92 | 0.4826 | +8.72 % | +1.46 |
+| (1, 0, 1) | ARMA on **raw** price (no diff) | 93 404.0 | 93 431.0 | 261.47 | 398.41 | 0.4820 | +0.99 % | +2.88 |
 
 ## Interpretation
 
-1. **All twelve orders sit within a $9 MAE band** ($337–346) around naive's $337.89. The signal isn't in `(p, d, q)` — the dynamics genuinely aren't there to extract from price alone at hourly resolution.
+1. **AR(1) on diffs and MA(1) on diffs are tied for the lead** — `(1, 1, 0)` and `(0, 1, 1)` produce identical AIC/BIC, identical MAE, identical dir_acc 0.5373, and identical Sharpe 7.52. With one parameter on differenced returns, the simplest possible learned signal is also the strongest one. They beat naive's MAE by 1¢ — within noise on the level metric — but produce a sharply non-trivial directional edge.
 
-2. **(0, 1, 0) ≡ naive.** ARIMA with no AR, no MA, and first-differencing is mathematically a random walk. MAE matches naive exactly (337.89). Pipeline sanity check passed.
+2. **(0, 1, 0) ≡ naive.** ARIMA with no AR, no MA, and first-differencing is mathematically a random walk. MAE matches naive exactly to two decimals; Sharpe is NaN because the model takes no positions. Pipeline sanity check passed.
 
-3. **AIC and out-of-sample MAE disagree, sharply.** (2, 1, 2) has the **best AIC** of the lot (24 863.2) but the **worst MAE** (345.79). Classic overfitting tell — AIC rewards in-sample fit, MAE measures what actually matters out-of-sample. **Don't pick orders by AIC alone on small samples.**
+3. **AIC and out-of-sample Sharpe disagree.** AIC's favourite is `(0, 1, 0)` (naive!) at 93 377.5 — pure parsimony. Out-of-sample, the order with the best AIC takes no positions and earns nothing, while the orders with one extra parameter — `(1, 1, 0)` / `(0, 1, 1)` — extract the directional edge. Don't pick orders by AIC alone when the goal is a trading signal.
 
-4. **(3, 1, 3) "wins" MAE by $0.87** vs naive — within noise on 437 test bars. Treat as a tie.
+4. **Adding AR/MA terms beyond 1 *hurts* directional accuracy.** Every order with AR or MA ≥ 2 is at or below 0.50 dir_acc except `(2, 1, 0)` and `(0, 1, 2)` (each barely above coin-flip). The richer orders ((2, 1, 2), (3, 1, 3), (5, 1, 5)) are anti-correct. Reading: on hourly BTC, only the most recent lag carries directional information; adding more terms fits noise.
 
-5. **Directional accuracy hovers at ~0.50 ± 0.02** across all orders. (0, 1, 1) hits 0.513 which sounds like skill but is well inside the standard error on this sample size.
+5. **MAE bandwidth across orders is ~$1**, all sitting on top of naive's $260.50. The level-prediction problem is essentially solved by "predict the last price"; the *only* place models meaningfully separate is direction.
 
-6. **(1, 0, 1) — ARMA on raw price, no differencing** — didn't explode. The AR coefficient just absorbed the non-stationarity (probably converged near 1.0, locally indistinguishable from a random walk). AIC is markedly worse (+25) so the diagnostic *did* flag it; MAE didn't.
+6. **(1, 0, 1) — ARMA on raw price, no differencing** — didn't explode. The AR coefficient absorbed the non-stationarity (probably converged near 1.0). AIC is markedly worse (+27) so the diagnostic *did* flag it; MAE didn't.
 
 ### Bottom line
 
-**No ARIMA order on close-price-alone meaningfully beats naive on hourly BTC.** That isn't a bug in any model — it's a statement about signal-to-noise at this timescale. ARIMA's job in this lineup is to confirm the baseline, not to surpass it.
+**An AR(1)-on-differences signal is the leaderboard's leading directional edge over Jan–Nov 2024.** It ties naive on MAE (as expected — random-walk floor) and produces dir_acc 0.5373 / Sharpe +7.52. That said, the test window (1 608 bars, ~67 days) includes the Sep–Nov post-halving + election rally, which is structurally favourable to any "go-with-momentum" rule. Per-bar Sharpe ≈ 0.080 with SE ≈ √(1/1 608) ≈ 0.025 — about 3σ above zero. Real evidence, but not yet falsified against a bear-leg test window.
 
-The next experiment that should actually win needs either:
+Compare to the Q1-only result (Jan–Mar 2024 only, 437 test bars), where the ARIMA leaderboard had `(0, 1, 1)` peaking at dir_acc 0.513 and Sharpe ~0.5. Same family of models, totally different rank order. The lesson is about test-window length and regime mix, not model choice.
 
-- **Richer features** — volume, returns of correlated assets, on-chain metrics, basis to perp futures. ARIMA**X** (with exogenous regressors) is a near-zero-effort next step. (`03_gradient_boosting` already adds volume + OHLC features; see [03_gradient_boosting.report.md](03_gradient_boosting.report.md). It buys directional skill but not MAE.)
-- **A non-linear model with much more data** — weekly/daily horizons or multi-symbol training to get enough samples for a transformer-style model to find weak signals.
+The next experiment that should win the leaderboard structurally needs:
 
-## Caveats baked into v1
+- **A test window that includes a real bear leg** (e.g. mid-2022) so we can confirm the directional edge holds out of regime.
+- **Richer features** — funding rate, perp basis, related-asset returns, on-chain. ARIMAX is a near-zero-effort step. (`03_gradient_boosting` adds engineered features and *underperforms* on this window — see [03_gradient_boosting.report.md](03_gradient_boosting.report.md).)
+- **Sequence models** (LSTM, transformer) — `04_lstm` lands at 0.5196 / +4.95, behind ARIMA on this window. See [04_lstm.report.md](04_lstm.report.md).
 
-- Single fit, no order search — we pick `(p, d, q)` deliberately. AutoARIMA could be added as `02b_arima_auto` if useful.
-- Walk-forward without re-estimation — each prediction uses real past data but the AR/MA coefficients are frozen at train-time values. Re-fitting at every step would be marginally more accurate, much slower.
+## Caveats
+
+- Single split, no rolling-origin CV. Hyperparameter rankings could shift on a different test window — and we already know they do, comparing Q1-only vs Jan–Nov.
+- Walk-forward without re-estimation — parameters are frozen at train-time values. Re-fitting at every step would be marginally more accurate, much slower.
 - No exogenous regressors (ARIMA, not ARIMAX).
 - ARIMA assumes residuals are roughly Gaussian and homoskedastic. BTC returns are neither — heavy tails and volatility clustering. Point forecasts may look reasonable while interval forecasts (not produced here) would be miscalibrated.
 

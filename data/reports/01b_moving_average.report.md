@@ -22,12 +22,12 @@ From [experiments/01b_moving_average/config.yaml](../../experiments/01b_moving_a
 | symbol | `BTCUSDT` |
 | interval | `1h` |
 | start | `2024-01-01` UTC (inclusive) |
-| end | `2024-04-01` UTC (exclusive) |
+| end | `2024-12-01` UTC (exclusive) |
 | period | `monthly` |
 | test_fraction | `0.2` |
 | window | **24** (= one day for hourly data) |
 
-Total bars: **2 184**. Test slice: **437 bars**.
+Total bars: **8 040**. Test slice: **1 608 bars**.
 
 ## Results
 
@@ -35,42 +35,49 @@ From [experiments/01b_moving_average/results/metrics.json](../../experiments/01b
 
 | Metric | Value |
 |---|---|
-| MAE | **1 012.86** USD |
-| RMSE | 1 356.63 USD |
-| MAPE | 1.5064 % |
-| Directional accuracy | **0.4828** |
+| MAE | **756.19** USD |
+| RMSE | 1 100.93 USD |
+| MAPE | 0.9897 % |
+| Directional accuracy | **0.5143** |
+| Cumulative return | **+25.67 %** |
+| Annualized Sharpe | **+4.33** |
 
 ## Cross-experiment comparison
 
 Same data slice, same split, same metrics:
 
-| Experiment | MAE | RMSE | MAPE | dir_acc |
-|---|---|---|---|---|
-| 01_baseline_naive | **337.89** | 471.54 | 0.502 % | NaN |
-| **01b_moving_average (window=24)** | **1012.86** | 1356.63 | 1.506 % | 0.483 |
-| 02_arima (1, 1, 1) | 338.15 | 471.49 | 0.503 % | 0.492 |
-| 03_gradient_boosting (default) | 354.60 | 493.14 | 0.528 % | **0.519** |
+| Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
+|---|---|---|---|---|---|---|
+| 01_baseline_naive | **260.50** | 396.97 | 0.341 % | NaN | — | — |
+| **01b_moving_average (window=24)** | **756.19** | 1 100.93 | 0.990 % | **0.5143** | **+25.67 %** | **+4.33** |
+| 02_arima (1, 1, 1) | 260.50 | 396.97 | 0.341 % | 0.5336 | +53.02 % | +7.28 |
+| 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
+| 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
 
-MA(24) is **3× worse than naive on MAE** and **0.483 on directional accuracy** — slightly *anti-correct*.
+MA(24) is **~3× worse than naive on MAE** but lands clearly on the *positive* side of directional accuracy with a strategy Sharpe of +4.33 — a reversal of the Q1-only result, which had MA at 0.4828 / Sharpe -3.08. Same model, same window size, same test_fraction; what changed is the regime mix in the test slice.
 
 ## Interpretation
 
-- **`mae` = 1012.86, ~3× naive's 337.89.** Exactly the predicted outcome. A 24-bar (one-day) window is a long lag on a series whose hourly moves are roughly random walk. The lag dominates. Smaller windows would be closer to naive; larger windows worse still.
-- **`rmse` = 1356.63.** Same story, with the gap-vs-MAE indicating that on volatile hours the lag-induced miss is even bigger.
-- **`mape` = 1.51 %** — a multiple-percent average error per bar. Roughly the cost of using the wrong tool.
-- **`directional_accuracy` = 0.4828 < 0.5.** The mean-reversion bet *loses* on this slice. When MA(24) said "I think it'll go down" (because recent prices were above the 24-bar mean), the actual move was up more often than down. Reading: hourly BTC in this Q1 2024 sample shows mild **momentum**, not mean-reversion. The deficit (1.7 %) is small enough that on 437 bars it's borderline noise — but the sign is clearly < 0.5, not above.
+- **`mae` = 756.19, ~3× naive's 260.50.** Exactly the predicted outcome. A 24-bar (one-day) window is a long lag on a series whose hourly moves are roughly random walk. The lag dominates. Smaller windows would be closer to naive; larger windows worse still.
+- **`rmse` = 1100.93.** Same story, with the gap-vs-MAE indicating that on volatile hours the lag-induced miss is even bigger.
+- **`mape` = 0.99 %** — about one percent average error per bar. Roughly the cost of using the wrong tool for the level forecast.
+- **`directional_accuracy` = 0.5143 > 0.5.** On Q1-only this was 0.483 (anti-correct); over Jan–Nov 2024 it inverted. MA(24) is structurally a **mean-reverter**: it bets "down" after a run-up and "up" after a sell-off. That bet *loses* in trends and *wins* in chop. The Q1 window was a clean uptrend, the wider Jan–Nov window mixes that with the Apr–Jul drawdown and the Sep–Nov rally — so the mean-reversion bet recovers a small directional edge.
+- **`annualized_sharpe` = +4.33** on 1 608 test bars. Per-bar Sharpe ≈ 0.046, SE ≈ √(1/1 608) ≈ 0.025 — about 2σ from zero. Real but modest evidence; the annualization (× √8 760) is what makes the headline number look impressive.
 
-### Choosing `window`
+### What changed from the Q1-only window
 
-If you re-ran the experiment over a sweep of windows, the picture would be:
+| Metric | Q1 (432 bars) | Jan–Nov (1 608 bars) |
+|---|---|---|
+| MAE | 1 012.86 | 756.19 |
+| dir_acc | 0.4828 | **0.5143** |
+| cum_ret | -8.90 % | **+25.67 %** |
+| sharpe | -3.08 | **+4.33** |
 
-- Small (3, 5) → MAE close to naive, directional signal near zero.
-- Medium (24) → today's run; clear lag, meaningful directional reading.
-- Large (168 = one week) → MAE blows up further; useful only as a "any model worse than this is broken" lower bound.
+Sign-flip on Sharpe is regime, not model. A pure-MA forecaster has zero learned parameters; nothing in this experiment "improved." The wider window *included* the Q1 drawdown for mean-reversion **and** several other regimes that happened to favour the MA bet. Don't read this as MA(24) being a useful predictor — read it as a reminder that **dir_acc and Sharpe over a single test slice are regime-dependent observations, not model-quality measurements.**
 
-## Why it still earns its place
+### Why it still earns its place
 
-Even with MAE far above naive, the experiment **fixed** the directional-accuracy axis. Without MA, `02_arima` has only naive (NaN) and itself to compare against on direction. With MA, we know that "predict-the-recent-mean" gives 0.483 on this slice, so any later model claiming directional skill (>0.5) has a meaningful baseline to beat — not just zero, but a model that *did* take positions, and slightly lost. (And `03_gradient_boosting` is the first to clear it: default config 0.519, sweep best 0.572.)
+Even with MAE far above naive, the experiment **fixed** the directional-accuracy axis. Without MA, `02_arima` has only naive (NaN) and itself to compare against on direction. With MA, every later model has a structurally-naive directional baseline to compare against — a model that *did* take positions, and slightly won this time around.
 
 ## Files produced
 
