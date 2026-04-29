@@ -1,0 +1,19 @@
+# ARIMA(p, d, q) baseline.
+#   p = AR order (autoregressive lags of the differenced series)
+#   d = differencing order (d=1 → model first differences, i.e. price changes)
+#   q = MA order (moving-average lags of the residuals)
+#
+# Common starting points for hourly BTC close:
+#   [1, 1, 0]  pure AR(1) on first differences — simplest non-trivial model
+#   [1, 1, 1]  classic Box-Jenkins default; one AR + one MA term
+#   [2, 1, 2]  slightly richer; more parameters to estimate
+# Pick explicitly. There is no auto-selection in this experiment.
+
+symbol: BTCUSDT       # Binance trading pair
+interval: 1h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
+start: 2024-01-01     # inclusive, UTC
+end: 2024-04-01       # exclusive, UTC
+period: monthly       # 'monthly' or 'daily'. Must be set explicitly.
+                      # Use 'daily' for partial / not-yet-complete months.
+test_fraction: 0.2    # tail fraction of the loaded series held out for evaluation
+order: [1, 1, 1]      # ARIMA (p, d, q)
