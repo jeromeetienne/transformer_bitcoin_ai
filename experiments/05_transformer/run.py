@@ -216,7 +216,13 @@ def train_and_evaluate(
 		save_checkpoints=False,
 		force_reset=True,
 	)
-	logger.info('fitting TFT on %d training rows', len(target_train_s))
+	logger.info(
+		'fitting TFT on %d training rows for up to %d epochs '
+		'(early-stopping patience=%d on val_loss; PL progress bar suppressed)',
+		len(target_train_s),
+		int(model_cfg['n_epochs']),
+		int(train_cfg['early_stopping_patience']),
+	)
 	model.fit(
 		series=target_train_s,
 		past_covariates=past_train_s,
@@ -225,10 +231,18 @@ def train_and_evaluate(
 		val_past_covariates=past_val_s,
 		val_future_covariates=future_val_s,
 	)
+	logger.info('training complete')
 
 	# Walk-forward 1-step prediction across the test window. retrain=False reuses the
 	# parameters fit above; the model just slides its input window across test.
 	test_start = target_full_s.time_index[val_end]
+	test_bars = len(target_full_s) - val_end
+	logger.info(
+		'walk-forward 1-step from %s over %d test bars',
+		test_start, test_bars,
+	)
+	# verbose=True surfaces darts' tqdm bar across the test window — without
+	# it the walk-forward sits silent and looks hung on slower hardware.
 	preds_s = model.historical_forecasts(
 		series=target_full_s,
 		past_covariates=past_full_s,
@@ -237,8 +251,9 @@ def train_and_evaluate(
 		forecast_horizon=1,
 		retrain=False,
 		last_points_only=True,
-		verbose=False,
+		verbose=True,
 	)
+	logger.info('walk-forward complete; reconstructing prices')
 	preds = scaler_target.inverse_transform(preds_s).to_series().rename('r_pred')
 
 	target_test = target_pd.iloc[val_end:]

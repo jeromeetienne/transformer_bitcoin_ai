@@ -2,17 +2,38 @@
 
 A collection of Python experiments exploring whether Bitcoin trading signals can be predicted from price time series. The repo serves as a sandbox for trying different modeling approaches (transformers, classical sequence models, baselines) against historical BTC price data, comparing their forecasting accuracy and trading-strategy performance.
 
+## How to install
+
+1. Install [`uv`](https://docs.astral.sh/uv/) — the project uses it for env, deps, and runs:
+   ```
+   brew install uv          # macOS
+   ```
+   Other platforms: see the [uv install docs](https://docs.astral.sh/uv/getting-started/installation/).
+
+2. Sync dependencies (creates `.venv/` from `pyproject.toml` + `uv.lock`):
+   ```
+   uv sync
+   ```
+
+3. Verify by listing Make targets:
+   ```
+   make help
+   ```
+
 ## Quickstart
 
 The Makefile is the canonical command surface — every target wraps `uv run`.
 
 ```
-make install                                       # uv sync (creates .venv)
 make fetch                                         # pre-warm data cache
 make 01_baseline_naive                             # naive last-value baseline
+make 01b_moving_average                            # rolling-mean baseline
 make 02_arima                                      # ARIMA(p, d, q) baseline
 make 03_gradient_boosting                          # XGBoost on engineered features
-make help                                          # list all targets
+make 04_lstm                                       # Darts BlockRNN-LSTM
+make 05_transformer                                # Darts Temporal Fusion Transformer
+make 06_pretrained                                 # zero-shot Chronos-2 / TimesFM 2.5
+make help                                          # list all targets (incl. *_sweep variants)
 ```
 
 Override the active experiment YAML for `make fetch`:
@@ -50,7 +71,10 @@ transformer_bitcoin_ai/
 │   │   └── results/            # metrics.json, predictions.parquet, plot.png
 │   ├── 01b_moving_average/     # rolling-mean baseline
 │   ├── 02_arima/               # ARIMA(p, d, q) + sweep over orders
-│   └── 03_gradient_boosting/   # XGBoost on engineered features (+ sweep)
+│   ├── 03_gradient_boosting/   # XGBoost on engineered features (+ sweep)
+│   ├── 04_lstm/                # Darts BlockRNN-LSTM (+ sweep)
+│   ├── 05_transformer/         # Darts Temporal Fusion Transformer (+ sweep)
+│   └── 06_pretrained/          # zero-shot Chronos-2 / TimesFM 2.5 foundation models (+ sweep)
 └── scripts/
     └── fetch_data.py           # CLI that pre-warms data cache from a config.yaml
 ```

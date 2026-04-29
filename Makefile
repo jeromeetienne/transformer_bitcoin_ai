@@ -5,16 +5,14 @@
 
 CONFIG ?= experiments/01_baseline_naive/config.yaml
 
-.PHONY: help install fetch lint test clean \
+.PHONY: help fetch lint test clean \
 	01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep \
 	03_gradient_boosting 03_gradient_boosting_sweep 04_lstm 04_lstm_sweep \
-	05_transformer 05_transformer_sweep
+	05_transformer 05_transformer_sweep \
+	06_pretrained 06_pretrained_sweep
 
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-28s %s\n", $$1, $$2}'
-
-install:        ## install deps via uv (creates .venv on first run)
-	uv sync
 
 fetch:          ## pre-warm the data cache for $(CONFIG)
 	uv run python scripts/fetch_data.py --config $(CONFIG)
@@ -62,3 +60,9 @@ clean:          ## remove cached data and experiment results
 
 05_transformer_sweep:  ## sweep TFT hyperparams on the same data slice
 	uv run python experiments/05_transformer/sweep.py
+
+06_pretrained:         ## run experiments/06_pretrained (zero-shot Chronos-2 / TimesFM 2.5)
+	uv run python experiments/06_pretrained/run.py
+
+06_pretrained_sweep:   ## sweep foundation-model backends + context lengths on the same data slice
+	uv run python experiments/06_pretrained/sweep.py

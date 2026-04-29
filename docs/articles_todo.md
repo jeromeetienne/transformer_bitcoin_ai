@@ -31,8 +31,20 @@ Walkthrough of [04_lstm](../experiments/04_lstm/) using Darts' `BlockRNNModel`: 
 **8. "Walk-forward without retraining: an honest cheat I keep using"**
 Methods post on the evaluation harness — `statsmodels.apply(refit=False)` for ARIMA, `historical_forecasts(retrain=False)` for Darts. What's preserved (no leakage), what's sacrificed (no regime adaptation), and when the cheat stops being defensible.
 
-**9. "Why this repo is named `transformer_bitcoin_ai` and still doesn't have a transformer"**
-Roadmap post. Where the lineup goes next: ARIMAX with funding rate / perp basis, a transformer / TFT, then zero-shot foundation models (Chronos, TimesFM). Frame the LSTM result as the baseline the transformer has to clear and be honest about whether attention is even expected to help at this signal-to-noise level.
+**9. "I built the transformer my repo is named after. ARIMA still won."**
+The headline negative result from [05_transformer](../experiments/05_transformer/): a Temporal Fusion Transformer with 4 attention heads, 48h of context, multivariate past covariates, and cyclical future covariates lands at Sharpe +4.59 / dir_acc 0.5053 — behind LSTM (+4.95 / 0.5196) and well behind ARIMA(1,1,1) (+7.28 / 0.5336). The best swept config (`48/64/8/1/0.1`) closes some of the gap (+4.83) but doesn't catch LSTM. Discuss what "more capacity didn't help" means at this signal-to-noise level, why *width* beat *depth* in the sweep (deeper LSTM-stack configs all underperformed), and the moral discomfort of publishing a model whose final leaderboard position is worse than a 2-parameter linear model from 1970.
 
-**10. (optional) "Stop annualizing your Sharpe"**
+**10. "Hourly BTC is calendar-blind"**
+Spin-off from the TFT sweep ([05_transformer/results/sweep.csv](../experiments/05_transformer/results/sweep.csv)). TFT's one architectural advantage over LSTM was supposed to be the future-covariate channel — hour_sin/cos and dow_sin/cos as cyclical inputs. Across 6 configs the Sharpe range was +3.45 to +4.83; the wider configs that *had* capacity to exploit calendar features didn't pull away from the smaller ones. If hourly BTC carried meaningful intraday or weekly seasonality, capacity-vs-Sharpe would look different. It doesn't. A useful negative result for anyone about to engineer "trading hours" features at this resolution.
+
+**11. "What does a model that has never seen Bitcoin think Bitcoin will do?"**
+Walkthrough of [06_pretrained](../experiments/06_pretrained/): Amazon's Chronos-2 (120M params) and Google's TimesFM 2.5 (200M), zero-shot, no fine-tuning, on the same 1h BTCUSDT log-returns slice as 04/05. The honest framing: if a pretrained prior over millions of unrelated series transfers, that's the result; if MAE sits near the naive floor (~$260) and dir_acc ≈ 0.50, the data — not the architecture, not the parameter count — is the bottleneck. The first time the lineup answers "is BTC unusually hard, or are we just bad at it?"
+
+**12. "Probabilistic forecasts, finally: what a q10/q50/q90 band changes"**
+The first experiment in the lineup with calibrated prediction intervals ([06_pretrained](../experiments/06_pretrained/), via `QuantileRegression([0.1, 0.5, 0.9])` and `num_samples=200`). What intervals give you that point predictions don't: risk-aware position sizing, calibration diagnostics ("did the realized return fall inside the 80% band the predicted fraction of the time?"), and the difference between "the model predicts +1 %" and "the model says 20 % chance of −2 % and 20 % chance of +3 %". Ties back to why every prior post talked about Sharpe but never about uncertainty.
+
+**13. "Where this repo goes next"**
+Roadmap post — what's left now that the headline architecture is in. Open threads: ARIMAX with funding rate / perp basis, fine-tuning the foundation models instead of zero-shot, multi-seed runs to turn point-estimate Sharpe gaps into distributions, and re-running every model on a regime that *isn't* the Sep–Nov 2024 rally. Honest about which of these are "fix the methodology" vs. "chase signal that may not exist."
+
+**14. (optional) "Stop annualizing your Sharpe"**
 Short methodological piece prompted by the +7.28 Sharpe headlines. Per-bar Sharpe ≈ 0.080 with SE ≈ 0.025 on 1,608 bars — about 3σ from zero. The √8760 multiplier makes the number look like a hedge fund. Useful to write because every BTC ML post on the internet does this and never says it.
