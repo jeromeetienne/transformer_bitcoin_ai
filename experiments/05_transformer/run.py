@@ -104,12 +104,15 @@ def split_three_way(
 def train_and_evaluate(
 	cfg: dict[str, Any],
 	model_overrides: dict[str, Any] | None = None,
+	extra_pl_callbacks: list[Any] | None = None,
 ) -> tuple[dict[str, Any], pd.DataFrame]:
-	# End-to-end pipeline shared by run.py and sweep.py: load data, build target +
-	# past + future covariates, fit Scaler on train only, train TFT with val-based
-	# early stopping, walk-forward 1-step-ahead predict on the test slice, reconstruct
-	# prices, compute price + strategy metrics. Returns (metrics_dict, predictions_df).
-	# `model_overrides` lets sweep.py poke individual hyperparams without rewriting cfg.
+	# End-to-end pipeline shared by run.py, sweep.py, and optuna_sweep.py: load data,
+	# build target + past + future covariates, fit Scaler on train only, train TFT
+	# with val-based early stopping, walk-forward 1-step-ahead predict on the test
+	# slice, reconstruct prices, compute price + strategy metrics.
+	# Returns (metrics_dict, predictions_df). `model_overrides` lets callers poke
+	# individual hyperparams without rewriting cfg; `extra_pl_callbacks` lets
+	# optuna_sweep.py inject a per-trial PruningCallback alongside EarlyStopping.
 	req = kline_request_from_config(cfg)
 	test_fraction = float(cfg['test_fraction'])
 	cov_cfg = cfg.get('covariates', {})
@@ -199,8 +202,11 @@ def train_and_evaluate(
 		patience=int(train_cfg['early_stopping_patience']),
 		mode='min',
 	)
+	callbacks: list[Any] = [early_stop]
+	if extra_pl_callbacks is not None:
+		callbacks.extend(extra_pl_callbacks)
 	pl_trainer_kwargs: dict[str, Any] = {
-		'callbacks': [early_stop],
+		'callbacks': callbacks,
 		'accelerator': 'auto',
 		'enable_progress_bar': False,
 		'enable_model_summary': False,

@@ -38,3 +38,20 @@ model:
 training:
   val_fraction: 0.1             # tail fraction of the *training* slice carved off for early stopping
   early_stopping_patience: 5    # epochs of no val_loss improvement before stopping
+
+optuna:                         # only read by optuna_sweep.py; ignored by run.py / sweep.py
+  n_trials: 80                  # total trials to evaluate (TPE sampler picks each set of params)
+  timeout_seconds: null         # wall-clock budget in seconds; null = unbounded
+  objective: annualized_sharpe  # metric key from train_and_evaluate's returned metrics dict
+                                # one of: mae, rmse, mape, directional_accuracy, cumulative_return, annualized_sharpe
+  direction: maximize           # 'minimize' for mae/rmse/mape, 'maximize' for sharpe/dir_acc/cum_ret
+  seed: 42                      # TPESampler seed for reproducibility across runs
+  search_space:                 # one entry per knob; type drives the trial.suggest_* call
+    input_chunk_length:     { type: categorical, choices: [24, 48, 96] }   # bars of history fed to TFT
+    hidden_size:            { type: categorical, choices: [16, 32, 64] }   # transformer hidden dim
+    lstm_layers:            { type: int, low: 1, high: 2 }                 # TFT encoder/decoder LSTM depth
+    num_attention_heads:    { type: categorical, choices: [2, 4, 8] }      # heads must divide hidden_size; 2/4/8 all divide 16/32/64
+    dropout:                { type: float, low: 0.0, high: 0.3 }           # dropout across transformer blocks
+    hidden_continuous_size: { type: int, low: 4, high: 16 }                # GRN width for continuous covariate processing
+    learning_rate:          { type: float, low: 1.0e-4, high: 1.0e-2, log: true }  # Adam lr (log-uniform)
+    batch_size:             { type: categorical, choices: [32, 64, 128] }  # mini-batch size

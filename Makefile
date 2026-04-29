@@ -9,7 +9,7 @@ CONFIG ?= experiments/01_baseline_naive/config.yaml
 	01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep \
 	03_gradient_boosting 03_gradient_boosting_sweep \
 	04_lstm 04_lstm_sweep 04_lstm_optuna 04_lstm_optuna_dashboard \
-	05_transformer 05_transformer_sweep \
+	05_transformer 05_transformer_sweep 05_transformer_optuna 05_transformer_optuna_dashboard \
 	06_pretrained 06_pretrained_sweep
 
 help:
@@ -67,6 +67,12 @@ clean:          ## remove cached data and experiment results
 
 05_transformer_sweep:  ## sweep TFT hyperparams on the same data slice
 	uv run python experiments/05_transformer/sweep.py
+
+05_transformer_optuna: ## optuna-driven hyperparameter search for 05_transformer
+	uv run python experiments/05_transformer/optuna_sweep.py
+
+05_transformer_optuna_dashboard: ## launch optuna-dashboard against the 05_transformer study (Ctrl-C to stop)
+	uv run optuna-dashboard sqlite:///experiments/05_transformer/results/optuna_study.db
 
 06_pretrained:         ## run experiments/06_pretrained (zero-shot Chronos-2 / TimesFM 2.5)
 	uv run python experiments/06_pretrained/run.py
