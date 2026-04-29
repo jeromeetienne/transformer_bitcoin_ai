@@ -169,7 +169,10 @@ def train_and_evaluate(
 		dropout=float(model_cfg['dropout']),
 		batch_size=int(model_cfg['batch_size']),
 		n_epochs=int(model_cfg['n_epochs']),
-		optimizer_kwargs={'lr': float(model_cfg['learning_rate'])},
+		optimizer_kwargs={
+			'lr': float(model_cfg['learning_rate']),
+			'weight_decay': float(model_cfg['weight_decay']),
+		},
 		random_state=int(model_cfg['random_state']),
 		pl_trainer_kwargs=pl_trainer_kwargs,
 		save_checkpoints=False,
