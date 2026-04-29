@@ -5,7 +5,10 @@
 
 CONFIG ?= experiments/01_baseline_naive/config.yaml
 
-.PHONY: help install fetch 01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep 03_gradient_boosting 03_gradient_boosting_sweep 04_lstm 04_lstm_sweep lint test clean
+.PHONY: help install fetch lint test clean \
+	01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep \
+	03_gradient_boosting 03_gradient_boosting_sweep 04_lstm 04_lstm_sweep \
+	05_transformer 05_transformer_sweep
 
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-28s %s\n", $$1, $$2}'
@@ -53,3 +56,9 @@ clean:          ## remove cached data and experiment results
 
 04_lstm_sweep:     ## sweep LSTM hyperparams on the same data slice
 	uv run python experiments/04_lstm/sweep.py
+
+05_transformer:        ## run experiments/05_transformer (Darts TFT)
+	uv run python experiments/05_transformer/run.py
+
+05_transformer_sweep:  ## sweep TFT hyperparams on the same data slice
+	uv run python experiments/05_transformer/sweep.py
