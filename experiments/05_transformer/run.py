@@ -1,23 +1,31 @@
 import argparse
 import json
 import logging
+import warnings
 from pathlib import Path
 from typing import Any
 
 import matplotlib
 
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from darts import TimeSeries
-from darts.dataprocessing.transformers import Scaler
-from darts.models import TFTModel
-from pytorch_lightning.callbacks import EarlyStopping
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
-from btc_ai.eval.metrics import (
+# Quiet noisy third-party imports before darts/lightning load:
+# - UserWarning covers PL's _pytree deprecation + torch's pin_memory MPS notice
+# - darts emits a WARNING at import about missing statsforecast (we don't use it)
+warnings.filterwarnings('ignore')
+logging.getLogger('darts').setLevel(logging.ERROR)
+
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from darts import TimeSeries  # noqa: E402
+from darts.dataprocessing.transformers import Scaler  # noqa: E402
+from darts.models import TFTModel  # noqa: E402
+from pytorch_lightning.callbacks import EarlyStopping  # noqa: E402
+
+from btc_ai.config import kline_request_from_config, load_yaml  # noqa: E402
+from btc_ai.data import BinanceVisionLoader  # noqa: E402
+from btc_ai.eval.metrics import (  # noqa: E402
 	annualized_sharpe,
 	cumulative_return,
 	directional_accuracy,
@@ -293,6 +301,8 @@ def train_and_evaluate(
 
 def main() -> None:
 	logging.basicConfig(level=logging.INFO, format='%(levelname)s %(name)s: %(message)s')
+	# Drop Lightning's "GPU/TPU/HPU available" startup banner without losing our INFO logs.
+	logging.getLogger('pytorch_lightning').setLevel(logging.WARNING)
 
 	parser = argparse.ArgumentParser(description='Darts TFT on 1h log-returns.')
 	parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
