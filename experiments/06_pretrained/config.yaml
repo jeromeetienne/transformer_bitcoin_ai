@@ -1,4 +1,4 @@
-# Zero-shot foundation models on 1h BTC log-returns. Same target as 04_lstm /
+# Zero-shot foundation models on 4h BTC log-returns. Same target as 04_lstm /
 # 05_transformer (r_T = log(close_T / close_{T-1})), reconstructed to price as
 # close_pred = close_{T-1} * exp(r_pred), so MAE / RMSE / MAPE / dir_acc / Sharpe
 # stay on the same scale as 01..05 and the leaderboard remains apples-to-apples.
@@ -9,7 +9,7 @@
 # and the question stays "does the pretrained prior alone transfer to BTC?".
 
 symbol: BTCUSDT       # Binance trading pair
-interval: 1h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
+interval: 4h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
 start: 2024-01-01     # inclusive, UTC
 end: 2024-12-01       # exclusive, UTC
 period: monthly       # 'monthly' or 'daily'. Must be set explicitly.

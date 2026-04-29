@@ -1,4 +1,4 @@
-# Darts BlockRNN(LSTM) on 1h BTC log-returns. The target is the bar-T log-return
+# Darts BlockRNN(LSTM) on 4h BTC log-returns. The target is the bar-T log-return
 # r_T = log(close_T / close_{T-1}); past covariates feed only data observed before T
 # into the LSTM (BlockRNN-style past_covariates are sliced strictly before each
 # forecast step, so no current-bar leakage). Predictions are reconstructed to price
@@ -6,7 +6,7 @@
 # comparable to 01/01b/02/03. Sharpe is computed on a long/flat trading rule.
 
 symbol: BTCUSDT       # Binance trading pair
-interval: 1h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
+interval: 4h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
 start: 2024-01-01     # inclusive, UTC
 end: 2024-12-01       # exclusive, UTC
 period: monthly       # 'monthly' or 'daily'. Must be set explicitly.
