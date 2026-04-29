@@ -14,7 +14,16 @@ from statsmodels.tsa.arima.model import ARIMA
 
 from btc_ai.config import kline_request_from_config, load_yaml
 from btc_ai.data import BinanceVisionLoader
-from btc_ai.eval.metrics import directional_accuracy, mae, mape, rmse
+from btc_ai.eval.metrics import (
+        annualized_sharpe,
+        cumulative_return,
+        directional_accuracy,
+        mae,
+        mape,
+        periods_per_year,
+        rmse,
+        strategy_returns,
+)
 
 EXPERIMENT_DIR = Path(__file__).parent
 DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
@@ -67,6 +76,9 @@ def main() -> None:
         y_pred = extended.predict(start=split, end=len(close) - 1, dynamic=False)
         y_pred.index = test.index
 
+        strat = strategy_returns(test, y_pred, ref)
+        ppy = periods_per_year(req.interval)
+
         metrics = {
                 'experiment': '02_arima',
                 'order': list(order),
@@ -79,12 +91,19 @@ def main() -> None:
                 'rmse': rmse(test, y_pred),
                 'mape': mape(test, y_pred),
                 'directional_accuracy': directional_accuracy(test, y_pred, ref),
+                'cumulative_return': cumulative_return(strat),
+                'annualized_sharpe': annualized_sharpe(strat, ppy),
         }
 
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         (RESULTS_DIR / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
 
-        predictions = pd.DataFrame({'close': test, 'pred': y_pred, 'ref': ref})
+        predictions = pd.DataFrame({
+                'close': test,
+                'pred': y_pred,
+                'ref': ref,
+                'strategy_return': strat,
+        })
         predictions.to_parquet(RESULTS_DIR / 'predictions.parquet')
 
         fig, ax = plt.subplots(figsize=(10, 4))

@@ -9,7 +9,16 @@ from statsmodels.tsa.arima.model import ARIMA
 
 from btc_ai.config import kline_request_from_config, load_yaml
 from btc_ai.data import BinanceVisionLoader
-from btc_ai.eval.metrics import directional_accuracy, mae, mape, rmse
+from btc_ai.eval.metrics import (
+        annualized_sharpe,
+        cumulative_return,
+        directional_accuracy,
+        mae,
+        mape,
+        periods_per_year,
+        rmse,
+        strategy_returns,
+)
 
 EXPERIMENT_DIR = Path(__file__).parent
 DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
@@ -63,12 +72,17 @@ def main() -> None:
         ref = close.iloc[split - 1:-1]
         ref.index = test.index
 
-        header = ['order', 'aic', 'bic', 'mae', 'rmse', 'mape', 'dir_acc']
+        ppy = periods_per_year(req.interval)
+        header = [
+                'order', 'aic', 'bic',
+                'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',
+        ]
         print(
                 f'{"order":<11} {"aic":>10} {"bic":>10} '
-                f'{"mae":>9} {"rmse":>9} {"mape":>9} {"dir_acc":>9}'
+                f'{"mae":>9} {"rmse":>9} {"mape":>9} {"dir_acc":>9} '
+                f'{"cum_ret":>10} {"sharpe":>8}'
         )
-        print('-' * 73)
+        print('-' * 95)
 
         rows: list[dict[str, object]] = []
         for order in ORDERS:
@@ -79,6 +93,7 @@ def main() -> None:
                                 start=split, end=len(close) - 1, dynamic=False,
                         )
                         y_pred.index = test.index
+                        strat = strategy_returns(test, y_pred, ref)
                         row = {
                                 'order': str(order),
                                 'aic': float(fit.aic),
@@ -87,11 +102,14 @@ def main() -> None:
                                 'rmse': rmse(test, y_pred),
                                 'mape': mape(test, y_pred),
                                 'dir_acc': directional_accuracy(test, y_pred, ref),
+                                'cum_ret': cumulative_return(strat),
+                                'sharpe': annualized_sharpe(strat, ppy),
                         }
                         print(
                                 f'{row["order"]:<11} {row["aic"]:>10.1f} {row["bic"]:>10.1f} '
                                 f'{row["mae"]:>9.2f} {row["rmse"]:>9.2f} '
-                                f'{row["mape"] * 100:>8.3f}% {row["dir_acc"]:>9.4f}'
+                                f'{row["mape"] * 100:>8.3f}% {row["dir_acc"]:>9.4f} '
+                                f'{row["cum_ret"] * 100:>9.3f}% {row["sharpe"]:>8.3f}'
                         )
                         rows.append(row)
                 except Exception as exc:  # noqa: BLE001

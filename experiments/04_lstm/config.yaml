@@ -1,0 +1,33 @@
+# Darts BlockRNN(LSTM) on 1h BTC log-returns. The target is the bar-T log-return
+# r_T = log(close_T / close_{T-1}); past covariates feed only data observed before T
+# into the LSTM (BlockRNN-style past_covariates are sliced strictly before each
+# forecast step, so no current-bar leakage). Predictions are reconstructed to price
+# as close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc are directly
+# comparable to 01/01b/02/03. Sharpe is computed on a long/flat trading rule.
+
+symbol: BTCUSDT       # Binance trading pair
+interval: 1h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
+start: 2024-01-01     # inclusive, UTC
+end: 2024-12-01       # exclusive, UTC
+period: monthly       # 'monthly' or 'daily'. Must be set explicitly.
+                      # Use 'daily' for partial / not-yet-complete months.
+test_fraction: 0.2    # tail fraction of the loaded series held out for evaluation
+
+covariates:
+  use_volume: true            # include log1p(volume) as a past covariate
+  use_ohlc: true              # include (high-low) range and (close-open) body as past covariates
+
+model:
+  input_chunk_length: 48      # bars of history fed to the LSTM at each step (48h = 2 days)
+  output_chunk_length: 1      # one-step-ahead forecast horizon
+  hidden_dim: 32              # LSTM hidden state size
+  n_rnn_layers: 2             # stacked LSTM layers
+  dropout: 0.1                # dropout between LSTM layers (regularization)
+  batch_size: 64              # mini-batch size during training
+  n_epochs: 30                # max passes over the training set; early stopping may halt sooner
+  learning_rate: 0.001        # Adam learning rate
+  random_state: 42            # determinism for reproducible runs
+
+training:
+  val_fraction: 0.1           # tail fraction of the *training* slice carved off for early stopping
+  early_stopping_patience: 5  # epochs of no val_loss improvement before stopping

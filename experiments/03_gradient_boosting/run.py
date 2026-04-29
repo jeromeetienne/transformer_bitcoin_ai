@@ -14,7 +14,16 @@ from features import build_features
 
 from btc_ai.config import kline_request_from_config, load_yaml
 from btc_ai.data import BinanceVisionLoader
-from btc_ai.eval.metrics import directional_accuracy, mae, mape, rmse
+from btc_ai.eval.metrics import (
+        annualized_sharpe,
+        cumulative_return,
+        directional_accuracy,
+        mae,
+        mape,
+        periods_per_year,
+        rmse,
+        strategy_returns,
+)
 
 EXPERIMENT_DIR = Path(__file__).parent
 DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
@@ -69,6 +78,9 @@ def main() -> None:
         close_test = ref_test * np.exp(y_test)
         pred_close = ref_test * np.exp(y_pred)
 
+        strat = strategy_returns(close_test, pred_close, ref_test)
+        ppy = periods_per_year(req.interval)
+
         metrics = {
                 'experiment': '03_gradient_boosting',
                 'rows_total': int(len(X)),
@@ -79,12 +91,19 @@ def main() -> None:
                 'rmse': rmse(close_test, pred_close),
                 'mape': mape(close_test, pred_close),
                 'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
+                'cumulative_return': cumulative_return(strat),
+                'annualized_sharpe': annualized_sharpe(strat, ppy),
         }
 
         RESULTS_DIR.mkdir(parents=True, exist_ok=True)
         (RESULTS_DIR / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
 
-        predictions = pd.DataFrame({'close': close_test, 'pred': pred_close, 'ref': ref_test})
+        predictions = pd.DataFrame({
+                'close': close_test,
+                'pred': pred_close,
+                'ref': ref_test,
+                'strategy_return': strat,
+        })
         predictions.to_parquet(RESULTS_DIR / 'predictions.parquet')
 
         fig, ax = plt.subplots(figsize=(10, 4))

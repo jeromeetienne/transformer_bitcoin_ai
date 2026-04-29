@@ -10,7 +10,16 @@ from features import build_features
 
 from btc_ai.config import kline_request_from_config, load_yaml
 from btc_ai.data import BinanceVisionLoader
-from btc_ai.eval.metrics import directional_accuracy, mae, mape, rmse
+from btc_ai.eval.metrics import (
+        annualized_sharpe,
+        cumulative_return,
+        directional_accuracy,
+        mae,
+        mape,
+        periods_per_year,
+        rmse,
+        strategy_returns,
+)
 
 EXPERIMENT_DIR = Path(__file__).parent
 DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
@@ -59,12 +68,17 @@ def main() -> None:
         ref_test = ref.iloc[split:]
         close_test = ref_test * np.exp(y_test)
 
-        header = ['n_estimators', 'max_depth', 'learning_rate', 'mae', 'rmse', 'mape', 'dir_acc']
+        ppy = periods_per_year(req.interval)
+        header = [
+                'n_estimators', 'max_depth', 'learning_rate',
+                'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',
+        ]
         print(
                 f'{"n_est":>6} {"depth":>6} {"lr":>6} '
-                f'{"mae":>10} {"rmse":>10} {"mape":>9} {"dir_acc":>9}'
+                f'{"mae":>10} {"rmse":>10} {"mape":>9} {"dir_acc":>9} '
+                f'{"cum_ret":>10} {"sharpe":>8}'
         )
-        print('-' * 65)
+        print('-' * 87)
 
         rows: list[dict[str, object]] = []
         for params in GRID:
@@ -84,6 +98,7 @@ def main() -> None:
                         model.fit(X_train, y_train)
                         y_pred = pd.Series(model.predict(X_test), index=X_test.index)
                         pred_close = ref_test * np.exp(y_pred)
+                        strat = strategy_returns(close_test, pred_close, ref_test)
                         row = {
                                 'n_estimators': int(params['n_estimators']),
                                 'max_depth': int(params['max_depth']),
@@ -92,12 +107,15 @@ def main() -> None:
                                 'rmse': rmse(close_test, pred_close),
                                 'mape': mape(close_test, pred_close),
                                 'dir_acc': directional_accuracy(close_test, pred_close, ref_test),
+                                'cum_ret': cumulative_return(strat),
+                                'sharpe': annualized_sharpe(strat, ppy),
                         }
                         print(
                                 f'{row["n_estimators"]:>6d} {row["max_depth"]:>6d} '
                                 f'{row["learning_rate"]:>6.3f} '
                                 f'{row["mae"]:>10.2f} {row["rmse"]:>10.2f} '
-                                f'{row["mape"] * 100:>8.3f}% {row["dir_acc"]:>9.4f}'
+                                f'{row["mape"] * 100:>8.3f}% {row["dir_acc"]:>9.4f} '
+                                f'{row["cum_ret"] * 100:>9.3f}% {row["sharpe"]:>8.3f}'
                         )
                         rows.append(row)
                 except Exception as exc:  # noqa: BLE001

@@ -5,10 +5,10 @@
 
 CONFIG ?= experiments/01_baseline_naive/config.yaml
 
-.PHONY: help install fetch 01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep 03_gradient_boosting 03_gradient_boosting_sweep lint test clean
+.PHONY: help install fetch 01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep 03_gradient_boosting 03_gradient_boosting_sweep 04_lstm 04_lstm_sweep lint test clean
 
 help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-12s %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-28s %s\n", $$1, $$2}'
 
 install:        ## install deps via uv (creates .venv on first run)
 	uv sync
@@ -47,3 +47,9 @@ clean:          ## remove cached data and experiment results
 
 03_gradient_boosting_sweep: ## sweep XGBoost hyperparams on the same data slice
 	uv run python experiments/03_gradient_boosting/sweep.py
+
+04_lstm:           ## run experiments/04_lstm (Darts BlockRNN-LSTM)
+	uv run python experiments/04_lstm/run.py
+
+04_lstm_sweep:     ## sweep LSTM hyperparams on the same data slice
+	uv run python experiments/04_lstm/sweep.py
