@@ -54,8 +54,9 @@ Same data slice, same split, same metrics:
 | 01_baseline_naive | **337.89** | 471.54 | 0.502 % | NaN | — |
 | 01b_moving_average (window=24) | 1012.86 | 1356.63 | 1.506 % | 0.483 | +674.97 |
 | **02_arima (1, 1, 1)** | **338.15** | **471.49** | 0.503 % | 0.492 | **+0.27** |
+| 03_gradient_boosting (default) | 354.60 | 493.14 | 0.528 % | **0.519** | +16.71 |
 
-ARIMA ties naive within $0.30 on MAE — within sample noise on a 437-bar test set.
+ARIMA ties naive within $0.30 on MAE — within sample noise on a 437-bar test set. 03_gradient_boosting trades $17 of MAE for the first `dir_acc > 0.5` reading in the lineup.
 
 ## Order sweep
 
@@ -96,7 +97,7 @@ From [experiments/02_arima/results/sweep.csv](../../experiments/02_arima/results
 
 The next experiment that should actually win needs either:
 
-- **Richer features** — volume, returns of correlated assets, on-chain metrics, basis to perp futures. ARIMA**X** (with exogenous regressors) is a near-zero-effort next step.
+- **Richer features** — volume, returns of correlated assets, on-chain metrics, basis to perp futures. ARIMA**X** (with exogenous regressors) is a near-zero-effort next step. (`03_gradient_boosting` already adds volume + OHLC features; see [03_gradient_boosting.report.md](03_gradient_boosting.report.md). It buys directional skill but not MAE.)
 - **A non-linear model with much more data** — weekly/daily horizons or multi-symbol training to get enough samples for a transformer-style model to find weak signals.
 
 ## Caveats baked into v1

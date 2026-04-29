@@ -5,7 +5,7 @@
 
 CONFIG ?= experiments/01_baseline_naive/config.yaml
 
-.PHONY: help install fetch 01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep lint test clean
+.PHONY: help install fetch 01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep 03_gradient_boosting 03_gradient_boosting_sweep lint test clean
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -41,3 +41,9 @@ clean:          ## remove cached data and experiment results
 
 02_arima_sweep:    ## sweep ARIMA (p, d, q) orders on the same data slice
 	uv run python experiments/02_arima/sweep.py
+
+03_gradient_boosting:       ## run experiments/03_gradient_boosting (XGBoost)
+	uv run python experiments/03_gradient_boosting/run.py
+
+03_gradient_boosting_sweep: ## sweep XGBoost hyperparams on the same data slice
+	uv run python experiments/03_gradient_boosting/sweep.py

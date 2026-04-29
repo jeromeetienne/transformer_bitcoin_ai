@@ -49,6 +49,7 @@ Same data slice, same split, same metrics:
 | 01_baseline_naive | **337.89** | 471.54 | 0.502 % | NaN |
 | **01b_moving_average (window=24)** | **1012.86** | 1356.63 | 1.506 % | 0.483 |
 | 02_arima (1, 1, 1) | 338.15 | 471.49 | 0.503 % | 0.492 |
+| 03_gradient_boosting (default) | 354.60 | 493.14 | 0.528 % | **0.519** |
 
 MA(24) is **3× worse than naive on MAE** and **0.483 on directional accuracy** — slightly *anti-correct*.
 
@@ -69,7 +70,7 @@ If you re-ran the experiment over a sweep of windows, the picture would be:
 
 ## Why it still earns its place
 
-Even with MAE far above naive, the experiment **fixed** the directional-accuracy axis. Without MA, `02_arima` has only naive (NaN) and itself to compare against on direction. With MA, we know that "predict-the-recent-mean" gives 0.483 on this slice, so any later model claiming directional skill (>0.5) has a meaningful baseline to beat — not just zero, but a model that *did* take positions, and slightly lost.
+Even with MAE far above naive, the experiment **fixed** the directional-accuracy axis. Without MA, `02_arima` has only naive (NaN) and itself to compare against on direction. With MA, we know that "predict-the-recent-mean" gives 0.483 on this slice, so any later model claiming directional skill (>0.5) has a meaningful baseline to beat — not just zero, but a model that *did* take positions, and slightly lost. (And `03_gradient_boosting` is the first to clear it: default config 0.519, sweep best 0.572.)
 
 ## Files produced
 
