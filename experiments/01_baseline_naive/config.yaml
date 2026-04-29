@@ -1,0 +1,12 @@
+# Naive last-value baseline — predicts close[t] = close[t-1].
+# The point of this experiment is the architecture, not the model:
+# ARIMA / LSTM / transformer experiments reuse this exact config schema,
+# the shared loader (src/btc_ai/data), and the shared metrics (src/btc_ai/eval).
+
+symbol: BTCUSDT       # Binance trading pair
+interval: 1h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
+start: 2024-01-01     # inclusive, UTC
+end: 2024-04-01       # exclusive, UTC
+period: monthly       # 'monthly' or 'daily'. Must be set explicitly.
+                      # Use 'daily' for partial / not-yet-complete months.
+test_fraction: 0.2    # tail fraction of the loaded series held out for evaluation

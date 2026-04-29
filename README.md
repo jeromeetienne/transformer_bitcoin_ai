@@ -2,51 +2,61 @@
 
 A collection of Python experiments exploring whether Bitcoin trading signals can be predicted from price time series. The repo serves as a sandbox for trying different modeling approaches (transformers, classical sequence models, baselines) against historical BTC price data, comparing their forecasting accuracy and trading-strategy performance.
 
+## Quickstart
+
+The Makefile is the canonical command surface — every target wraps `uv run`.
+
+```
+make install                                       # uv sync (creates .venv)
+make fetch                                         # pre-warm data cache
+make baseline                                      # run experiments/01_baseline_naive
+make help                                          # list all targets
+```
+
+Override the active experiment YAML for `make fetch`:
+```
+make fetch CONFIG=experiments/02_arima/config.yaml
+```
+
 ## Repository Layout
 
 Shared infrastructure lives at the root; each experiment is a self-contained folder so runs stay independent and comparable.
 
 ```
 transformer_bitcoin_ai/
+├── Makefile                    # canonical command surface (wraps uv run)
 ├── README.md
-├── pyproject.toml              # deps + tooling (ruff, pytest)
-├── .python-version
+├── pyproject.toml              # deps + tooling (ruff, pytest), managed by uv
+├── uv.lock                     # committed
+├── .python-version             # 3.11, managed by uv
 ├── data/
-│   ├── raw/                    # downloaded OHLCV (gitignored)
-│   ├── processed/              # cleaned/resampled parquet (gitignored)
-│   └── README.md               # how to fetch data
+│   ├── raw/                    # downloaded zips (gitignored)
+│   ├── processed/              # reserved for future feature caches (gitignored)
+│   └── README.md
 ├── src/btc_ai/                 # shared library (importable)
-│   ├── __init__.py
+│   ├── config.py               # YAML + KlineRequest construction
 │   ├── data/
-│   │   ├── fetch.py            # exchange/API downloaders
-│   │   ├── loaders.py          # train/val/test splits, windowing
-│   │   └── features.py         # returns, log-returns, TA features
-│   ├── models/                 # reusable model building blocks
-│   ├── eval/
-│   │   ├── metrics.py          # MAE, directional accuracy, Sharpe
-│   │   └── backtest.py         # turn predictions into PnL
-│   └── viz.py
+│   │   ├── schema.py           # KlineRequest dataclass
+│   │   ├── cache.py            # HTTP download with on-disk cache
+│   │   └── binance_vision.py   # data.binance.vision loader
+│   └── eval/
+│       └── metrics.py          # MAE, RMSE, MAPE, directional accuracy
 ├── experiments/                # one folder per experiment
-│   ├── 01_baseline_naive/      # last-value, moving average
-│   │   ├── run.py
-│   │   ├── config.yaml
-│   │   └── results/            # metrics, plots, saved model
-│   ├── 02_arima/
-│   ├── 03_lstm/
-│   ├── 04_transformer_vanilla/
-│   ├── 05_transformer_multivariate/   # + volume, on-chain, sentiment
-│   └── 06_informer_or_patchtst/
-├── notebooks/                  # exploration, not the source of truth
-│   └── eda_btc_returns.ipynb
-├── scripts/
-│   ├── fetch_data.py
-│   └── compare_experiments.py  # leaderboard across experiments/
-└── tests/
+│   └── 01_baseline_naive/      # last-value forecast (the architecture probe)
+│       ├── run.py
+│       ├── config.yaml
+│       └── results/            # metrics.json, predictions.parquet, plot.png
+└── scripts/
+    └── fetch_data.py           # CLI that pre-warms data cache from a config.yaml
 ```
 
 ## Conventions
 
-- **Each experiment is self-contained**: `run.py` + `config.yaml` + `results/`. Never edit a past experiment — copy it to the next number. This keeps results reproducible.
-- **Shared code lives in `src/btc_ai/`**, not duplicated per experiment. Data loaders, metrics, and the backtester especially — every model is evaluated identically.
+- **Tooling is `uv`.** `uv init`, `uv add`, `uv run`. `uv.lock` is committed; `.venv/` is not.
+- **All commands go through the Makefile.** Don't invoke `python` directly.
+- **Each experiment is self-contained**: `run.py` + `config.yaml` + `results/`. Never edit a past experiment — copy it to the next number (`cp -r experiments/01_baseline_naive experiments/02_arima`).
+- **The YAML is the single source of truth** for both data selection and model params. `run.py` and `scripts/fetch_data.py` both consume the same `--config`.
+- **Shared code lives in `src/btc_ai/`** so every experiment is evaluated identically.
 - **Numbered prefixes** (`01_`, `02_`) preserve chronology and make leaderboards readable.
-- **Data is gitignored**; `scripts/fetch_data.py` makes it reproducible.
+- **`period` is required and explicit** (`monthly` or `daily`) — no auto-pick. Use `daily` for ranges that include a not-yet-complete month.
+- **Data is gitignored**; `make fetch` makes it reproducible.

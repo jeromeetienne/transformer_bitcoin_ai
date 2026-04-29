@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# uv
+.venv/
+
+# Data — fetched on demand by scripts/fetch_data.py
+data/raw/
+data/processed/
+
+# Experiment outputs (keep dir, ignore contents)
+experiments/*/results/*
+!experiments/*/results/.gitkeep
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
