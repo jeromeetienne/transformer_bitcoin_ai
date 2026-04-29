@@ -115,17 +115,47 @@ What to look at in the sweep:
 - **`input_chunk_length` matters more than `hidden_dim`.** For a near-random-walk like hourly BTC, doubling the lookback often changes nothing; doubling the hidden size mostly buys variance. Sweep `icl` first.
 - **Bigger ≠ better.** With a few thousand training rows and a noisy target, the smaller configs (`icl=24`, `hidden_dim=16`, `n_rnn_layers=1`) are often more honest than the bigger ones.
 
+### Optuna search (TPE + median pruning)
+
+For an adaptive search over the same 4-D space — Tree-structured Parzen Estimator picks each next trial based on previous results, and `MedianPruner` kills unpromising trials mid-training:
+
+```
+make 04_lstm_optuna
+```
+
+The search is parameterised in the `optuna:` section of [`config.yaml`](config.yaml): `n_trials`, `timeout_seconds`, `objective` (any metric key returned by the run, e.g. `annualized_sharpe`), `direction` (`minimize` / `maximize`), `seed`, and a declarative `search_space` (`categorical` / `int` / `float`). No silent defaults — `objective` and `direction` must both be set explicitly.
+
+Outputs (under `results/`):
+
+- `optuna_study.db` — SQLite-backed Optuna storage. Resumable: rerunning `make 04_lstm_optuna` adds new trials to the same study (via `load_if_exists=True`).
+- `optuna_trials.csv` — full `study.trials_dataframe()` snapshot for CLI inspection.
+- `optuna_best.json` — best params, best objective value, count of completed vs pruned trials, storage URL.
+
+To explore the study interactively (parallel coordinates, history, parameter importance):
+
+```
+make 04_lstm_optuna_dashboard
+```
+
+This launches [`optuna-dashboard`](https://optuna-dashboard.readthedocs.io/) against `results/optuna_study.db` on `http://127.0.0.1:8080`. Ctrl-C to stop. The dashboard reads the same SQLite file the sweep is writing to, so you can leave it running while a longer search is in progress and refresh.
+
+The Optuna run **does not** touch `metrics.json` / `predictions.parquet` / `plot.png` / `sweep.csv` — they reflect the manual GRID and the single `model:` config, not the Optuna search.
+
 ## Files
 
 ```
 experiments/04_lstm/
 ├── README.md           # this file
-├── config.yaml         # data slice + test_fraction + covariates + LSTM model knobs + training (val + early stopping)
-├── run.py              # entry point — fits the single config in config.yaml; train_and_evaluate() is reused by sweep.py
-├── sweep.py            # sweeps multiple LSTM configs, writes results/sweep.csv
+├── config.yaml         # data slice + test_fraction + covariates + LSTM model + training + optuna sections
+├── run.py              # entry point — fits the single config in config.yaml; train_and_evaluate() is reused by sweep.py / optuna_sweep.py
+├── sweep.py            # manual GRID sweep, writes results/sweep.csv
+├── optuna_sweep.py     # Optuna TPE search with PyTorchLightning pruning, writes results/optuna_*
 └── results/
     ├── metrics.json        # produced by run.py
     ├── predictions.parquet # close + pred + ref + strategy_return on the test slice
     ├── plot.png            # produced by run.py
-    └── sweep.csv           # produced by sweep.py
+    ├── sweep.csv           # produced by sweep.py
+    ├── optuna_study.db     # produced by optuna_sweep.py (SQLite, read by optuna-dashboard)
+    ├── optuna_trials.csv   # produced by optuna_sweep.py
+    └── optuna_best.json    # produced by optuna_sweep.py
 ```

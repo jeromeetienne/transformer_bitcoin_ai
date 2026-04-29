@@ -7,7 +7,8 @@ CONFIG ?= experiments/01_baseline_naive/config.yaml
 
 .PHONY: help fetch lint test clean \
 	01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep \
-	03_gradient_boosting 03_gradient_boosting_sweep 04_lstm 04_lstm_sweep \
+	03_gradient_boosting 03_gradient_boosting_sweep \
+	04_lstm 04_lstm_sweep 04_lstm_optuna 04_lstm_optuna_dashboard \
 	05_transformer 05_transformer_sweep \
 	06_pretrained 06_pretrained_sweep
 
@@ -54,6 +55,12 @@ clean:          ## remove cached data and experiment results
 
 04_lstm_sweep:     ## sweep LSTM hyperparams on the same data slice
 	uv run python experiments/04_lstm/sweep.py
+
+04_lstm_optuna:    ## optuna-driven hyperparameter search for 04_lstm
+	uv run python experiments/04_lstm/optuna_sweep.py
+
+04_lstm_optuna_dashboard: ## launch optuna-dashboard against the 04_lstm study (Ctrl-C to stop)
+	uv run optuna-dashboard sqlite:///experiments/04_lstm/results/optuna_study.db
 
 05_transformer:        ## run experiments/05_transformer (Darts TFT)
 	uv run python experiments/05_transformer/run.py
