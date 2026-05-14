@@ -1,0 +1,5 @@
+topic: why fastbrowser + a11y_parse are great to scrape the web with AI
+description: |
+  Based on those 2 folders, in a monorepo
+  - https://github.com/jeromeetienne/skillmd_collection/tree/main/packages/a11y_parse
+  - https://github.com/jeromeetienne/skillmd_collection/tree/main/packages/fastbrowser_cli
