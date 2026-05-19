@@ -93,6 +93,9 @@ def main() -> None:
 
         metrics = {
                 'experiment': '03_gradient_boosting',
+                'dataset': cfg['dataset'],
+                'symbol': splits.symbol_test,
+                'interval': splits.interval,
                 'rows_total': int(len(X)),
                 'rows_train': int(len(X_train)),
                 'rows_test': int(len(X_test)),

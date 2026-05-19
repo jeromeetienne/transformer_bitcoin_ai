@@ -48,6 +48,9 @@ def main() -> None:
 
         metrics = {
                 'experiment': '01_baseline_naive',
+                'dataset': cfg['dataset'],
+                'symbol': splits.symbol_test,
+                'interval': splits.interval,
                 'rows_total': int(len(close)),
                 'rows_test': int(len(test)),
                 'mae': mae(test, y_pred),

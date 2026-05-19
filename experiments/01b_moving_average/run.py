@@ -71,6 +71,9 @@ def main() -> None:
 
         metrics = {
                 'experiment': '01b_moving_average',
+                'dataset': cfg['dataset'],
+                'symbol': splits.symbol_test,
+                'interval': splits.interval,
                 'window': window,
                 'rows_total': int(len(close)),
                 'rows_test': int(len(test)),

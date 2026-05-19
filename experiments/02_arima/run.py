@@ -85,6 +85,9 @@ def main() -> None:
 
         metrics = {
                 'experiment': '02_arima',
+                'dataset': cfg['dataset'],
+                'symbol': splits.symbol_test,
+                'interval': splits.interval,
                 'order': list(order),
                 'rows_total': int(len(close)),
                 'rows_train': int(len(train)),

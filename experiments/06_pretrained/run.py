@@ -203,6 +203,7 @@ def train_and_evaluate(
 
 	metrics: dict[str, Any] = {
 		'experiment': '06_pretrained',
+		'dataset': cfg['dataset'],
 		'backend': backend,
 		'hub_model_name': hub_model_name,
 		'symbol': splits.symbol_test,

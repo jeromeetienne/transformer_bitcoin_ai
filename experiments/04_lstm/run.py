@@ -203,6 +203,7 @@ def train_and_evaluate(
 
 	metrics: dict[str, Any] = {
 		'experiment': '04_lstm',
+		'dataset': cfg['dataset'],
 		'symbol': splits.symbol_test,
 		'interval': splits.interval,
 		'rows_total': int(n),

@@ -273,6 +273,7 @@ def train_and_evaluate(
 
 	metrics: dict[str, Any] = {
 		'experiment': '05_transformer',
+		'dataset': cfg['dataset'],
 		'symbol': splits.symbol_test,
 		'interval': splits.interval,
 		'rows_total': int(n),
