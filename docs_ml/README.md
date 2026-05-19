@@ -1,6 +1,6 @@
 # docs_ml — ML article series principles
 
-A short manifesto for the article series in this folder. Five articles, published on a personal blog and cross-posted to LinkedIn, on machine learning applied to Bitcoin price prediction.
+A short manifesto for the article series in this folder. Six articles (one project-intro piece plus five model articles), published on a personal blog and cross-posted to LinkedIn, on machine learning applied to Bitcoin price prediction.
 
 The goal is to showcase **ML craft, not trading intuition**. The financial-flavor articles in `../docs_finance/articles/` are explicitly out of scope and should not be used as templates or sources of prose.
 
@@ -16,9 +16,10 @@ ML engineers and curious technical readers. They want to see:
 
 They do **not** want trading advice, get-rich framing, or finance jargon.
 
-## The five articles
+## The six articles
 
-1. **Baselines you need to beat** — project setup, data, walk-forward evaluation methodology, naive / moving-average / ARIMA baselines.
+0. **Presentation of the project** — the curtain-raiser. Frames the question, the data, and the evaluation philosophy, and previews the model articles that follow. No model, no results.
+1. **Baselines you need to beat** — naive / moving-average / ARIMA as the floor every later model must clear. The specifics companion to article 0's framing.
 2. **XGBoost and feature engineering** — what classical ML brings to the table: the model is generic, the features carry the signal.
 3. **LSTM** — recurrent nets on raw sequences. Sequence length, training stability, what they do and don't learn.
 4. **Transformer** — attention applied to time series, via the Temporal Fusion Transformer in Darts.
@@ -37,7 +38,7 @@ They do **not** want trading advice, get-rich framing, or finance jargon.
 A loose template, not a rigid one:
 
 1. **Hook** — one paragraph. What this article is about and why an ML reader should care.
-2. **Setup** — data, target, evaluation. Article 1 establishes this; later articles recap in one short paragraph.
+2. **Setup** — data, target, evaluation. Articles 0 and 1 establish this between them (framing in 0, specifics in 1); later articles recap in one short paragraph.
 3. **The model** — intuition first, then enough detail that the reader knows what is actually being trained.
 4. **What happened** — results. Include the surprises.
 5. **What it means** — one short section. Not "what you should do" but "what this tells us about the model class."

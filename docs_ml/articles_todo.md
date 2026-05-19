@@ -1,11 +1,12 @@
-# article_todo.md
+# articles_todo.md
 
-Working tracker for the five-article ML series. See [README.md](README.md) for the editorial principles.
+Working tracker for the six-article ML series (one project-intro piece plus five model articles). See [README.md](README.md) for the editorial principles.
 
 ## Status at a glance
 
 | #   | Article                                 | Source experiments                                                   | Status      |
 | --- | --------------------------------------- | -------------------------------------------------------------------- | ----------- |
+| 0   | Presentation of the project             | — (meta-article, no model)                                           | not started |
 | 1   | Baselines you need to beat              | `01_baseline_naive`, `01b_moving_average`, `02_arima`                | not started |
 | 2   | XGBoost and feature engineering         | `03_gradient_boosting`                                               | not started |
 | 3   | LSTM                                    | `04_lstm`                                                            | not started |
@@ -16,12 +17,15 @@ Status values: `not started` → `outlined` → `drafting` → `numbers verified
 
 ## Series-level decisions
 
-Open knobs to settle before drafting article 1:
+Open knobs to settle before drafting article 0:
 
 - [ ] Blog platform confirmed (and URL pattern decided, so cross-links between articles are stable).
-- [ ] Repo visibility — public from article 1 (current plan) vs. publish at end. Confirm.
+- [ ] Repo visibility — public from article 0 (current plan) vs. publish at end. Confirm.
 - [x] Editorial voice — code-first, show the losses, no financial framing. See [README.md](README.md).
-- [x] Article boundaries — 5 articles, with pure baselines (incl. ARIMA) in article 1 and XGBoost split out into article 2.
+- [x] Article boundaries — 6 articles: article 0 = project intro (no model); article 1 = pure baselines incl. ARIMA; article 2 = XGBoost; articles 3–5 = LSTM, transformer, zero-shot.
+- [ ] Spoil the "ARIMA beats deep learning" punchline in article 0, or save it for article 4? Decide before drafting article 0.
+- [ ] Personal-credibility paragraph in article 0 — include (helps the "make me look good in ML" goal) or skip (risks bragging)? Decide before drafting.
+- [ ] Methodology split — high-level framing in article 0 vs. specifics (split indices, log-return reconstruction, metric definitions) in article 1. Settle to avoid redundancy.
 - [ ] Methodology recap snippet — a 1-paragraph reusable block on data + walk-forward eval, to drop into articles 2–5 instead of re-deriving.
 - [ ] Visual conventions — plot style, code-block conventions, whether to include screenshots of plots or describe them.
 - [ ] Cover-image strategy for LinkedIn (per-article image? series-wide template?).
@@ -39,77 +43,40 @@ The same six-item checklist applies to every article. Tick as you go.
 
 ---
 
+Per-article sections below are deliberately kept short — title plus a short description. Detailed outlines (key beats, open questions, source experiments, raw material) will be generated separately when each article moves from `not started` to `outlined`.
+
+## Article 0 — Presentation of the project
+
+Working title: *"Predicting Bitcoin with machine learning: what this series is about."*
+
+The curtain-raiser. Frames the question (forecasting BTC log-returns as an ML problem), introduces the data and walk-forward evaluation at a high level, walks through the repo, and previews articles 1–5. No model, no results.
+
 ## Article 1 — Baselines you need to beat
 
-Working title: *"Forecasting Bitcoin with ML, Part 1: the problem, the data, and the baselines you need to beat."*
+Working title: *"Forecasting Bitcoin with ML, Part 1: the baselines you need to beat."*
 
-Carries the project-introduction load for the series. Frames the problem, the data, and the walk-forward evaluation methodology, then runs through naive / moving-average / ARIMA as the floor every later model must clear.
-
-- Source experiments: `experiments/01_baseline_naive/`, `experiments/01b_moving_average/`, `experiments/02_arima/`.
-- Raw material from prior series: `docs_original_finance/reports/01_baseline_naive.report.md`, `01b_moving_average.report.md`, `02_arima.report.md`. Pull numbers and structure; rewrite voice.
-- Key beats to surface:
-  - Why a one-line "predict the last value" baseline is hard to beat on short horizons.
-  - What walk-forward evaluation is and why it matters here (no look-ahead leakage).
-  - ARIMA as the strongest baseline — set up the recurring theme that simple models are hard to beat.
-- Open questions:
-  - How much methodology to put in article 1 vs. how much to recap in later articles.
+The first model article. Defines target and evaluation specifics, and runs naive / moving-average / ARIMA as the floor every later model must clear.
 
 ## Article 2 — XGBoost and feature engineering
 
 Working title: TBD. Candidate angle: *"When the features do the work — XGBoost on engineered Bitcoin features."*
 
-Classical-ML article. The point is that the model is generic and the features carry the signal — the opposite contract from the deep-learning articles that follow.
-
-- Source experiment: `experiments/03_gradient_boosting/`.
-- Raw material: `docs_original_finance/reports/03_gradient_boosting.report.md`.
-- Key beats to surface:
-  - What feature engineering looked like here (lagged returns, rolling stats, volatility, etc.).
-  - The "generic model + engineered features" contract.
-  - Honest result vs. ARIMA from article 1.
-- Open questions:
-  - Whether to spend any time on XGBoost mechanics (gradient boosting, second-order Taylor expansion, regularization) or assume reader familiarity.
+The classical-ML article. The model is generic, the features carry the signal — the opposite contract from the deep-learning articles that follow.
 
 ## Article 3 — LSTM
 
 Working title: TBD. Candidate angle: *"What an LSTM learns from a window of Bitcoin history."*
 
-First deep-learning article. The model now consumes a sequence (plus a few past covariates — volume, OHLC range and body) rather than the flat, hand-crafted feature vector that XGBoost was fed.
-
-- Source experiment: `experiments/04_lstm/`.
-- Raw material: `docs_original_finance/reports/04_lstm.report.md`.
-- Key beats to surface:
-  - Sequence length / window choice and what it implies.
-  - Training stability and what tuning actually mattered.
-  - Result vs. the classical methods — keep it honest if classical wins.
-- Open questions:
-  - How much LSTM architecture to explain (gates, cell state) vs. linking out.
+The first deep-learning article. The model now consumes a sequence (plus a few past covariates) rather than the hand-crafted feature vector that XGBoost was fed.
 
 ## Article 4 — Transformer
 
 Working title: TBD. Candidate angle: *"Attention on a price series — and what it changes (or doesn't)."*
 
-The titular model of the repo. Use the Temporal Fusion Transformer from Darts.
-
-- Source experiment: `experiments/05_transformer/`.
-- Raw material: `docs_original_finance/reports/05_transformer.report.md`.
-- Key beats to surface:
-  - What attention buys you on a time series (in plain English).
-  - TFT-specific bits (variable selection, gating) only if they actually mattered for this problem.
-  - Honest comparison vs. LSTM and ARIMA — don't pretend transformer wins if it doesn't.
-- Open questions:
-  - Whether to lean into the "the repo is named after this and ARIMA still won" angle if that's the result.
+The titular model of the repo. The Darts Temporal Fusion Transformer applied to BTC, compared honestly against LSTM and ARIMA.
 
 ## Article 5 — Zero-shot foundation models
 
 Working title: TBD. Candidate angle: *"What does a model that has never seen Bitcoin think Bitcoin will do?"*
 
-The capstone. Two off-the-shelf pretrained models (Chronos-2, TimesFM 2.5) run zero-shot on the BTC series — no training, no fine-tuning.
-
-- Source experiment: `experiments/06_pretrained/`.
-- Raw material: `docs_original_finance/reports/06_pretrained.report.md`.
-- Key beats to surface:
-  - What zero-shot forecasting means and why time-series foundation models exist.
-  - The probabilistic-forecast angle (Q10/Q50/Q90 bands) if the experiment surfaces it.
-  - Honest comparison vs. every prior article — how does a model that's never seen BTC compare to one that's trained on it?
-- Open questions:
-  - Whether to wrap the series with a "where this goes next" closing section, or save that for a separate epilogue.
+The capstone. Two off-the-shelf pretrained models (Chronos-2, TimesFM 2.5) run zero-shot on the BTC series — no training, no fine-tuning. Probabilistic forecasts via Q10/Q50/Q90 bands.
