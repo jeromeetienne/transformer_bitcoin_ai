@@ -18,7 +18,7 @@ Library: **darts** (`darts.models.BlockRNNModel(model='LSTM')`) on PyTorch Light
 
 ## Configuration
 
-From [experiments/04_lstm/config.yaml](../../experiments/04_lstm/config.yaml):
+From [experiments/04_lstm/configs/btc_4h_2024.yaml](../../experiments/04_lstm/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -47,7 +47,7 @@ Total bars: **2 009**. Train: **1 448**. Val: **160**. Test: **401**.
 
 ## Results — single fit
 
-From [experiments/04_lstm/results/metrics.json](../../experiments/04_lstm/results/metrics.json):
+From [experiments/04_lstm/results/btc_4h_2024/metrics.json](../../experiments/04_lstm/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -74,7 +74,7 @@ From [experiments/04_lstm/results/metrics.json](../../experiments/04_lstm/result
 
 ## Sweep — 6 (input_chunk_length, hidden_dim, n_rnn_layers, dropout) configs
 
-From [experiments/04_lstm/results/sweep.csv](../../experiments/04_lstm/results/sweep.csv) on the same 4h data slice. Sorted in source order; leaders bolded per column.
+From [experiments/04_lstm/results/btc_4h_2024/sweep.csv](../../experiments/04_lstm/results/btc_4h_2024/sweep.csv) on the same 4h data slice. Sorted in source order; leaders bolded per column.
 
 | icl | hidden | layers | dropout | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|---|---|---|
@@ -110,10 +110,10 @@ LSTM is **the first model in the lineup whose extra capacity does not pay back o
 
 ## Files produced
 
-- [experiments/04_lstm/results/metrics.json](../../experiments/04_lstm/results/metrics.json)
-- [experiments/04_lstm/results/predictions.parquet](../../experiments/04_lstm/results/predictions.parquet)
-- [experiments/04_lstm/results/plot.png](../../experiments/04_lstm/results/plot.png)
-- [experiments/04_lstm/results/sweep.csv](../../experiments/04_lstm/results/sweep.csv)
+- [experiments/04_lstm/results/btc_4h_2024/metrics.json](../../experiments/04_lstm/results/btc_4h_2024/metrics.json)
+- [experiments/04_lstm/results/btc_4h_2024/predictions.parquet](../../experiments/04_lstm/results/btc_4h_2024/predictions.parquet)
+- [experiments/04_lstm/results/btc_4h_2024/plot.png](../../experiments/04_lstm/results/btc_4h_2024/plot.png)
+- [experiments/04_lstm/results/btc_4h_2024/sweep.csv](../../experiments/04_lstm/results/btc_4h_2024/sweep.csv)
 
 ## How to reproduce
 

@@ -17,7 +17,7 @@ Library: **darts** (`darts.models.Chronos2Model`, with `darts.models.TimesFM2p5M
 
 ## Configuration
 
-From [experiments/06_pretrained/config.yaml](../../experiments/06_pretrained/config.yaml):
+From [experiments/06_pretrained/configs/btc_4h_2024.yaml](../../experiments/06_pretrained/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -38,7 +38,7 @@ Total bars: **2 009**. Train: **1 607** (Scaler-fit slice; the model itself does
 
 ## Results — single fit (Chronos-2 on 4h)
 
-From [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretrained/results/metrics.json):
+From [experiments/06_pretrained/results/btc_4h_2024/metrics.json](../../experiments/06_pretrained/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -71,7 +71,7 @@ From [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretr
 2. **RMSE leader despite mid-pack MAE.** MAE 519.78 sits $2.62 above ARIMA's 517.16 — within sweep-noise of the floor — but RMSE 780.99 is $1.43 *below* ARIMA's 782.42. Lower RMSE with similar MAE means **fewer outsized error bars** — the foundation model hedges effectively on the bars where the trained models miss big. The probabilistic prior on next-step values squeezes the tails of the error distribution.
 3. **dir_acc 0.5323 — second-best in the leaderboard, all without training on BTC.** Only ARIMA(1, 1, 1) finds more direction. The 120 M-parameter foundation model with no covariates beats the gradient booster (0.5365 → close, sets aside) and clearly beats the deep-learning models trained on this slice (LSTM 0.4938, TFT 0.4913).
 4. **The probabilistic head is the architectural novelty.** `num_samples = 200` per step and `quantiles = [0.1, 0.5, 0.9]` are produced explicitly. q10 and q90 are stored alongside the median in `predictions.parquet` and shown as a shaded band on `plot.png`. None of 01 – 05 produce calibrated prediction intervals. Interval coverage is *not* summarised in `metrics.json` — pulling `(close ∈ [pred_lo, pred_hi])` from the parquet would close that gap and is a clean follow-up analysis.
-5. **Backend was Chronos-2 in this run.** Earlier 1h artifacts ran with TimesFM 2.5 (different model family, different prior, very different result). The Chronos vs. TimesFM head-to-head — the design intent of this experiment, see [`config.yaml`](../../experiments/06_pretrained/config.yaml) — needs a sibling run with `backend: timesfm` on the same 4h slice. `make 06_pretrained_sweep` is the vehicle.
+5. **Backend was Chronos-2 in this run.** Earlier 1h artifacts ran with TimesFM 2.5 (different model family, different prior, very different result). The Chronos vs. TimesFM head-to-head — the design intent of this experiment, see [`config.yaml`](../../experiments/06_pretrained/configs/btc_4h_2024.yaml) — needs a sibling run with `backend: timesfm` on the same 4h slice. `make 06_pretrained_sweep` is the vehicle.
 
 ### Bottom line
 
@@ -89,9 +89,9 @@ From [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretr
 
 ## Files produced
 
-- [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretrained/results/metrics.json) (fresh 4h, Chronos-2)
-- [experiments/06_pretrained/results/predictions.parquet](../../experiments/06_pretrained/results/predictions.parquet)
-- [experiments/06_pretrained/results/plot.png](../../experiments/06_pretrained/results/plot.png)
+- [experiments/06_pretrained/results/btc_4h_2024/metrics.json](../../experiments/06_pretrained/results/btc_4h_2024/metrics.json) (fresh 4h, Chronos-2)
+- [experiments/06_pretrained/results/btc_4h_2024/predictions.parquet](../../experiments/06_pretrained/results/btc_4h_2024/predictions.parquet)
+- [experiments/06_pretrained/results/btc_4h_2024/plot.png](../../experiments/06_pretrained/results/btc_4h_2024/plot.png)
 
 ## How to reproduce
 

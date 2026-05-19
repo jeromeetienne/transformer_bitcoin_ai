@@ -15,18 +15,20 @@ Reverse-engineered from the existing reports in [docs_ml/reports/](reports/). Us
 
 ## Inputs
 
-Read these files for the experiment under report (substitute `${experiment_id}`, e.g. `02_arima`):
+The report covers a single `(experiment, trial)` pair. The trial name is the stem of the config filename — e.g. `experiments/02_arima/configs/btc_4h_2024.yaml` → trial `btc_4h_2024`, with artefacts under `experiments/02_arima/results/btc_4h_2024/`. Substitute `${experiment_id}` (e.g. `02_arima`) and `${trial}` (e.g. `btc_4h_2024`) throughout.
 
-- `experiments/${experiment_id}/config.yaml` — config table + data slice description
+Read these files for the experiment+trial under report:
+
+- `experiments/${experiment_id}/configs/${trial}.yaml` — config table + data slice description
 - `experiments/${experiment_id}/run.py` — what the model actually does (target definition, walk-forward shape, library used)
 - `experiments/${experiment_id}/README.md` — narrative source for "What this experiment is"
-- `experiments/${experiment_id}/results/metrics.json` — single-fit headline metrics
-- `experiments/${experiment_id}/results/sweep.csv` — if present, becomes the sweep section
-- `experiments/${experiment_id}/results/plot.png` — referenced under "Files produced"
+- `experiments/${experiment_id}/results/${trial}/metrics.json` — single-fit headline metrics
+- `experiments/${experiment_id}/results/${trial}/sweep.csv` — if present, becomes the sweep section
+- `experiments/${experiment_id}/results/${trial}/plot.png` — referenced under "Files produced"
 - `src/btc_ai/eval/metrics.py` — authoritative metric definitions (use these when explaining NaN, sign conventions, ppy, etc.)
 - `docs_ml/reports/*.report.md` — every prior report. **Required** for the cross-experiment leaderboard table and inline links to sibling reports.
 
-Do **not** rerun experiments, recompute metrics, or invent numbers. Every numeric value in the report must come verbatim from `metrics.json` / `sweep.csv` of the experiment being reported on, or from a sibling experiment's existing report.
+Do **not** rerun experiments, recompute metrics, or invent numbers. Every numeric value in the report must come verbatim from `metrics.json` / `sweep.csv` of the experiment+trial being reported on, or from a sibling experiment's existing report.
 
 ## Output
 
@@ -46,12 +48,12 @@ One paragraph naming the model class, what it predicts, and what makes this expe
 
 ## Configuration
 
-From [experiments/${experiment_id}/config.yaml](../../experiments/${experiment_id}/config.yaml):
+From [experiments/${experiment_id}/configs/${trial}.yaml](../../experiments/${experiment_id}/configs/${trial}.yaml):
 
 | Field | Value |
 |---|---|
 | symbol | `BTCUSDT` |
-| interval | `1h` |
+| interval | `4h` |
 | start | `2024-01-01` UTC (inclusive) |
 | end | `2024-12-01` UTC (exclusive) |
 | period | `monthly` |
@@ -62,7 +64,7 @@ Total bars: **N**. Train: **N**. (Val: **N**.) Test: **N**.
 
 ## Results — single fit (and the model's identifier if applicable, e.g. ARIMA(1,1,1))
 
-From [experiments/${experiment_id}/results/metrics.json](../../experiments/${experiment_id}/results/metrics.json):
+From [experiments/${experiment_id}/results/${trial}/metrics.json](../../experiments/${experiment_id}/results/${trial}/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -91,7 +93,7 @@ One paragraph of editorial after the table: which row leads which column, what f
 
 ## Sweep (omit if no `sweep.csv`)
 
-From [experiments/${experiment_id}/results/sweep.csv](../../experiments/${experiment_id}/results/sweep.csv) — same data slice, N configs:
+From [experiments/${experiment_id}/results/${trial}/sweep.csv](../../experiments/${experiment_id}/results/${trial}/sweep.csv) — same data slice, N configs:
 
 | <param columns…> | <metric columns…> |
 |---|---|
@@ -123,17 +125,19 @@ One short paragraph stating the headline finding, in bold where appropriate, plu
 
 ## Files produced
 
-- [experiments/${experiment_id}/results/metrics.json](../../experiments/${experiment_id}/results/metrics.json)
-- [experiments/${experiment_id}/results/predictions.parquet](../../experiments/${experiment_id}/results/predictions.parquet)
-- [experiments/${experiment_id}/results/plot.png](../../experiments/${experiment_id}/results/plot.png)
-- [experiments/${experiment_id}/results/sweep.csv](../../experiments/${experiment_id}/results/sweep.csv)  ← only if exists
+- [experiments/${experiment_id}/results/${trial}/metrics.json](../../experiments/${experiment_id}/results/${trial}/metrics.json)
+- [experiments/${experiment_id}/results/${trial}/predictions.parquet](../../experiments/${experiment_id}/results/${trial}/predictions.parquet)
+- [experiments/${experiment_id}/results/${trial}/plot.png](../../experiments/${experiment_id}/results/${trial}/plot.png)
+- [experiments/${experiment_id}/results/${trial}/sweep.csv](../../experiments/${experiment_id}/results/${trial}/sweep.csv)  ← only if exists
 
 ## How to reproduce
 
 ```
-make ${experiment_id}
-make ${experiment_id}_sweep   # only if there is a sweep target in the Makefile
+make ${experiment_id} CONFIG=experiments/${experiment_id}/configs/${trial}.yaml
+make ${experiment_id}_sweep CONFIG=experiments/${experiment_id}/configs/${trial}.yaml   # only if there is a sweep target in the Makefile
 ```
+
+(The CONFIG= override is optional when running the trial that matches the per-experiment Makefile's default `CONFIG ?=`; required for any other trial.)
 ```
 
 ## Style rules
@@ -170,8 +174,8 @@ The single-file synthesis across every per-experiment report. Lives at `docs_ml/
 Read these files for the global report:
 
 - Every `docs_ml/reports/*.report.md` (except `XX_global.report.md` itself). These are the audit trail; every number in the global report should be traceable to one of them.
-- Every `experiments/${experiment_id}/results/metrics.json` — for verbatim numeric values when reproducing leaderboard rows.
-- Every `experiments/${experiment_id}/results/sweep.csv` — only when the global report cites a sweep row (e.g. ARIMA's `(3, 1, 3)` AIC leader).
+- Every `experiments/${experiment_id}/results/${trial}/metrics.json` — for verbatim numeric values when reproducing leaderboard rows.
+- Every `experiments/${experiment_id}/results/${trial}/sweep.csv` — only when the global report cites a sweep row (e.g. ARIMA's `(3, 1, 3)` AIC leader).
 - [`src/btc_ai/eval/metrics.py`](../src/btc_ai/eval/metrics.py) — for NaN semantics and the `periods_per_year` mapping used in the per-bar Sharpe significance table.
 - [`docs_ml/articles_todo.md`](articles_todo.md) — to keep the "where this goes next" section pointed at the right downstream consumer.
 

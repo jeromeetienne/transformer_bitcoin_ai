@@ -21,8 +21,8 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
-RESULTS_DIR = EXPERIMENT_DIR / 'results'
+# results_dir is derived inside main() from the config filename stem
+# (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
 CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
 
 # Edit this list to change which (p, d, q) orders the sweep evaluates.
@@ -54,8 +54,11 @@ def main() -> None:
         parser = argparse.ArgumentParser(
                 description='Sweep ARIMA orders on the same data slice as run.py.',
         )
-        parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+        parser.add_argument('--config', type=Path, required=True)
         args = parser.parse_args()
+
+        results_dir = EXPERIMENT_DIR / 'results' / args.config.stem
+        results_dir.mkdir(parents=True, exist_ok=True)
 
         cfg = load_yaml(args.config)
         req = kline_request_from_config(cfg)
@@ -115,8 +118,7 @@ def main() -> None:
                 except Exception as exc:  # noqa: BLE001
                         print(f'{str(order):<11} FAILED: {exc}')
 
-        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        out = RESULTS_DIR / 'sweep.csv'
+        out = results_dir / 'sweep.csv'
         with open(out, 'w', newline='') as f:
                 writer = csv.DictWriter(f, fieldnames=header)
                 writer.writeheader()

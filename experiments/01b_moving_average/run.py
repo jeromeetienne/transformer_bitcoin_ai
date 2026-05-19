@@ -23,8 +23,8 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
-RESULTS_DIR = EXPERIMENT_DIR / 'results'
+# results_dir is derived inside main() from the config filename stem
+# (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
 CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
 
 logger = logging.getLogger(__name__)
@@ -34,8 +34,11 @@ def main() -> None:
         logging.basicConfig(level=logging.INFO, format='%(levelname)s %(name)s: %(message)s')
 
         parser = argparse.ArgumentParser(description='Moving-average baseline.')
-        parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+        parser.add_argument('--config', type=Path, required=True)
         args = parser.parse_args()
+
+        results_dir = EXPERIMENT_DIR / 'results' / args.config.stem
+        results_dir.mkdir(parents=True, exist_ok=True)
 
         cfg = load_yaml(args.config)
         req = kline_request_from_config(cfg)
@@ -78,8 +81,7 @@ def main() -> None:
                 'annualized_sharpe': annualized_sharpe(strat, ppy),
         }
 
-        RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        (RESULTS_DIR / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
+        (results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
 
         predictions = pd.DataFrame({
                 'close': test,
@@ -87,7 +89,7 @@ def main() -> None:
                 'ref': ref,
                 'strategy_return': strat,
         })
-        predictions.to_parquet(RESULTS_DIR / 'predictions.parquet')
+        predictions.to_parquet(results_dir / 'predictions.parquet')
 
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(test.index, test.values, label='close', linewidth=1)
@@ -98,7 +100,7 @@ def main() -> None:
         ax.set_ylabel('price')
         ax.legend()
         fig.tight_layout()
-        fig.savefig(RESULTS_DIR / 'plot.png', dpi=120)
+        fig.savefig(results_dir / 'plot.png', dpi=120)
         plt.close(fig)
 
         print(json.dumps(metrics, indent=2))

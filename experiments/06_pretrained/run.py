@@ -29,8 +29,8 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
-RESULTS_DIR = EXPERIMENT_DIR / 'results'
+# results_dir is derived inside main() from the config filename stem
+# (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
 CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
 
 VALID_BACKENDS: tuple[str, ...] = ('chronos', 'timesfm')
@@ -232,15 +232,17 @@ def main() -> None:
 	parser = argparse.ArgumentParser(
 		description='Zero-shot Chronos-2 / TimesFM 2.5 on 1h log-returns.',
 	)
-	parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+	parser.add_argument('--config', type=Path, required=True)
 	args = parser.parse_args()
+
+	results_dir = EXPERIMENT_DIR / 'results' / args.config.stem
+	results_dir.mkdir(parents=True, exist_ok=True)
 
 	cfg = load_yaml(args.config)
 	metrics, predictions = train_and_evaluate(cfg)
 
-	RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-	(RESULTS_DIR / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
-	predictions.to_parquet(RESULTS_DIR / 'predictions.parquet')
+	(results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
+	predictions.to_parquet(results_dir / 'predictions.parquet')
 
 	req = kline_request_from_config(cfg)
 	label = f'{metrics["backend"]} ({metrics["hub_model_name"]})'
@@ -266,7 +268,7 @@ def main() -> None:
 	ax.set_ylabel('price')
 	ax.legend()
 	fig.tight_layout()
-	fig.savefig(RESULTS_DIR / 'plot.png', dpi=120)
+	fig.savefig(results_dir / 'plot.png', dpi=120)
 	plt.close(fig)
 
 	print(json.dumps(metrics, indent=2))

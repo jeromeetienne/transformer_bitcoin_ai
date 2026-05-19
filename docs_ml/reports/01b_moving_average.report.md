@@ -15,7 +15,7 @@ No training, no parameters fit, no walk-forward in the model-fitting sense — t
 
 ## Configuration
 
-From [experiments/01b_moving_average/config.yaml](../../experiments/01b_moving_average/config.yaml):
+From [experiments/01b_moving_average/configs/btc_4h_2024.yaml](../../experiments/01b_moving_average/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -31,7 +31,7 @@ Total bars: **2 010**. Test: **402**. (No train slice in the fitting sense.)
 
 ## Results — single fit
 
-From [experiments/01b_moving_average/results/metrics.json](../../experiments/01b_moving_average/results/metrics.json):
+From [experiments/01b_moving_average/results/btc_4h_2024/metrics.json](../../experiments/01b_moving_average/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -76,9 +76,9 @@ MA(24) lags trends mechanically and **breaks naive's MAE floor by a factor of 3.
 
 ## Files produced
 
-- [experiments/01b_moving_average/results/metrics.json](../../experiments/01b_moving_average/results/metrics.json)
-- [experiments/01b_moving_average/results/predictions.parquet](../../experiments/01b_moving_average/results/predictions.parquet)
-- [experiments/01b_moving_average/results/plot.png](../../experiments/01b_moving_average/results/plot.png)
+- [experiments/01b_moving_average/results/btc_4h_2024/metrics.json](../../experiments/01b_moving_average/results/btc_4h_2024/metrics.json)
+- [experiments/01b_moving_average/results/btc_4h_2024/predictions.parquet](../../experiments/01b_moving_average/results/btc_4h_2024/predictions.parquet)
+- [experiments/01b_moving_average/results/btc_4h_2024/plot.png](../../experiments/01b_moving_average/results/btc_4h_2024/plot.png)
 
 ## How to reproduce
 

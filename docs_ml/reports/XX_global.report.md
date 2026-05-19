@@ -5,7 +5,7 @@
 
 ## What this report is
 
-A single-file leaderboard and analytical comparison of every experiment in the repo: [01_baseline_naive](01_baseline_naive.report.md), [01b_moving_average](01b_moving_average.report.md), [02_arima](02_arima.report.md), [03_gradient_boosting](03_gradient_boosting.report.md), [04_lstm](04_lstm.report.md), [05_transformer](05_transformer.report.md), [06_pretrained](06_pretrained.report.md). Every number cited here is verbatim from the corresponding `experiments/${id}/results/metrics.json`; the per-experiment reports are the audit trail.
+A single-file leaderboard and analytical comparison of every experiment in the repo: [01_baseline_naive](01_baseline_naive.report.md), [01b_moving_average](01b_moving_average.report.md), [02_arima](02_arima.report.md), [03_gradient_boosting](03_gradient_boosting.report.md), [04_lstm](04_lstm.report.md), [05_transformer](05_transformer.report.md), [06_pretrained](06_pretrained.report.md). Every number cited here is verbatim from the corresponding `experiments/${id}/results/btc_4h_2024/metrics.json`; the per-experiment reports are the audit trail.
 
 Sections progress from raw numbers to analytical observations. The intent is not to repeat what the per-experiment reports already say but to put the rows side-by-side and read the *gradient* across the ladder of model classes.
 
@@ -119,7 +119,7 @@ A leaderboard reader can mistake any of these for a missing run. They are not. T
 
 Two checks land cleanly in the artefacts:
 
-1. **02 sweep's `(0, 1, 0)` row reports MAE 518.358631840796** — bit-identical to [01_baseline_naive's metrics.json](../../experiments/01_baseline_naive/results/metrics.json) MAE. The random-walk ARIMA *is* the naive predictor; identical numbers confirm the data slice, the split index, and the metric implementation are shared.
+1. **02 sweep's `(0, 1, 0)` row reports MAE 518.358631840796** — bit-identical to [01_baseline_naive's metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json) MAE. The random-walk ARIMA *is* the naive predictor; identical numbers confirm the data slice, the split index, and the metric implementation are shared.
 2. **06_pretrained's RMSE (780.99) is below 02_arima's RMSE (782.42) while its MAE is above 02's** — a non-trivial consistency check on the metric implementation: RMSE and MAE can disagree on ranking when the error distribution has different tails, which the implementation correctly reflects. Squared-error penalises outliers more than absolute-error.
 
 Two checks that *don't* exist yet but would be useful:
@@ -181,7 +181,7 @@ Operational follow-ups surfaced by the per-experiment reports:
 - One seed per row for the stochastic trainers (XGBoost, LSTM, TFT, foundation models).
 - Long / flat strategy, no shorting, no transaction costs, no slippage.
 - Single test regime (Q4-2024 BTC rally). See [Regime caveat](#regime-caveat).
-- All numbers above are copied verbatim from `experiments/${id}/results/metrics.json` and the per-experiment reports. No values are recomputed in this document.
+- All numbers above are copied verbatim from `experiments/${id}/results/btc_4h_2024/metrics.json` and the per-experiment reports. No values are recomputed in this document.
 
 ## Source artefacts
 

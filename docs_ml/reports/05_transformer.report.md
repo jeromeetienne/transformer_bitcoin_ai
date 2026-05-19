@@ -19,7 +19,7 @@ Library: **darts** (`darts.models.TFTModel`) on PyTorch Lightning. Walk-forward 
 
 ## Configuration
 
-From [experiments/05_transformer/config.yaml](../../experiments/05_transformer/config.yaml):
+From [experiments/05_transformer/configs/btc_4h_2024.yaml](../../experiments/05_transformer/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -52,7 +52,7 @@ Total bars: **2 009**. Train: **1 448**. Val: **160**. Test: **401**.
 
 ## Results — single fit
 
-From [experiments/05_transformer/results/metrics.json](../../experiments/05_transformer/results/metrics.json):
+From [experiments/05_transformer/results/btc_4h_2024/metrics.json](../../experiments/05_transformer/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -81,7 +81,7 @@ From [experiments/05_transformer/results/metrics.json](../../experiments/05_tran
 
 ## Sweep — stale 1h artifact
 
-> **Stale-slice warning.** [experiments/05_transformer/results/sweep.csv](../../experiments/05_transformer/results/sweep.csv) was last regenerated on 2026-04-29 against the previous 1h slice (5 789 training rows, 1 607 test rows). The single-fit `metrics.json` above is fresh on 4h. The sweep MAE figures (range 373–420 USD) are on the 1h scale and **not directly comparable** to the headline numbers above. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 05_transformer_sweep`.
+> **Stale-slice warning.** [experiments/05_transformer/results/btc_4h_2024/sweep.csv](../../experiments/05_transformer/results/btc_4h_2024/sweep.csv) was last regenerated on 2026-04-29 against the previous 1h slice (5 789 training rows, 1 607 test rows). The single-fit `metrics.json` above is fresh on 4h. The sweep MAE figures (range 373–420 USD) are on the 1h scale and **not directly comparable** to the headline numbers above. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 05_transformer_sweep`.
 
 ## Interpretation
 
@@ -108,10 +108,10 @@ TFT on 4h reports **MAE 813.10 (worst in the 4h leaderboard) / dir_acc 0.4913 (b
 
 ## Files produced
 
-- [experiments/05_transformer/results/metrics.json](../../experiments/05_transformer/results/metrics.json) (fresh 4h)
-- [experiments/05_transformer/results/predictions.parquet](../../experiments/05_transformer/results/predictions.parquet) (fresh 4h)
-- [experiments/05_transformer/results/plot.png](../../experiments/05_transformer/results/plot.png) (fresh 4h)
-- [experiments/05_transformer/results/sweep.csv](../../experiments/05_transformer/results/sweep.csv) (**stale 1h**)
+- [experiments/05_transformer/results/btc_4h_2024/metrics.json](../../experiments/05_transformer/results/btc_4h_2024/metrics.json) (fresh 4h)
+- [experiments/05_transformer/results/btc_4h_2024/predictions.parquet](../../experiments/05_transformer/results/btc_4h_2024/predictions.parquet) (fresh 4h)
+- [experiments/05_transformer/results/btc_4h_2024/plot.png](../../experiments/05_transformer/results/btc_4h_2024/plot.png) (fresh 4h)
+- [experiments/05_transformer/results/btc_4h_2024/sweep.csv](../../experiments/05_transformer/results/btc_4h_2024/sweep.csv) (**stale 1h**)
 
 ## How to reproduce
 

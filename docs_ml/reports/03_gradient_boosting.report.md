@@ -19,7 +19,7 @@ Library: **xgboost** (`xgb.XGBRegressor` with `tree_method='hist'`). Walk-forwar
 
 ## Configuration
 
-From [experiments/03_gradient_boosting/config.yaml](../../experiments/03_gradient_boosting/config.yaml):
+From [experiments/03_gradient_boosting/configs/btc_4h_2024.yaml](../../experiments/03_gradient_boosting/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -45,7 +45,7 @@ Total bars: **1 985** (25 rows dropped by lag / rolling-window construction). Tr
 
 ## Results — single fit
 
-From [experiments/03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json):
+From [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -72,7 +72,7 @@ From [experiments/03_gradient_boosting/results/metrics.json](../../experiments/0
 
 ## Sweep — 8 (n_estimators, max_depth, learning_rate) configs
 
-> **Stale-slice warning.** The contents of [experiments/03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv) date from the previous 1h-data run and have **not** been regenerated since commit 81d4fcb (kline interval switch). The single-fit `metrics.json` above is fresh on 4h (MAE 539). The sweep MAEs (range 269–276) are on the 1h scale and **not directly comparable** to the headline numbers. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 03_gradient_boosting_sweep`.
+> **Stale-slice warning.** The contents of [experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv](../../experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv) date from the previous 1h-data run and have **not** been regenerated since commit 81d4fcb (kline interval switch). The single-fit `metrics.json` above is fresh on 4h (MAE 539). The sweep MAEs (range 269–276) are on the 1h scale and **not directly comparable** to the headline numbers. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 03_gradient_boosting_sweep`.
 
 From the stale sweep, sorted in source order, leaders bolded per column:
 
@@ -112,10 +112,10 @@ XGBoost on 31 engineered features takes the 4h Sharpe to **6.4233** and cum_ret 
 
 ## Files produced
 
-- [experiments/03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json) (fresh 4h)
-- [experiments/03_gradient_boosting/results/predictions.parquet](../../experiments/03_gradient_boosting/results/predictions.parquet)
-- [experiments/03_gradient_boosting/results/plot.png](../../experiments/03_gradient_boosting/results/plot.png)
-- [experiments/03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv) (**stale 1h**)
+- [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json) (fresh 4h)
+- [experiments/03_gradient_boosting/results/btc_4h_2024/predictions.parquet](../../experiments/03_gradient_boosting/results/btc_4h_2024/predictions.parquet)
+- [experiments/03_gradient_boosting/results/btc_4h_2024/plot.png](../../experiments/03_gradient_boosting/results/btc_4h_2024/plot.png)
+- [experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv](../../experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv) (**stale 1h**)
 
 ## How to reproduce
 

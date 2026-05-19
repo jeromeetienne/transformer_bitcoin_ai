@@ -37,8 +37,8 @@ class PruningCallback(Callback):
 			raise optuna.TrialPruned(f'pruned at epoch {epoch}')
 
 EXPERIMENT_DIR = Path(__file__).parent
-DEFAULT_CONFIG = EXPERIMENT_DIR / 'config.yaml'
-RESULTS_DIR = EXPERIMENT_DIR / 'results'
+# results_dir is derived inside main() from the config filename stem
+# (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
 STUDY_NAME = '05_transformer'
 
 VALID_OBJECTIVES = {
@@ -132,8 +132,11 @@ def main() -> None:
 			'on the same data slice as run.py.'
 		),
 	)
-	parser.add_argument('--config', type=Path, default=DEFAULT_CONFIG)
+	parser.add_argument('--config', type=Path, required=True)
 	args = parser.parse_args()
+
+	results_dir = EXPERIMENT_DIR / 'results' / args.config.stem
+	results_dir.mkdir(parents=True, exist_ok=True)
 
 	cfg = load_yaml(args.config)
 	opt_cfg = require(cfg, 'optuna', 'config')
@@ -149,8 +152,7 @@ def main() -> None:
 		)
 	seed = int(require(opt_cfg, 'seed', 'optuna'))
 
-	RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-	storage_path = RESULTS_DIR / 'optuna_study.db'
+	storage_path = results_dir / 'optuna_study.db'
 	storage_url = f'sqlite:///{storage_path}'
 
 	print(f'study={STUDY_NAME!r} storage={storage_url}')
@@ -171,7 +173,7 @@ def main() -> None:
 		timeout=timeout_seconds,
 	)
 
-	trials_csv = RESULTS_DIR / 'optuna_trials.csv'
+	trials_csv = results_dir / 'optuna_trials.csv'
 	study.trials_dataframe().to_csv(trials_csv, index=False)
 
 	pruned = sum(1 for t in study.trials if t.state == optuna.trial.TrialState.PRUNED)
@@ -188,11 +190,11 @@ def main() -> None:
 		'best_params': study.best_params if complete > 0 else None,
 		'best_trial_number': study.best_trial.number if complete > 0 else None,
 	}
-	(RESULTS_DIR / 'optuna_best.json').write_text(json.dumps(best_json, indent=2) + '\n')
+	(results_dir / 'optuna_best.json').write_text(json.dumps(best_json, indent=2) + '\n')
 
 	print(json.dumps(best_json, indent=2))
 	print(f'\nwrote {trials_csv}')
-	print(f'wrote {RESULTS_DIR / "optuna_best.json"}')
+	print(f'wrote {results_dir / "optuna_best.json"}')
 	print('\nlaunch dashboard: make 05_transformer_optuna_dashboard')
 
 

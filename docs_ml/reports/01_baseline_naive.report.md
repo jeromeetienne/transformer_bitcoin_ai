@@ -15,7 +15,7 @@ No training, no parameters, no walk-forward in the model-fitting sense — predi
 
 ## Configuration
 
-From [experiments/01_baseline_naive/config.yaml](../../experiments/01_baseline_naive/config.yaml):
+From [experiments/01_baseline_naive/configs/btc_4h_2024.yaml](../../experiments/01_baseline_naive/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -30,7 +30,7 @@ Total bars: **2 010**. Test: **402**. (No train slice — there is nothing to fi
 
 ## Results — single fit
 
-From [experiments/01_baseline_naive/results/metrics.json](../../experiments/01_baseline_naive/results/metrics.json):
+From [experiments/01_baseline_naive/results/btc_4h_2024/metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -74,9 +74,9 @@ The naive baseline reports **MAE 518.36 / RMSE 784.09 / NaN dir_acc** on a 402-b
 
 ## Files produced
 
-- [experiments/01_baseline_naive/results/metrics.json](../../experiments/01_baseline_naive/results/metrics.json)
-- [experiments/01_baseline_naive/results/predictions.parquet](../../experiments/01_baseline_naive/results/predictions.parquet)
-- [experiments/01_baseline_naive/results/plot.png](../../experiments/01_baseline_naive/results/plot.png)
+- [experiments/01_baseline_naive/results/btc_4h_2024/metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json)
+- [experiments/01_baseline_naive/results/btc_4h_2024/predictions.parquet](../../experiments/01_baseline_naive/results/btc_4h_2024/predictions.parquet)
+- [experiments/01_baseline_naive/results/btc_4h_2024/plot.png](../../experiments/01_baseline_naive/results/btc_4h_2024/plot.png)
 
 ## How to reproduce
 

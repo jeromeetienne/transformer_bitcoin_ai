@@ -18,7 +18,7 @@ Library: **statsmodels** (`statsmodels.tsa.arima.model.ARIMA`). Walk-forward sha
 
 ## Configuration
 
-From [experiments/02_arima/config.yaml](../../experiments/02_arima/config.yaml):
+From [experiments/02_arima/configs/btc_4h_2024.yaml](../../experiments/02_arima/configs/btc_4h_2024.yaml):
 
 | Field | Value |
 |---|---|
@@ -34,7 +34,7 @@ Total bars: **2 010**. Train: **1 608**. Test: **402**.
 
 ## Results — single fit (ARIMA(1, 1, 1))
 
-From [experiments/02_arima/results/metrics.json](../../experiments/02_arima/results/metrics.json):
+From [experiments/02_arima/results/btc_4h_2024/metrics.json](../../experiments/02_arima/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -63,7 +63,7 @@ From [experiments/02_arima/results/metrics.json](../../experiments/02_arima/resu
 
 ## Sweep — 12 (p, d, q) orders
 
-From [experiments/02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) on the same 4h data slice. Sorted in source order (Box-Jenkins canonical ramp + endpoints). Leaders bolded per column.
+From [experiments/02_arima/results/btc_4h_2024/sweep.csv](../../experiments/02_arima/results/btc_4h_2024/sweep.csv) on the same 4h data slice. Sorted in source order (Box-Jenkins canonical ramp + endpoints). Leaders bolded per column.
 
 | order | AIC | BIC | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|---|---|
@@ -85,7 +85,7 @@ The (3, 1, 3) row leads on five columns simultaneously: AIC, MAE, RMSE, MAPE, cu
 ## Interpretation
 
 1. **AIC and Sharpe agree on (3, 1, 3).** Lowest AIC (25 543.88), lowest MAE (514.07), highest Sharpe (6.40). Unusually, the in-sample selection criterion picks the same order the out-of-sample trading metric prefers. The disagreement that *does* show up is between AIC/Sharpe and **directional accuracy** — the configured (1, 1, 1) leads dir_acc at 0.5547, while (3, 1, 3) is at 0.5274 despite a richer AR / MA spec. Different criteria can rank differently; this sweep makes that visible.
-2. **(0, 1, 0) returns the naive baseline exactly.** AIC 25 546.20 with MAE 518.358631840796 — bit-identical to [01_baseline_naive's metrics.json](../../experiments/01_baseline_naive/results/metrics.json). That row is the random-walk specification (no AR, no MA, one difference); mathematically it *is* `close_pred[t] = close[t-1]`. Pipeline sanity check passes.
+2. **(0, 1, 0) returns the naive baseline exactly.** AIC 25 546.20 with MAE 518.358631840796 — bit-identical to [01_baseline_naive's metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json). That row is the random-walk specification (no AR, no MA, one difference); mathematically it *is* `close_pred[t] = close[t-1]`. Pipeline sanity check passes.
 3. **(1, 0, 1) — only un-differenced order in the sweep — collapses on Sharpe** to 0.5560. Differencing is load-bearing: BTC price levels are non-stationary, and an ARMA without differencing fits the level and fails the strategy. d ≥ 1 is non-optional.
 4. **MAE differences between (1, 1, 1) and (3, 1, 3) are $3** on a 402-bar slice. On a different split, the rank order between them could flip. The robust reading is that *both* are useful, with (3, 1, 3) more aggressive on direction and (1, 1, 1) marginally better at the no-opinion direction-call.
 5. **(5, 1, 5) is the overfit shape.** Higher AIC than smaller orders, worse MAE, lower Sharpe than (3, 1, 3) — extra AR / MA coefficients past 3 deliver no signal on this data slice and add variance.
@@ -104,10 +104,10 @@ ARIMA(1, 1, 1) ties naive on MAE within **$1.20** (517.16 vs. 518.36) and takes 
 
 ## Files produced
 
-- [experiments/02_arima/results/metrics.json](../../experiments/02_arima/results/metrics.json)
-- [experiments/02_arima/results/predictions.parquet](../../experiments/02_arima/results/predictions.parquet)
-- [experiments/02_arima/results/plot.png](../../experiments/02_arima/results/plot.png)
-- [experiments/02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv)
+- [experiments/02_arima/results/btc_4h_2024/metrics.json](../../experiments/02_arima/results/btc_4h_2024/metrics.json)
+- [experiments/02_arima/results/btc_4h_2024/predictions.parquet](../../experiments/02_arima/results/btc_4h_2024/predictions.parquet)
+- [experiments/02_arima/results/btc_4h_2024/plot.png](../../experiments/02_arima/results/btc_4h_2024/plot.png)
+- [experiments/02_arima/results/btc_4h_2024/sweep.csv](../../experiments/02_arima/results/btc_4h_2024/sweep.csv)
 
 ## How to reproduce
 
