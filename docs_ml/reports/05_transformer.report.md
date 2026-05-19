@@ -1,13 +1,11 @@
 # Report — `05_transformer`
 
-**Run date:** 2026-04-29
-**Status:** completed (single fit + 6-config sweep) — **on stale 1h slice; pending re-run on 4h**
-
-> The `config.yaml` for this experiment now declares `interval: 4h` (matching commit 81d4fcb's project-wide kline switch), but the `metrics.json` and `sweep.csv` artefacts in this report were last regenerated on **2026-04-29** against the previous 1h slice. Total bars 8 039 / test 1 607 corresponds to 1h, not 4h (which would give ~2 010 / 402, as seen in 01–04). All numbers below are honest reports of the artefacts on disk; they are **not** comparable to the 4h leaderboard in 01–04's reports.
+**Run date:** 2026-05-19
+**Status:** completed (single fit on fresh 4h slice). Sweep present but **stale on 1h** — pending re-run via `make 05_transformer_sweep`.
 
 ## What this experiment is
 
-First **attention-based** model in the lineup. Fits a Darts Temporal Fusion Transformer with separate past- and future-covariate channels and the bar-T log-return as target. Predictions are reconstructed to price as `close_pred = close[t-1] * exp(r_pred)`. Differentiator vs. 04_lstm: attention over an explicit time window (can look at any past step directly instead of compressing it into a hidden state), plus a future-covariate channel — cyclical encodings of hour-of-day and day-of-week — that TFT can legitimately consume at prediction time because they are deterministic functions of the timestamp.
+First **attention-based** model in the lineup. Fits a Darts Temporal Fusion Transformer with separate past- and future-covariate channels and the bar-T log-return as target. Predictions are reconstructed to price as `close_pred = close[t-1] * exp(r_pred)`. Differentiator vs. [04_lstm](04_lstm.report.md): attention over an explicit time window (any past step can be addressed directly instead of compressed into a hidden state), plus a future-covariate channel — cyclical encodings of hour-of-day and day-of-week — that TFT can legitimately consume at prediction time because they are deterministic functions of the timestamp.
 
 ```
 TFT
@@ -17,7 +15,7 @@ TFT
    └── gated residual networks       (feature mixing & skips)
 ```
 
-Library: **darts** (`darts.models.TFTModel`) on PyTorch Lightning. Walk-forward shape: `model.historical_forecasts(start=test_start, forecast_horizon=1, retrain=False, last_points_only=True)`. Same harness as [04_lstm](04_lstm.report.md) so the two are directly comparable when *both* are on the same slice (they currently are not). See [experiments/05_transformer/README.md](../../experiments/05_transformer/README.md) for the full narrative.
+Library: **darts** (`darts.models.TFTModel`) on PyTorch Lightning. Walk-forward shape: `model.historical_forecasts(start=test_start, forecast_horizon=1, retrain=False, last_points_only=True)`. Same harness as [04_lstm](04_lstm.report.md); only the model class and the future-covariate channel differ. See [experiments/05_transformer/README.md](../../experiments/05_transformer/README.md) for the full narrative.
 
 ## Configuration
 
@@ -26,7 +24,7 @@ From [experiments/05_transformer/config.yaml](../../experiments/05_transformer/c
 | Field | Value |
 |---|---|
 | symbol | `BTCUSDT` |
-| interval | `4h` (config) — **1h on the stale artefacts** |
+| interval | `4h` |
 | start | `2024-01-01` UTC (inclusive) |
 | end | `2024-12-01` UTC (exclusive) |
 | period | `monthly` |
@@ -34,7 +32,7 @@ From [experiments/05_transformer/config.yaml](../../experiments/05_transformer/c
 | covariates.use_volume | `true` |
 | covariates.use_ohlc | `true` |
 | covariates.use_time_features | `true` |
-| model.input_chunk_length | `48` |
+| model.input_chunk_length | `48` (= 8 days at 4h) |
 | model.output_chunk_length | `1` |
 | model.hidden_size | `32` |
 | model.lstm_layers | `1` |
@@ -50,77 +48,69 @@ From [experiments/05_transformer/config.yaml](../../experiments/05_transformer/c
 | training.val_fraction | `0.1` |
 | training.early_stopping_patience | `5` |
 
-Total bars on the stale 1h artefact: **8 039**. Train: **5 789**. Val: **643**. Test: **1 607**.
+Total bars: **2 009**. Train: **1 448**. Val: **160**. Test: **401**.
 
-## Results — single fit (on stale 1h slice)
+## Results — single fit
 
 From [experiments/05_transformer/results/metrics.json](../../experiments/05_transformer/results/metrics.json):
 
 | Metric | Value |
 |---|---|
-| MAE | 373.70 USD |
-| RMSE | 546.68 USD |
-| MAPE | 0.4879 % |
-| Directional accuracy | 0.5053 |
-| Cumulative return | 0.2957 |
-| Annualized Sharpe | 4.5864 |
-
-The MAE 373.70 is **lower** than every 4h number reported in 01–04 — but only because it is computed over 1h bars on a different prediction horizon. It is not a TFT advantage; it is an interval artefact. The honest comparison is the 1h-only leaderboard below.
+| MAE | 813.10 USD |
+| RMSE | 1 090.78 USD |
+| MAPE | 1.0786 % |
+| Directional accuracy | **0.4913** (below coin-flip — see Interpretation) |
+| Cumulative return | 0.4468 |
+| Annualized Sharpe | 5.8675 |
 
 ## Cross-experiment comparison
 
-1h-slice leaderboard. Same data slice, same split, same metrics. Only experiments still on the stale 1h slice appear here.
+4h-slice leaderboard. Same data slice, same split, same metrics:
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| **05_transformer** | 373.70 | 546.68 | 0.4879 % | **0.5053** | **0.2957** | **4.5864** |
-| [06_pretrained (timesfm)](06_pretrained.report.md) | **268.89** | **405.14** | **0.3521 %** | 0.4677 | 0.1690 | 2.4444 |
+| [01_baseline_naive](01_baseline_naive.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
+| [01b_moving_average (window=24)](01b_moving_average.report.md) | 1 905.27 | 2 580.61 | 2.4782 % | 0.4801 | 0.0511 | 1.3003 |
+| [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | 782.42 | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
+| [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
+| [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
+| **05_transformer** | 813.10 | 1 090.78 | 1.0786 % | 0.4913 | 0.4468 | 5.8675 |
+| [06_pretrained (chronos-2)](06_pretrained.report.md) | 519.78 | **780.99** | 0.6721 % | 0.5323 | **0.6975** | **7.5915** |
 
-On the 1h slice, 05_transformer leads the trading metrics (dir_acc, cum_ret, Sharpe) and 06_pretrained leads point error (MAE, RMSE, MAPE). The split is informative: a trained model with covariates squeezes more direction out of the slice than a zero-shot 200M-parameter generic prior does — and the zero-shot model returns a lower MAE because it commits less to a direction. (Experiments 01–04 are on the fresh 4h slice; their reports contain a separate leaderboard.)
+05_transformer has **the worst MAE in the 4h leaderboard** at 813.10 — **57 % worse than naive's 518.36** and **51 % worse than the next-worst trained model** (03_gradient_boosting at 539.39). dir_acc 0.4913 is below coin-flip and essentially tied with LSTM's 0.4938. Sharpe 5.8675 is decent but trails 06_pretrained's 7.5915 and the ARIMA / XGBoost cluster around 6.0–6.4. **The TFT's extra architectural capacity does not pay off on the 4h training set of 1 448 rows.**
 
-## Sweep — 6 (input_chunk_length, hidden_size, num_attention_heads, lstm_layers, dropout) configs
+## Sweep — stale 1h artifact
 
-From [experiments/05_transformer/results/sweep.csv](../../experiments/05_transformer/results/sweep.csv), still on the stale 1h slice. Sorted in source order; leaders bolded per column.
-
-| icl | hidden | heads | layers | dropout | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 24 | 16 | 2 | 1 | 0.1 | 398.59 | 580.50 | 0.5232 % | 0.5028 | **0.3008** | 4.3677 |
-| **48** | **32** | **4** | **1** | **0.1** | **373.70** | **546.68** | **0.4879 %** | 0.5053 | 0.2957 | 4.5864 |
-| 48 | 32 | 4 | 2 | 0.2 | 420.61 | 605.08 | 0.5538 % | 0.4984 | 0.2898 | 4.1173 |
-| 48 | 64 | 8 | 1 | 0.1 | 392.46 | 574.22 | 0.5127 % | **0.5109** | 0.3076 | **4.8331** |
-| 96 | 32 | 4 | 1 | 0.1 | 409.96 | 601.69 | 0.5412 % | 0.4984 | 0.2294 | 3.4472 |
-| 96 | 64 | 8 | 2 | 0.2 | 395.20 | 610.71 | 0.5119 % | 0.5047 | 0.3095 | 4.4670 |
-
-The default config `(48, 32, 4, 1, 0.1)` leads on MAE / RMSE / MAPE; the wider config `(48, 64, 8, 1, 0.1)` leads on dir_acc and Sharpe. Larger `input_chunk_length` (96 bars) consistently underperforms — extra history does not help on a near-i.i.d. signal.
+> **Stale-slice warning.** [experiments/05_transformer/results/sweep.csv](../../experiments/05_transformer/results/sweep.csv) was last regenerated on 2026-04-29 against the previous 1h slice (5 789 training rows, 1 607 test rows). The single-fit `metrics.json` above is fresh on 4h. The sweep MAE figures (range 373–420 USD) are on the 1h scale and **not directly comparable** to the headline numbers above. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 05_transformer_sweep`.
 
 ## Interpretation
 
-1. **The 1h slice is what is on disk.** Total rows 8 039 corresponds to roughly 24h × 335 days ≈ 8 040 hourly bars; the 4h slice would have ~2 010. The `interval: 4h` in the current config has not been propagated through to the artefacts. Re-running with `make 05_transformer` will overwrite `metrics.json` and `sweep.csv` against the 4h slice and make the row comparable to 04_lstm.
-2. **dir_acc 0.5053 is the median outcome for a TFT on near-random-walk data** — a tiny edge over coin-flip, just enough to produce a positive Sharpe of 4.5864. Per-bar Sharpe ≈ 4.5864 / √8760 = 0.0490; standard error ≈ 1 / √1607 = 0.0249; ratio ≈ **1.97 σ** — borderline significant at ~95 %. Not strong evidence of an edge.
-3. **Sweep Sharpe winner is wider, not deeper.** `(48, 64, 8, 1, 0.1)` reaches Sharpe 4.8331 at the same `icl` as the default with twice the hidden size and twice the attention heads — but the same single LSTM layer. Adding a second `lstm_layers` (the `(48, 32, 4, 2, 0.2)` row) costs Sharpe.
-4. **`input_chunk_length = 96` consistently underperforms in this sweep.** Both 96-row configs lose Sharpe relative to their 48-bar counterparts. Either the slice is too short for the model to learn cross-day structure, or there is no cross-day structure to learn — the second is the more probable explanation on hourly BTC.
-5. **Where capacity may have hurt.** Doubling `lstm_layers` from 1 → 2 with `dropout` raised to 0.2 (`(48, 32, 4, 2, 0.2)` row) drops Sharpe by 0.47 vs. the default — even though more parameters and more regularization usually go together. A near-i.i.d. residual punishes extra recurrent depth.
+1. **Worst MAE in the 4h leaderboard.** MAE 813.10 is 57 % above naive's 518.36 — no other model in the 4h leaderboard is wrong by this much on average. The TFT is underfit on point precision: the 1 448 training rows are not enough for ~30 k parameters across variable-selection networks, gated residual networks, an LSTM encoder/decoder, and multi-head attention to converge on a stable point estimate.
+2. **dir_acc 0.4913 is below coin-flip** — and almost identical to 04_lstm's 0.4938. Adding attention, future covariates (calendar cyclical), variable selection, and gated residuals over an LSTM-only baseline does **not** pull more direction out of this signal at this training-set size. The TFT's extra machinery is exercised but does not earn its keep.
+3. **Sharpe 5.8675 is decent despite the poor MAE.** Per-bar Sharpe = 5.8675 / √2190 = 0.1254; SE = 1 / √401 = 0.0499; ratio ≈ **2.51 σ** — borderline significant. The TFT is wrong-about-magnitude but expresses enough strong-positive forecasts that the long/flat rule (`pred > ref → long`) keeps the strategy long during the rally. Strategy aggressiveness rescues Sharpe even as MAE collapses.
+4. **The 4h re-run dramatically changes the picture from the prior 1h artifact.** On 1h with 5 789 training rows, the same architecture reported MAE 373.70 (comparable to naive on the 1h scale) and Sharpe 4.5864. On 4h with 1 448 training rows, MAE jumps to 813.10 (much worse than naive) but Sharpe rises to 5.8675. The TFT is now *wrong-by-more* per bar but *more directional* — an artifact of the smaller training slice and the strong-trending test regime.
+5. **Sweep is stale on 1h and cannot rank current 4h configs.** The 1h sweep's `(48, 64, 8, 1, 0.1)` was the Sharpe winner at 4.83. Whether that ranking survives the 4h re-run is unknown until `make 05_transformer_sweep` runs.
 
 ### Bottom line
 
-**On the stale 1h slice**, 05_transformer reports **MAE 373.70 / dir_acc 0.5053 / Sharpe 4.5864**. The Sharpe per-bar (0.0490) is 1.97 σ above zero relative to a 1 607-bar SE — borderline significant. Sweep Sharpe winner `(48, 64, 8, 1, 0.1)` at 4.8331 sits just above the default; the wins from extra width are modest and the wins from extra depth are negative. Test slice covers approximately Sep 25 → Dec 1 2024 (post-election BTC rally) regardless of which interval is used. **The load-bearing item is operational, not architectural**: the artefacts need to be regenerated on 4h before this row can sit in the same leaderboard as 02_arima / 03_gradient_boosting / 04_lstm.
+TFT on 4h reports **MAE 813.10 (worst in the 4h leaderboard) / dir_acc 0.4913 (below coin-flip) / Sharpe 5.8675**. Per-bar Sharpe 0.1254 against SE 0.0499 → **2.51 σ**, borderline significant. Test slice covers approximately Sep 25 → Dec 1 2024 (post-election BTC rally). The load-bearing observation: **the TFT needs more training data than the 4h slice supplies** — its extra capacity over the LSTM does not buy meaningful skill at 1 448 rows, and it pays a large MAE penalty for the parameters that *are* exercised.
 
 ## Caveats
 
-- **Stale 1h slice.** Re-run `make 05_transformer` after confirming the config's `interval: 4h`, then re-run `make 05_transformer_sweep`.
 - Single deterministic fit. `random_state` is fixed but neural-net training has run-to-run variance from MPS / CUDA non-determinism.
-- Walk-forward without re-estimation. `retrain=False`.
+- Walk-forward without re-estimation. `retrain=False` keeps train-time weights frozen across the entire test window.
 - `output_chunk_length: 1`. One-step-ahead only.
-- No probabilistic head. TFT supports quantile regression; not used here (foundation models in 06 do use it).
+- No probabilistic head. TFT supports quantile regression; not used here (the foundation models in [06_pretrained](06_pretrained.report.md) do use it).
 - Future covariates are calendar-only (`hour_sin / hour_cos / dow_sin / dow_cos`). No exogenous price-of-other-assets, on-chain features, or news.
+- Sweep on stale 1h slice; do not read it as ranking 4h configs.
 - Long/flat strategy, no shorting, no transaction costs.
 - Attention weights are not interpretation. A high attention weight on lag −24 does not mean lag −24 *caused* the prediction.
 
 ## Files produced
 
-- [experiments/05_transformer/results/metrics.json](../../experiments/05_transformer/results/metrics.json) (**stale 1h**)
-- [experiments/05_transformer/results/predictions.parquet](../../experiments/05_transformer/results/predictions.parquet) (**stale 1h**)
-- [experiments/05_transformer/results/plot.png](../../experiments/05_transformer/results/plot.png) (**stale 1h**)
+- [experiments/05_transformer/results/metrics.json](../../experiments/05_transformer/results/metrics.json) (fresh 4h)
+- [experiments/05_transformer/results/predictions.parquet](../../experiments/05_transformer/results/predictions.parquet) (fresh 4h)
+- [experiments/05_transformer/results/plot.png](../../experiments/05_transformer/results/plot.png) (fresh 4h)
 - [experiments/05_transformer/results/sweep.csv](../../experiments/05_transformer/results/sweep.csv) (**stale 1h**)
 
 ## How to reproduce
