@@ -3,6 +3,10 @@
 
 CONFIG ?= configs/btc_4h_2024.yaml
 
+# Silence Lightning/Torch noise (PL pytree deprecation, MPS pin_memory notice).
+# Set in env so it survives Lightning's in-process filter resets and reaches DataLoader workers.
+export PYTHONWARNINGS := ignore::UserWarning,ignore::DeprecationWarning
+
 .PHONY: help run sweep
 
 help:
