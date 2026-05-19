@@ -15,7 +15,7 @@ No training, no parameters, no walk-forward in the model-fitting sense — predi
 
 ## Configuration
 
-From [experiments/01_baseline_naive/configs/btc_4h_2024.yaml](../../experiments/01_baseline_naive/configs/btc_4h_2024.yaml):
+From [experiments/01_baseline_naive/configs/btc_4h_2024.config.yaml](../../experiments/01_baseline_naive/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|

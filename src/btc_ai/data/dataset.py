@@ -66,10 +66,10 @@ def load_dataset_from_experiment_cfg(
         if 'dataset' not in exp_cfg:
                 raise ValueError(
                         'experiment config must reference a dataset via `dataset: <name>` '
-                        '(name resolves to configs/datasets/<name>.yaml)'
+                        '(name resolves to configs/datasets/<name>.dataset.yaml)'
                 )
         name = exp_cfg['dataset']
-        path = repo_root / 'configs' / 'datasets' / f'{name}.yaml'
+        path = repo_root / 'configs' / 'datasets' / f'{name}.dataset.yaml'
         if not path.exists():
                 raise FileNotFoundError(
                         f'dataset ref `{name}` not found at {path}'

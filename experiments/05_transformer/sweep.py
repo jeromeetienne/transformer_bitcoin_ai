@@ -9,7 +9,7 @@ from btc_ai.config import load_yaml
 
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
+# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 
 # Edit this list to change which (input_chunk_length, hidden_size, num_attention_heads,
 # lstm_layers, dropout) combos the sweep evaluates. All combos use the same data slice /
@@ -55,7 +55,7 @@ def main() -> None:
 	parser.add_argument('--config', type=Path, required=True)
 	args = parser.parse_args()
 
-	results_dir = EXPERIMENT_DIR / 'results' / args.config.stem
+	results_dir = EXPERIMENT_DIR / 'results' / args.config.stem.removesuffix('.config')
 	results_dir.mkdir(parents=True, exist_ok=True)
 
 	cfg = load_yaml(args.config)

@@ -18,7 +18,7 @@ Library: **statsmodels** (`statsmodels.tsa.arima.model.ARIMA`). Walk-forward sha
 
 ## Configuration
 
-From [experiments/02_arima/configs/btc_4h_2024.yaml](../../experiments/02_arima/configs/btc_4h_2024.yaml):
+From [experiments/02_arima/configs/btc_4h_2024.config.yaml](../../experiments/02_arima/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|

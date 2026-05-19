@@ -19,7 +19,7 @@ Library: **darts** (`darts.models.TFTModel`) on PyTorch Lightning. Walk-forward 
 
 ## Configuration
 
-From [experiments/05_transformer/configs/btc_4h_2024.yaml](../../experiments/05_transformer/configs/btc_4h_2024.yaml):
+From [experiments/05_transformer/configs/btc_4h_2024.config.yaml](../../experiments/05_transformer/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|

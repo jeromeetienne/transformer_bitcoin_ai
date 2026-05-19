@@ -8,7 +8,7 @@
 # keep Chronos-2 univariate too so the head-to-head is fair on the same inputs
 # and the question stays "does the pretrained prior alone transfer to BTC?".
 
-dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.yaml
+dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.dataset.yaml
 
 backend: chronos      # 'chronos' or 'timesfm' — no default; pick one explicitly
 hub_model_name: amazon/chronos-2

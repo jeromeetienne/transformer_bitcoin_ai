@@ -5,4 +5,4 @@
 # (src/btc_ai/eval). All "historical CSV" fields (symbol, interval, periods)
 # live in the referenced dataset under configs/datasets/.
 
-dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.yaml
+dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.dataset.yaml

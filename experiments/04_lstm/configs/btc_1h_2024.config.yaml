@@ -5,7 +5,7 @@
 # as close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc are directly
 # comparable to 01/01b/02/03. Sharpe is computed on a long/flat trading rule.
 
-dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.yaml
+dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.dataset.yaml
 
 covariates:
   use_volume: true            # include log1p(volume) as a past covariate

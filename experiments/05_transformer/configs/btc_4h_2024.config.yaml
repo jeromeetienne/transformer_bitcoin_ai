@@ -1,4 +1,4 @@
-# Darts TFT (Temporal Fusion Transformer) on 1h BTC log-returns. The target is the
+# Darts TFT (Temporal Fusion Transformer) on 4h BTC log-returns. The target is the
 # bar-T log-return r_T = log(close_T / close_{T-1}); past covariates feed only data
 # observed before T (darts slices past_covariates strictly before each forecast step,
 # so no current-bar leakage). TFT additionally consumes future_covariates: cyclical
@@ -7,7 +7,7 @@
 # close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc/Sharpe are directly
 # comparable to 01/01b/02/03/04.
 
-dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.yaml
+dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.dataset.yaml
 
 covariates:
   use_volume: true            # include log1p(volume) as a past covariate
@@ -15,18 +15,18 @@ covariates:
   use_time_features: true     # include hour_sin/hour_cos/dow_sin/dow_cos as FUTURE covariates
 
 model:
-  input_chunk_length: 192       # bars of history fed to the transformer (192h = 8 days; matches 4h's 48 bars)
+  input_chunk_length: 48        # bars of history fed to the transformer (48h = 8 days)
   output_chunk_length: 1        # one-step-ahead forecast horizon
-  hidden_size: 32               # transformer hidden dim (TFT main width)
-  lstm_layers: 1                # depth of TFT's encoder/decoder LSTM stack
-  num_attention_heads: 4        # multi-head self-attention heads
-  dropout: 0.1                  # dropout across transformer blocks
-  hidden_continuous_size: 8     # GRN size for continuous covariate processing
+  hidden_size: 32               # transformer hidden dim (TFT main width); Optuna best (trial 10)
+  lstm_layers: 1                # depth of TFT's encoder/decoder LSTM stack; Optuna best
+  num_attention_heads: 2        # multi-head self-attention heads; Optuna best (was 4)
+  dropout: 0.192                # dropout across transformer blocks; Optuna best (was 0.1)
+  hidden_continuous_size: 10    # GRN size for continuous covariate processing; Optuna best (was 8)
   add_relative_index: false     # we provide real future_covariates instead
   full_attention: false         # use TFT's interpretable masked attention
-  batch_size: 64                # mini-batch size during training
+  batch_size: 128               # mini-batch size during training; Optuna best (was 64)
   n_epochs: 30                  # max passes; early stopping may halt sooner
-  learning_rate: 0.001          # Adam learning rate
+  learning_rate: 1.07e-4        # Adam learning rate; Optuna best (was 1e-3)
   random_state: 42              # determinism for reproducible runs
 
 training:
@@ -41,7 +41,7 @@ optuna:                         # only read by optuna_sweep.py; ignored by run.p
   direction: maximize           # 'minimize' for mae/rmse/mape, 'maximize' for sharpe/dir_acc/cum_ret
   seed: 42                      # TPESampler seed for reproducibility across runs
   search_space:                 # one entry per knob; type drives the trial.suggest_* call
-    input_chunk_length:     { type: categorical, choices: [96, 192, 384] } # bars of history fed to TFT (wall-clock matched to 4h's [24,48,96])
+    input_chunk_length:     { type: categorical, choices: [24, 48, 96] }   # bars of history fed to TFT
     hidden_size:            { type: categorical, choices: [16, 32, 64] }   # transformer hidden dim
     lstm_layers:            { type: int, low: 1, high: 2 }                 # TFT encoder/decoder LSTM depth
     num_attention_heads:    { type: categorical, choices: [2, 4, 8] }      # heads must divide hidden_size; 2/4/8 all divide 16/32/64

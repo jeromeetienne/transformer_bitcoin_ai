@@ -18,7 +18,7 @@ Library: **darts** (`darts.models.BlockRNNModel(model='LSTM')`) on PyTorch Light
 
 ## Configuration
 
-From [experiments/04_lstm/configs/btc_4h_2024.yaml](../../experiments/04_lstm/configs/btc_4h_2024.yaml):
+From [experiments/04_lstm/configs/btc_4h_2024.config.yaml](../../experiments/04_lstm/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|

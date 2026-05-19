@@ -4,10 +4,10 @@ Centralized "historical CSV" specs. Each `*.yaml` here defines:
 - A Binance Vision **source** (market / symbol / interval / period), and
 - Three **splits** — `train`, `validation`, `test` — as explicit UTC `[start, end)` date ranges.
 
-Experiment configs (`experiments/<N>_<model>/configs/*.yaml`) reference a dataset by name:
+Experiment configs (`experiments/<N>_<model>/configs/*.config.yaml`) reference a dataset by name:
 
 ```yaml
-dataset: btc_4h_2024     # resolves to configs/datasets/btc_4h_2024.yaml
+dataset: btc_4h_2024     # resolves to configs/datasets/btc_4h_2024.dataset.yaml
 model: { ... }            # rest of the experiment config: model / covariates / optuna
 ```
 

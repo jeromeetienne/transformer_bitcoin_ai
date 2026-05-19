@@ -4,11 +4,11 @@
 # Predictions are reconstructed to price as close_pred = close_{T-1} * exp(r_pred)
 # so MAE/RMSE/MAPE/dir_acc are directly comparable to 01/01b/02.
 
-dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.yaml
+dataset: btc_4h_2024     # → configs/datasets/btc_4h_2024.dataset.yaml
 
 features:
-  return_lags: 96            # number of lagged log-returns: r_{T-1}, r_{T-2}, ..., r_{T-N} (4 days at 1h, matches 4h's 24)
-  rolling_windows: [24, 96]  # window sizes (in bars) for rolling mean/std of past log-returns (1d, 4d at 1h)
+  return_lags: 24            # number of lagged log-returns: r_{T-1}, r_{T-2}, ..., r_{T-N}
+  rolling_windows: [6, 24]   # window sizes (in bars) for rolling mean/std of past log-returns
   use_volume: true           # include log1p(volume_{T-1}) as a feature
   use_ohlc: true             # include (high-low) range and (close-open) body of bar T-1
 

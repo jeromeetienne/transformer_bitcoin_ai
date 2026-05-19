@@ -38,7 +38,7 @@ class PruningCallback(Callback):
 
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
+# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 STUDY_NAME = '05_transformer'
 
 VALID_OBJECTIVES = {
@@ -135,7 +135,7 @@ def main() -> None:
 	parser.add_argument('--config', type=Path, required=True)
 	args = parser.parse_args()
 
-	results_dir = EXPERIMENT_DIR / 'results' / args.config.stem
+	results_dir = EXPERIMENT_DIR / 'results' / args.config.stem.removesuffix('.config')
 	results_dir.mkdir(parents=True, exist_ok=True)
 
 	cfg = load_yaml(args.config)

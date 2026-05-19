@@ -1,7 +1,7 @@
 # All paths in this file are relative to experiments/01_baseline_naive/.
 # Invoked from the root via `$(MAKE) -C experiments/01_baseline_naive <target>`.
 
-CONFIG ?= configs/btc_4h_2024.yaml
+CONFIG ?= configs/btc_4h_2024.config.yaml
 
 .PHONY: help run
 

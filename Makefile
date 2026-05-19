@@ -5,9 +5,9 @@
 # work, but CLI overrides (`make 02_arima CONFIG=foo`) recurse automatically.
 #
 # Override the active config for `make fetch` on the command line:
-#   make fetch CONFIG=experiments/02_arima/configs/btc_4h_2024.yaml
+#   make fetch CONFIG=experiments/02_arima/configs/btc_4h_2024.config.yaml
 
-CONFIG ?= experiments/01_baseline_naive/configs/btc_4h_2024.yaml
+CONFIG ?= experiments/01_baseline_naive/configs/btc_4h_2024.config.yaml
 
 .PHONY: help fetch lint test clean \
 	01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep \

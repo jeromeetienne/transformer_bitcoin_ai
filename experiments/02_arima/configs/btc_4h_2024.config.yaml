@@ -9,5 +9,5 @@
 #   [2, 1, 2]  slightly richer; more parameters to estimate
 # Pick explicitly. There is no auto-selection in this experiment.
 
-dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.yaml
+dataset: btc_4h_2024     # → configs/datasets/btc_4h_2024.dataset.yaml
 order: [3, 1, 3]         # ARIMA (p, d, q)

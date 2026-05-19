@@ -19,7 +19,7 @@ Library: **xgboost** (`xgb.XGBRegressor` with `tree_method='hist'`). Walk-forwar
 
 ## Configuration
 
-From [experiments/03_gradient_boosting/configs/btc_4h_2024.yaml](../../experiments/03_gradient_boosting/configs/btc_4h_2024.yaml):
+From [experiments/03_gradient_boosting/configs/btc_4h_2024.config.yaml](../../experiments/03_gradient_boosting/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|

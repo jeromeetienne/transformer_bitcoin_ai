@@ -15,11 +15,11 @@ Reverse-engineered from the existing reports in [docs_ml/reports/](reports/). Us
 
 ## Inputs
 
-The report covers a single `(experiment, trial)` pair. The trial name is the stem of the config filename — e.g. `experiments/02_arima/configs/btc_4h_2024.yaml` → trial `btc_4h_2024`, with artefacts under `experiments/02_arima/results/btc_4h_2024/`. Substitute `${experiment_id}` (e.g. `02_arima`) and `${trial}` (e.g. `btc_4h_2024`) throughout.
+The report covers a single `(experiment, trial)` pair. The trial name is the config filename with the `.config.yaml` extension stripped — e.g. `experiments/02_arima/configs/btc_4h_2024.config.yaml` → trial `btc_4h_2024`, with artefacts under `experiments/02_arima/results/btc_4h_2024/`. Substitute `${experiment_id}` (e.g. `02_arima`) and `${trial}` (e.g. `btc_4h_2024`) throughout.
 
 Read these files for the experiment+trial under report:
 
-- `experiments/${experiment_id}/configs/${trial}.yaml` — config table + data slice description
+- `experiments/${experiment_id}/configs/${trial}.config.yaml` — config table + data slice description
 - `experiments/${experiment_id}/run.py` — what the model actually does (target definition, walk-forward shape, library used)
 - `experiments/${experiment_id}/README.md` — narrative source for "What this experiment is"
 - `experiments/${experiment_id}/results/${trial}/metrics.json` — single-fit headline metrics

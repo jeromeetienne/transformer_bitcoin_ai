@@ -1,7 +1,7 @@
 # All paths in this file are relative to experiments/06_pretrained/.
 # Invoked from the root via `$(MAKE) -C experiments/06_pretrained <target>`.
 
-CONFIG ?= configs/btc_4h_2024.yaml
+CONFIG ?= configs/btc_4h_2024.config.yaml
 
 # Silence Lightning/Torch noise (PL pytree deprecation, MPS pin_memory notice).
 # Set in env so it survives Lightning's in-process filter resets and reaches DataLoader workers.

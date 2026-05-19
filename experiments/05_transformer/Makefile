@@ -1,7 +1,7 @@
 # All paths in this file are relative to experiments/05_transformer/.
 # Invoked from the root via `$(MAKE) -C experiments/05_transformer <target>`.
 
-CONFIG ?= configs/btc_4h_2024.yaml
+CONFIG ?= configs/btc_4h_2024.config.yaml
 TRIAL  := $(notdir $(basename $(CONFIG)))
 
 # Silence Lightning/Torch noise (PL pytree deprecation, MPS pin_memory notice).
