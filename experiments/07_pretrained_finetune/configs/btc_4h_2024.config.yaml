@@ -1,0 +1,48 @@
+# Fine-tuned foundation models on 4h BTC log-returns. Same target as 04_lstm /
+# 05_transformer / 06_pretrained (r_T = log(close_T / close_{T-1})), reconstructed
+# to price as close_pred = close_{T-1} * exp(r_pred), so MAE / RMSE / MAPE /
+# dir_acc / Sharpe stay on the same scale as 01..06 and the leaderboard remains
+# apples-to-apples. The only delta from 06 is that fit() actually updates
+# weights: the prediction head (and optionally the last transformer block) is
+# trained against the validation slice with early stopping. Compare against 06's
+# zero-shot numbers to see whether the pretrained init beats both (a) zero-shot
+# from the same checkpoint and (b) 05_transformer trained from scratch.
+
+dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.dataset.yaml
+
+backend: chronos      # 'chronos' or 'timesfm' — no default; pick one explicitly
+hub_model_name: autogluon/chronos-2-small
+                      # chronos: amazon/chronos-2 | autogluon/chronos-2-small | autogluon/chronos-2-synth
+                      # timesfm: google/timesfm-2.5-200m-pytorch
+# backend: 'timesfm'
+# hub_model_name: google/timesfm-2.5-200m-pytorch
+
+finetune:
+  enable_finetuning:                       # partial fine-tuning by default (head only, light on Apple Metal Performance Shaders).
+                                           # bool true = full fine-tuning; bool false = zero-shot (06 behavior);
+                                           # dict {unfreeze: [...]} = unfreeze patterns, freeze the rest;
+                                           # dict {freeze: [...]} = freeze patterns, unfreeze the rest.
+                                           # Patterns are fnmatch globs against model.named_parameters().
+    unfreeze:
+      - '*output_patch_embedding*'         # chronos-2 prediction head — name verified in darts source
+      # - '*encoder.layers.11.*'           # chronos-2 last encoder block — uncomment after introspecting
+                                           # named_parameters() to confirm the exact layer index/name
+      # - '*horizon_head*'                 # timesfm-2.5 head — name not verified; introspect first
+
+training:
+  early_stopping_patience: 5              # epochs of no val_loss improvement before stop
+
+model:
+  input_chunk_length: 256                  # bars of history fed to the foundation model
+                                           # (chronos-2 max=8192, timesfm-2.5 max=16384)
+  output_chunk_length: 1                   # one-step-ahead forecast horizon
+  num_samples: 200                         # samples drawn from the predictive quantile distribution
+  quantiles: [0.1, 0.5, 0.9]               # subset of the model's pre-trained quantiles;
+                                           # median (0.5) feeds point metrics; q10 / q90 are stored
+                                           # alongside in predictions.parquet
+  n_epochs: 50                             # upper bound; EarlyStopping usually stops earlier
+  batch_size: 64                           # 32 fits chronos-2 head-only fine-tuning on Apple Metal Performance Shaders at input_chunk_length=256;
+                                           # drop to 16 for full fine-tuning or larger input_chunk_length
+  learning_rate: 0.00001                    # 1e-4 is the conventional fine-tuning learning rate;
+                                           # 1e-3 risks destroying the pretrained prior
+  random_state: 42                         # reproducibility for dropout / data shuffle

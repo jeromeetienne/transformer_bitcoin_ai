@@ -1,0 +1,49 @@
+# Encoder-only fine-tuning variant: freezes the prediction head and unfreezes
+# everything else. Inverts the head-only recipe in btc_4h_2024.config.yaml.
+# Hypothesis: chronos-2-small's directional bias on log-returns lives in the
+# output head, and head-only fine-tuning (the default in the sibling config)
+# erodes that bias — every 07 head-only run came out worse than 06 zero-shot
+# on directional_accuracy / cumulative_return / annualized_sharpe. By freezing
+# the head and letting the encoder specialize to BTC scale / noise, we keep
+# the head's prior intact while still adapting the representations it consumes.
+#
+# Trainable parameter count flips from ~5% (head only) to ~95% (everything
+# except head) — moving roughly 8x more parameters. The default learning rate
+# of 1e-5 is conservative on purpose; consider 3e-6 if Sharpe still regresses
+# vs zero-shot. Each epoch is also slower because more parameters get gradients.
+
+dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.dataset.yaml
+
+backend: chronos      # 'chronos' or 'timesfm' — no default; pick one explicitly
+hub_model_name: autogluon/chronos-2-small
+                      # chronos: amazon/chronos-2 | autogluon/chronos-2-small | autogluon/chronos-2-synth
+                      # timesfm: google/timesfm-2.5-200m-pytorch
+
+finetune:
+  enable_finetuning:                       # encoder-only: freeze the head, unfreeze the rest.
+                                           # bool true = full fine-tuning; bool false = zero-shot;
+                                           # dict {unfreeze: [...]} = unfreeze patterns, freeze the rest;
+                                           # dict {freeze: [...]} = freeze patterns, unfreeze the rest.
+                                           # Patterns are fnmatch globs against model.named_parameters().
+    freeze:
+      - '*output_patch_embedding*'         # keep the head static (the directional prior we want to preserve)
+
+training:
+  early_stopping_patience: 5              # epochs of no val_loss improvement before stop
+
+model:
+  input_chunk_length: 256                  # bars of history fed to the foundation model
+                                           # (chronos-2 max=8192, timesfm-2.5 max=16384)
+  output_chunk_length: 1                   # one-step-ahead forecast horizon
+  num_samples: 200                         # samples drawn from the predictive quantile distribution
+  quantiles: [0.1, 0.5, 0.9]               # subset of the model's pre-trained quantiles;
+                                           # median (0.5) feeds point metrics; q10 / q90 are stored
+                                           # alongside in predictions.parquet
+  n_epochs: 50                             # upper bound; EarlyStopping usually stops earlier
+  batch_size: 32                           # ~8x more parameters get gradients than the head-only config;
+                                           # 32 keeps Apple Metal Performance Shaders comfortable at input_chunk_length=256.
+                                           # Drop to 16 if memory pressure shows up; raise on CUDA.
+  learning_rate: 0.00001                   # 1e-5 — conservative because we're moving 8x more parameters
+                                           # than head-only and want to preserve the pretrained encoder.
+                                           # If Sharpe still regresses vs zero-shot, try 3e-6.
+  random_state: 42                         # reproducibility for dropout / data shuffle

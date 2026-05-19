@@ -11,7 +11,7 @@
 dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.dataset.yaml
 
 backend: chronos      # 'chronos' or 'timesfm' — no default; pick one explicitly
-hub_model_name: amazon/chronos-2
+hub_model_name: autogluon/chronos-2-small
                       # chronos: amazon/chronos-2 | autogluon/chronos-2-small | autogluon/chronos-2-synth
                       # timesfm: google/timesfm-2.5-200m-pytorch
 # backend: 'timesfm'

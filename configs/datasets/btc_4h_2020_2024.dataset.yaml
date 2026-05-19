@@ -1,0 +1,32 @@
+# 4h BTCUSDT spot. Same validation and test windows as btc_4h_2024.dataset.yaml
+# (so test metrics are directly comparable across the two configs), but the
+# train window starts at 2020-01-01 instead of 2023-01-01 — roughly 4.7 years
+# of history vs 1.6, or ~3x more training bars (~10100 vs ~3500).
+#
+# Motivation: 07_pretrained_finetune on the 1.6-year slice consistently
+# over-fits within ~3 epochs (train_loss collapses, val_loss diverges) and
+# every fine-tuning recipe — head-only, encoder-only, full — lands worse than
+# 06_pretrained zero-shot on the trading metrics. The hypothesis is that
+# 3500 train rows is just too small to extract signal beyond what the
+# pretrained foundation model already encodes; widening the train window gives
+# the optimizer more distinct market regimes to generalize across (2020 COVID
+# crash, 2021 bull, 2022 bear, 2023 chop, mid-2024 ATH) and may delay
+# overfitting enough for val_loss to drift meaningfully downward.
+#
+# Caveat: more regimes also means more distributional heterogeneity. If the
+# train window is *too* far from the test window, the model's learned
+# specialization may not transfer. The honest experiment is the comparison
+# itself.
+#
+# All boundaries are UTC, [start, end) — start inclusive, end exclusive.
+
+source:                   # one Binance Vision pull covers all splits
+  market: spot            # 'spot' | 'futures/um' | 'futures/cm'
+  symbol: BTCUSDT         # Binance trading pair
+  interval: 4h            # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
+  period: monthly         # 'monthly' or 'daily'. Binance Vision archive granularity.
+
+splits:
+  train:      { start: 2020-01-01, end: 2024-08-01 }   # 55 months — ~10100 bars
+  validation: { start: 2024-08-01, end: 2024-10-01 }   # 2 months — unchanged vs btc_4h_2024
+  test:       { start: 2024-10-01, end: 2024-12-01 }   # 2 months — unchanged vs btc_4h_2024
