@@ -1,0 +1,51 @@
+# Darts TFT (Temporal Fusion Transformer) on 1h BTC log-returns. The target is the
+# bar-T log-return r_T = log(close_T / close_{T-1}); past covariates feed only data
+# observed before T (darts slices past_covariates strictly before each forecast step,
+# so no current-bar leakage). TFT additionally consumes future_covariates: cyclical
+# encodings of hour-of-day and day-of-week, which are deterministic and known at any
+# future timestamp. Predictions are reconstructed to price as
+# close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc/Sharpe are directly
+# comparable to 01/01b/02/03/04.
+
+dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.yaml
+
+covariates:
+  use_volume: true            # include log1p(volume) as a past covariate
+  use_ohlc: true              # include (high-low) range and (close-open) body as past covariates
+  use_time_features: true     # include hour_sin/hour_cos/dow_sin/dow_cos as FUTURE covariates
+
+model:
+  input_chunk_length: 192       # bars of history fed to the transformer (192h = 8 days; matches 4h's 48 bars)
+  output_chunk_length: 1        # one-step-ahead forecast horizon
+  hidden_size: 32               # transformer hidden dim (TFT main width)
+  lstm_layers: 1                # depth of TFT's encoder/decoder LSTM stack
+  num_attention_heads: 4        # multi-head self-attention heads
+  dropout: 0.1                  # dropout across transformer blocks
+  hidden_continuous_size: 8     # GRN size for continuous covariate processing
+  add_relative_index: false     # we provide real future_covariates instead
+  full_attention: false         # use TFT's interpretable masked attention
+  batch_size: 64                # mini-batch size during training
+  n_epochs: 30                  # max passes; early stopping may halt sooner
+  learning_rate: 0.001          # Adam learning rate
+  random_state: 42              # determinism for reproducible runs
+
+training:
+  early_stopping_patience: 5    # epochs of no val_loss improvement before stopping
+                                # (validation slice comes from the dataset config above)
+
+optuna:                         # only read by optuna_sweep.py; ignored by run.py / sweep.py
+  n_trials: 80                  # total trials to evaluate (TPE sampler picks each set of params)
+  timeout_seconds: null         # wall-clock budget in seconds; null = unbounded
+  objective: annualized_sharpe  # metric key from train_and_evaluate's returned metrics dict
+                                # one of: mae, rmse, mape, directional_accuracy, cumulative_return, annualized_sharpe
+  direction: maximize           # 'minimize' for mae/rmse/mape, 'maximize' for sharpe/dir_acc/cum_ret
+  seed: 42                      # TPESampler seed for reproducibility across runs
+  search_space:                 # one entry per knob; type drives the trial.suggest_* call
+    input_chunk_length:     { type: categorical, choices: [96, 192, 384] } # bars of history fed to TFT (wall-clock matched to 4h's [24,48,96])
+    hidden_size:            { type: categorical, choices: [16, 32, 64] }   # transformer hidden dim
+    lstm_layers:            { type: int, low: 1, high: 2 }                 # TFT encoder/decoder LSTM depth
+    num_attention_heads:    { type: categorical, choices: [2, 4, 8] }      # heads must divide hidden_size; 2/4/8 all divide 16/32/64
+    dropout:                { type: float, low: 0.0, high: 0.3 }           # dropout across transformer blocks
+    hidden_continuous_size: { type: int, low: 4, high: 16 }                # GRN width for continuous covariate processing
+    learning_rate:          { type: float, low: 1.0e-4, high: 1.0e-2, log: true }  # Adam lr (log-uniform)
+    batch_size:             { type: categorical, choices: [32, 64, 128] }  # mini-batch size

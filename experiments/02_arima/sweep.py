@@ -36,12 +36,30 @@ ORDERS: list[tuple[int, int, int]] = [
         (1, 1, 1),  # Box-Jenkins default
         (2, 1, 0),
         (0, 1, 2),
+        (2, 1, 1),
+        (1, 1, 2),
         (2, 1, 2),
+        (3, 1, 0),
+        (0, 1, 3),
+        (3, 1, 1),
+        (1, 1, 3),
+        (3, 1, 2),
+        (2, 1, 3),
         (3, 1, 3),
+        (4, 1, 0),
+        (0, 1, 4),
+        (4, 1, 4),
         (5, 1, 0),
         (0, 1, 5),
         (5, 1, 5),
+        (7, 1, 0),
+        (0, 1, 7),
+        (7, 1, 7),
+        (10, 1, 0),
+        (0, 1, 10),
+        (10, 1, 10),
         (1, 0, 1),  # ARMA on RAW price (no differencing) — usually worse
+        (2, 0, 2),  # ARMA on RAW price, slightly richer
 ]
 
 warnings.simplefilter('ignore', ConvergenceWarning)

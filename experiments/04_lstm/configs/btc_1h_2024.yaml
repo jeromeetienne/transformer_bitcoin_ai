@@ -1,0 +1,44 @@
+# Darts BlockRNN(LSTM) on 1h BTC log-returns. The target is the bar-T log-return
+# r_T = log(close_T / close_{T-1}); past covariates feed only data observed before T
+# into the LSTM (BlockRNN-style past_covariates are sliced strictly before each
+# forecast step, so no current-bar leakage). Predictions are reconstructed to price
+# as close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc are directly
+# comparable to 01/01b/02/03. Sharpe is computed on a long/flat trading rule.
+
+dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.yaml
+
+covariates:
+  use_volume: true            # include log1p(volume) as a past covariate
+  use_ohlc: true              # include (high-low) range and (close-open) body as past covariates
+
+model:
+  input_chunk_length: 192     # bars of history fed to the LSTM at each step (192h = 8 days; matches 4h's 48 bars)
+  output_chunk_length: 1      # one-step-ahead forecast horizon
+  hidden_dim: 32              # LSTM hidden state size
+  n_rnn_layers: 2             # stacked LSTM layers
+  dropout: 0.1                # dropout between LSTM layers (regularization)
+  batch_size: 64              # mini-batch size during training
+  n_epochs: 30                # max passes over the training set; early stopping may halt sooner
+  learning_rate: 0.001        # Adam learning rate
+  weight_decay: 0.0           # Adam L2 regularization; 0.0 = vanilla Adam, >0 = AdamW-like decay
+  random_state: 42            # determinism for reproducible runs
+
+training:
+  early_stopping_patience: 5  # epochs of no val_loss improvement before stopping
+                              # (validation slice comes from the dataset config above)
+
+optuna:                       # only read by optuna_sweep.py; ignored by run.py / sweep.py
+  n_trials: 80                # total trials to evaluate (TPE sampler picks each set of params)
+  timeout_seconds: null       # wall-clock budget in seconds; null = unbounded
+  objective: annualized_sharpe  # metric key from train_and_evaluate's returned metrics dict
+                              # one of: mae, rmse, mape, directional_accuracy, cumulative_return, annualized_sharpe
+  direction: maximize         # 'minimize' for mae/rmse/mape, 'maximize' for sharpe/dir_acc/cum_ret
+  seed: 42                    # TPESampler seed for reproducibility across runs
+  search_space:               # one entry per knob; type drives the trial.suggest_* call
+    input_chunk_length: { type: categorical, choices: [96, 192, 384] } # bars of history fed to LSTM (wall-clock matched to 4h's [24,48,96])
+    hidden_dim:         { type: categorical, choices: [16, 32, 64] }   # LSTM hidden state size
+    n_rnn_layers:       { type: int, low: 1, high: 3 }                 # stacked LSTM layers
+    dropout:            { type: float, low: 0.0, high: 0.3 }           # between-layer dropout
+    learning_rate:      { type: float, low: 1.0e-4, high: 1.0e-2, log: true }  # Adam lr (log-uniform)
+    batch_size:         { type: categorical, choices: [32, 64, 128] }  # mini-batch size
+    weight_decay:       { type: float, low: 1.0e-6, high: 1.0e-2, log: true }  # Adam L2 (log-uniform)

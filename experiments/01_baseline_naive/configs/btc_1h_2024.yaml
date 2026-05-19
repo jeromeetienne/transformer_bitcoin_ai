@@ -1,0 +1,8 @@
+# Naive last-value baseline — predicts close[t] = close[t-1].
+# The point of this experiment is the architecture, not the model:
+# ARIMA / LSTM / transformer experiments reuse this exact config schema,
+# the shared dataset loader (src/btc_ai/data/dataset.py), and the shared metrics
+# (src/btc_ai/eval). All "historical CSV" fields (symbol, interval, periods)
+# live in the referenced dataset under configs/datasets/.
+
+dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.yaml

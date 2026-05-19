@@ -1,0 +1,13 @@
+# ARIMA(p, d, q) baseline.
+#   p = AR order (autoregressive lags of the differenced series)
+#   d = differencing order (d=1 → model first differences, i.e. price changes)
+#   q = MA order (moving-average lags of the residuals)
+#
+# Common starting points for hourly BTC close:
+#   [1, 1, 0]  pure AR(1) on first differences — simplest non-trivial model
+#   [1, 1, 1]  classic Box-Jenkins default; one AR + one MA term
+#   [2, 1, 2]  slightly richer; more parameters to estimate
+# Pick explicitly. There is no auto-selection in this experiment.
+
+dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.yaml
+order: [1, 1, 1]         # ARIMA (p, d, q)
