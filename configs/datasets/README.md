@@ -22,8 +22,8 @@ source:
   interval: 4h
   period: monthly
 splits:
-  train:      { start: 2024-01-01, end: 2024-09-01 }
-  validation: { start: 2024-09-01, end: 2024-10-01 }
+  train:      { start: 2024-01-01, end: 2024-08-01 }
+  validation: { start: 2024-08-01, end: 2024-10-01 }
   test:       { start: 2024-10-01, end: 2024-12-01 }
 ```
 
@@ -42,6 +42,10 @@ Per-split sources are required when there is no top-level `source:`. All three s
 
 ## Rules
 
-- `validation:` is **always required**. Experiments that don't use a validation slice (ARIMA, naive, MA, XGBoost, foundation models) concatenate `train + validation` for fitting.
+- `validation:` is **always required** by the loader, but **not every experiment uses it**:
+  - `04_lstm`, `05_transformer` — fit on `train`, early-stop on `validation`, evaluate on `test`.
+  - `01_baseline_naive`, `01b_moving_average`, `02_arima`, `03_gradient_boosting`, `06_pretrained` — concatenate `train + validation` for fitting; the validation slice acts as extra training data, not held-out signal.
+  - Pick `validation` boundaries with the neural models in mind (enough bars for a stable early-stopping signal); the other experiments are insensitive to where `train` ends and `validation` begins.
 - Splits must be `train.end <= validation.start` and `validation.end <= test.start`. Gaps between splits are allowed; overlaps are not.
 - Dates are UTC. Use ISO `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS` (UTC implied).
+- Lag and rolling features at the first bar of `validation` / `test` legitimately read history from the prior slice — that is walk-forward evaluation, not leakage. Bars themselves never cross; only the rolling-window feature inputs do.
