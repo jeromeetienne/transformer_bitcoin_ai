@@ -2,7 +2,7 @@
 
 A short manifesto for the article series in this folder. Five articles, published on a personal blog and cross-posted to LinkedIn, on machine learning applied to Bitcoin price prediction.
 
-The goal is to showcase **ML craft, not trading intuition**. The financial-flavor articles in `../docs_original_finance/articles/` are explicitly out of scope and should not be used as templates or sources of prose.
+The goal is to showcase **ML craft, not trading intuition**. The financial-flavor articles in `../docs_finance/articles/` are explicitly out of scope and should not be used as templates or sources of prose.
 
 ## Audience
 
@@ -48,7 +48,7 @@ A loose template, not a rigid one:
 - Trading strategy backtests, P&L, or Sharpe ratios as the main metric.
 - Financial advice in any form, even disclaimed.
 - Hype: claims like "transformers crush time series" that are not backed by *your* results.
-- Reusing prose from `../docs_original_finance/articles/`. Different series, different framing.
+- Reusing prose from `../docs_finance/articles/`. Different series, different framing.
 
 ## Cross-posting
 
@@ -56,10 +56,10 @@ Three tiers:
 
 - **Blog** — the canonical home for each article. Long form. The blog post URL is what every other channel ultimately points back to.
 - **LinkedIn article** — the same content as the blog article, re-published as a LinkedIn article. Opens with a standard attribution paragraph noting the piece was originally published on the blog and linking to the blog URL (the usual cross-post wording).
-- **LinkedIn posts** — several short posts per article, each teasing one beat and linking to the LinkedIn article. Lead with the most ML-credible beat (often the surprise: *"ARIMA beat my XGBoost"*).
+- **LinkedIn posts** — several short posts per article, say 3-4 posts, each teasing one beat and linking to the LinkedIn article. Lead with the most ML-credible beat (often the surprise: *"ARIMA beat my XGBoost"*).
 
 ## Workflow
 
 - Drafts live in `docs_ml/articles/NN-slug.md`.
 - Code under `experiments/NN_*/` is the source of truth. If an article cites a number, that number comes from the actual `results/metrics.json` in the experiment.
-- Per-experiment technical reports under `../docs_original_finance/reports/` are useful raw material — pull from them, but rewrite for this series' voice.
+- Per-experiment technical reports under `../docs_finance/reports/` are useful raw material — pull from them, but rewrite for this series' voice.
