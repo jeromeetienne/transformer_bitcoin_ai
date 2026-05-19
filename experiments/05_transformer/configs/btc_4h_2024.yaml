@@ -15,18 +15,18 @@ covariates:
   use_time_features: true     # include hour_sin/hour_cos/dow_sin/dow_cos as FUTURE covariates
 
 model:
-  input_chunk_length: 48        # bars of history fed to the transformer (48h = 2 days)
+  input_chunk_length: 48        # bars of history fed to the transformer (48h = 8 days)
   output_chunk_length: 1        # one-step-ahead forecast horizon
-  hidden_size: 32               # transformer hidden dim (TFT main width)
-  lstm_layers: 1                # depth of TFT's encoder/decoder LSTM stack
-  num_attention_heads: 4        # multi-head self-attention heads
-  dropout: 0.1                  # dropout across transformer blocks
-  hidden_continuous_size: 8     # GRN size for continuous covariate processing
+  hidden_size: 32               # transformer hidden dim (TFT main width); Optuna best (trial 10)
+  lstm_layers: 1                # depth of TFT's encoder/decoder LSTM stack; Optuna best
+  num_attention_heads: 2        # multi-head self-attention heads; Optuna best (was 4)
+  dropout: 0.192                # dropout across transformer blocks; Optuna best (was 0.1)
+  hidden_continuous_size: 10    # GRN size for continuous covariate processing; Optuna best (was 8)
   add_relative_index: false     # we provide real future_covariates instead
   full_attention: false         # use TFT's interpretable masked attention
-  batch_size: 64                # mini-batch size during training
+  batch_size: 128               # mini-batch size during training; Optuna best (was 64)
   n_epochs: 30                  # max passes; early stopping may halt sooner
-  learning_rate: 0.001          # Adam learning rate
+  learning_rate: 1.07e-4        # Adam learning rate; Optuna best (was 1e-3)
   random_state: 42              # determinism for reproducible runs
 
 training:
