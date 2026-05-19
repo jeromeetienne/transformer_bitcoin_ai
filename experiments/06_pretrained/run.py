@@ -15,8 +15,8 @@ from darts.dataprocessing.transformers import Scaler
 from darts.models import Chronos2Model, TimesFM2p5Model
 from darts.utils.likelihood_models.torch import QuantileRegression
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 from btc_ai.eval.metrics import (
 	annualized_sharpe,
 	cumulative_return,
@@ -31,7 +31,8 @@ from btc_ai.eval.metrics import (
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
 # (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
-CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 VALID_BACKENDS: tuple[str, ...] = ('chronos', 'timesfm')
 
@@ -92,9 +93,6 @@ def train_and_evaluate(
 	# prices on the median, and compute the standard metric suite.
 	# `model_overrides` lets sweep.py poke individual config values (backend,
 	# hub_model_name, input_chunk_length, num_samples) without rewriting cfg.
-	req = kline_request_from_config(cfg)
-	test_fraction = float(cfg['test_fraction'])
-
 	merged: dict[str, Any] = {
 		'backend': cfg['backend'],
 		'hub_model_name': cfg['hub_model_name'],
@@ -118,15 +116,20 @@ def train_and_evaluate(
 		)
 	num_samples = int(merged['num_samples'])
 
-	loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-	df = loader.load(req)
+	splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+	# Zero-shot models don't use a validation slice: fold val into the training
+	# segment so behavior matches the legacy single-split path.
+	df = pd.concat([splits.train, splits.validation, splits.test])
+	pre_test_rows = len(splits.train) + len(splits.validation)
 	# Drop tz so darts' time indexing is unambiguous (matches 02_arima/04_lstm/05_transformer).
 	df.index = df.index.tz_localize(None)
 	logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
 
 	target_pd, ref_pd = build_target(df)
+	# build_target drops the leading row (.diff() yields NaN at index 0). Translate
+	# the bar-level pre_test_rows index into a target-row index via the timestamp.
+	train_end = target_pd.index.get_indexer([df.index[pre_test_rows]])[0]
 	n = len(target_pd)
-	train_end = int(n * (1.0 - test_fraction))
 	logger.info('split: train=[0:%d] test=[%d:%d]', train_end, train_end, n)
 
 	# Cast to float32 for the torch model: MPS does not support float64 tensors,
@@ -195,13 +198,15 @@ def train_and_evaluate(
 	pred_close_lo = ref_test * np.exp(r_q_lo)
 	pred_close_hi = ref_test * np.exp(r_q_hi)
 
-	ppy = periods_per_year(req.interval)
+	ppy = periods_per_year(splits.interval)
 	strat = strategy_returns(close_test, pred_close, ref_test)
 
 	metrics: dict[str, Any] = {
 		'experiment': '06_pretrained',
 		'backend': backend,
 		'hub_model_name': hub_model_name,
+		'symbol': splits.symbol_test,
+		'interval': splits.interval,
 		'input_chunk_length': int(merged['input_chunk_length']),
 		'num_samples': num_samples,
 		'quantiles': quantiles,
@@ -244,7 +249,6 @@ def main() -> None:
 	(results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
 	predictions.to_parquet(results_dir / 'predictions.parquet')
 
-	req = kline_request_from_config(cfg)
 	label = f'{metrics["backend"]} ({metrics["hub_model_name"]})'
 	q_lo, _, q_hi = metrics['quantiles']
 
@@ -264,7 +268,9 @@ def main() -> None:
 		alpha=0.2,
 		label=f'q{q_lo:g}–q{q_hi:g} band',
 	)
-	ax.set_title(f'{req.symbol} {req.interval} — {label} (test set, zero-shot)')
+	ax.set_title(
+		f'{metrics["symbol"]} {metrics["interval"]} — {label} (test set, zero-shot)',
+	)
 	ax.set_ylabel('price')
 	ax.legend()
 	fig.tight_layout()

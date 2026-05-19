@@ -12,8 +12,8 @@ import pandas as pd
 import xgboost as xgb
 from features import build_features
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 from btc_ai.eval.metrics import (
         annualized_sharpe,
         cumulative_return,
@@ -28,7 +28,8 @@ from btc_ai.eval.metrics import (
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
 # (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
-CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 logger = logging.getLogger(__name__)
 
@@ -44,19 +45,25 @@ def main() -> None:
         results_dir.mkdir(parents=True, exist_ok=True)
 
         cfg = load_yaml(args.config)
-        req = kline_request_from_config(cfg)
-        test_fraction: float = cfg['test_fraction']
         feat_cfg = cfg['features']
         model_cfg = cfg['model']
 
-        loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-        df = loader.load(req)
+        splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+        # XGBoost doesn't use a validation slice: fold val into the training segment
+        # so behavior matches the legacy single-split path. Split before feature
+        # building would lose continuity for lag/rolling features that cross the
+        # train/test boundary, so we concat then split by index.
+        df = pd.concat([splits.train, splits.validation, splits.test])
+        pre_test_rows = len(splits.train) + len(splits.validation)
         logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
 
         X, y, ref = build_features(df, feat_cfg)
         logger.info('built %d feature rows × %d cols (after dropna)', len(X), X.shape[1])
 
-        split = int(len(X) * (1.0 - test_fraction))
+        # build_features drops the leading rows that don't have enough history for
+        # the longest lag/rolling window. Translate the bar-level pre_test_rows
+        # index into a feature-row index via the index intersection.
+        split = X.index.get_indexer([df.index[pre_test_rows]])[0]
         X_train, y_train = X.iloc[:split], y.iloc[:split]
         X_test, y_test = X.iloc[split:], y.iloc[split:]
         ref_test = ref.iloc[split:]
@@ -82,7 +89,7 @@ def main() -> None:
         pred_close = ref_test * np.exp(y_pred)
 
         strat = strategy_returns(close_test, pred_close, ref_test)
-        ppy = periods_per_year(req.interval)
+        ppy = periods_per_year(splits.interval)
 
         metrics = {
                 'experiment': '03_gradient_boosting',
@@ -111,7 +118,9 @@ def main() -> None:
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(close_test.index, close_test.values, label='close', linewidth=1)
         ax.plot(pred_close.index, pred_close.values, label='XGBoost pred', linewidth=1, alpha=0.7)
-        ax.set_title(f'{req.symbol} {req.interval} — XGBoost (test set)')
+        ax.set_title(
+                f'{splits.symbol_test} {splits.interval} — XGBoost (test set)',
+        )
         ax.set_ylabel('price')
         ax.legend()
         fig.tight_layout()

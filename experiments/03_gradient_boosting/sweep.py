@@ -8,8 +8,8 @@ import pandas as pd
 import xgboost as xgb
 from features import build_features
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 from btc_ai.eval.metrics import (
         annualized_sharpe,
         cumulative_return,
@@ -24,7 +24,8 @@ from btc_ai.eval.metrics import (
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
 # (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
-CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 # Edit this list to change which (n_estimators, max_depth, learning_rate) combos
 # the sweep evaluates. All combos run against the same data slice / split / feature
@@ -56,22 +57,20 @@ def main() -> None:
         results_dir.mkdir(parents=True, exist_ok=True)
 
         cfg = load_yaml(args.config)
-        req = kline_request_from_config(cfg)
-        test_fraction: float = cfg['test_fraction']
         feat_cfg = cfg['features']
         model_cfg = cfg['model']
 
-        loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-        df = loader.load(req)
+        splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+        df = pd.concat([splits.train, splits.validation, splits.test])
+        pre_test_rows = len(splits.train) + len(splits.validation)
         X, y, ref = build_features(df, feat_cfg)
-
-        split = int(len(X) * (1.0 - test_fraction))
+        split = X.index.get_indexer([df.index[pre_test_rows]])[0]
         X_train, y_train = X.iloc[:split], y.iloc[:split]
         X_test, y_test = X.iloc[split:], y.iloc[split:]
         ref_test = ref.iloc[split:]
         close_test = ref_test * np.exp(y_test)
 
-        ppy = periods_per_year(req.interval)
+        ppy = periods_per_year(splits.interval)
         header = [
                 'n_estimators', 'max_depth', 'learning_rate',
                 'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',

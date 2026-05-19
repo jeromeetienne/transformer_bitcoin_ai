@@ -2,8 +2,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CACHE_DIR = REPO_ROOT / 'data' / 'raw'
@@ -22,13 +22,17 @@ def main() -> None:
         args = parser.parse_args()
 
         cfg = load_yaml(args.config)
-        req = kline_request_from_config(cfg)
-
-        loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-        df = loader.load(req)
-
-        print(f'rows: {len(df)}')
-        print(f'range: {df.index[0]} -> {df.index[-1]}')
+        # Resolves the referenced dataset and warms the cache via BinanceVisionLoader
+        # (one fetch for shape A, three for shape B). Returned splits are discarded.
+        splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+        n_train = len(splits.train)
+        n_val = len(splits.validation)
+        n_test = len(splits.test)
+        print(f'dataset: {cfg["dataset"]}')
+        print(
+                f'rows: train={n_train} validation={n_val} test={n_test} '
+                f'total={n_train + n_val + n_test}'
+        )
         print(f'cache: {CACHE_DIR}')
 
 

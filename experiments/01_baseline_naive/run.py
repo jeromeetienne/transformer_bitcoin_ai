@@ -9,14 +9,15 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 from btc_ai.eval.metrics import directional_accuracy, mae, mape, rmse
 
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
 # (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
-CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +33,14 @@ def main() -> None:
         results_dir.mkdir(parents=True, exist_ok=True)
 
         cfg = load_yaml(args.config)
-        req = kline_request_from_config(cfg)
-        test_fraction: float = cfg['test_fraction']
-
-        loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-        df = loader.load(req)
+        splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+        # Naive baseline doesn't use a validation slice: fold val into the
+        # "pre-test" segment so behavior matches the legacy single-split path.
+        df = pd.concat([splits.train, splits.validation, splits.test])
+        split = len(splits.train) + len(splits.validation)
         logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
 
         close = df['close']
-        split = int(len(close) * (1.0 - test_fraction))
         test = close.iloc[split:]
         ref = close.iloc[split - 1:-1]
         ref.index = test.index
@@ -64,7 +64,9 @@ def main() -> None:
         fig, ax = plt.subplots(figsize=(10, 4))
         ax.plot(test.index, test.values, label='close', linewidth=1)
         ax.plot(y_pred.index, y_pred.values, label='naive pred', linewidth=1, alpha=0.7)
-        ax.set_title(f'{req.symbol} {req.interval} — naive baseline (test set)')
+        ax.set_title(
+                f'{splits.symbol_test} {splits.interval} — naive baseline (test set)',
+        )
         ax.set_ylabel('price')
         ax.legend()
         fig.tight_layout()

@@ -4,23 +4,10 @@ from typing import Any
 
 import yaml
 
-from btc_ai.data.schema import KlineRequest
-
 
 def load_yaml(path: Path) -> dict[str, Any]:
         with open(path) as f:
                 return yaml.safe_load(f)
-
-
-def kline_request_from_config(cfg: dict[str, Any]) -> KlineRequest:
-        return KlineRequest(
-                symbol=cfg['symbol'],
-                interval=cfg['interval'],
-                start=_parse_dt(cfg['start']),
-                end=_parse_dt(cfg['end']),
-                period=cfg['period'],
-                market=cfg.get('market', 'spot'),
-        )
 
 
 def _parse_dt(value: Any) -> datetime:

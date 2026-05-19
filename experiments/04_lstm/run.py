@@ -15,8 +15,8 @@ from darts.dataprocessing.transformers import Scaler
 from darts.models import BlockRNNModel
 from pytorch_lightning.callbacks import EarlyStopping
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 from btc_ai.eval.metrics import (
 	annualized_sharpe,
 	cumulative_return,
@@ -31,7 +31,8 @@ from btc_ai.eval.metrics import (
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
 # (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
-CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 logger = logging.getLogger(__name__)
 
@@ -64,21 +65,6 @@ def build_target_and_covariates(
 	return joined['r_target'], None, joined['ref_close']
 
 
-def split_three_way(
-	n: int,
-	test_fraction: float,
-	val_fraction: float,
-) -> tuple[int, int]:
-	# Returns (train_end, val_end). test = [val_end:n]. test_fraction is taken from
-	# the full series; val_fraction is then taken from the *remaining* train tail so
-	# val never overlaps test.
-	test_size = int(n * test_fraction)
-	val_end = n - test_size
-	val_size = int(val_end * val_fraction)
-	train_end = val_end - val_size
-	return train_end, val_end
-
-
 def train_and_evaluate(
 	cfg: dict[str, Any],
 	model_overrides: dict[str, Any] | None = None,
@@ -91,24 +77,26 @@ def train_and_evaluate(
 	# `model_overrides` lets sweep.py poke individual hyperparams without rewriting cfg.
 	# `extra_pl_callbacks` lets optuna_sweep.py inject a PyTorchLightningPruningCallback
 	# without forcing the early-stopping callback to be reconstructed in callers.
-	req = kline_request_from_config(cfg)
-	test_fraction = float(cfg['test_fraction'])
 	cov_cfg = cfg.get('covariates', {})
 	model_cfg = dict(cfg['model'])
 	if model_overrides is not None:
 		model_cfg.update(model_overrides)
 	train_cfg = cfg['training']
-	val_fraction = float(train_cfg['val_fraction'])
 
-	loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-	df = loader.load(req)
+	splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+	df = pd.concat([splits.train, splits.validation, splits.test])
+	pre_val_rows = len(splits.train)
+	pre_test_rows = len(splits.train) + len(splits.validation)
 	# Drop tz so darts' time indexing is unambiguous (matches 02_arima's convention).
 	df.index = df.index.tz_localize(None)
 	logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
 
 	target_pd, cov_pd, ref_pd = build_target_and_covariates(df, cov_cfg)
+	# build_target_and_covariates drops leading rows that lack history (diff/lag NaNs).
+	# Translate the bar-level boundary indices to target-row indices via timestamps.
+	train_end = target_pd.index.get_indexer([df.index[pre_val_rows]])[0]
+	val_end = target_pd.index.get_indexer([df.index[pre_test_rows]])[0]
 	n = len(target_pd)
-	train_end, val_end = split_three_way(n, test_fraction, val_fraction)
 	logger.info(
 		'split: train=[0:%d] val=[%d:%d] test=[%d:%d]',
 		train_end, train_end, val_end, val_end, n,
@@ -210,11 +198,13 @@ def train_and_evaluate(
 	close_test = ref_test * np.exp(target_test)
 	pred_close = ref_test * np.exp(preds)
 
-	ppy = periods_per_year(req.interval)
+	ppy = periods_per_year(splits.interval)
 	strat = strategy_returns(close_test, pred_close, ref_test)
 
 	metrics: dict[str, Any] = {
 		'experiment': '04_lstm',
+		'symbol': splits.symbol_test,
+		'interval': splits.interval,
 		'rows_total': int(n),
 		'rows_train': int(train_end),
 		'rows_val': int(val_end - train_end),
@@ -251,7 +241,6 @@ def main() -> None:
 	(results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
 	predictions.to_parquet(results_dir / 'predictions.parquet')
 
-	req = kline_request_from_config(cfg)
 	fig, ax = plt.subplots(figsize=(10, 4))
 	ax.plot(predictions.index, predictions['close'].values, label='close', linewidth=1)
 	ax.plot(
@@ -261,7 +250,9 @@ def main() -> None:
 		linewidth=1,
 		alpha=0.7,
 	)
-	ax.set_title(f'{req.symbol} {req.interval} — BlockRNN-LSTM (test set)')
+	ax.set_title(
+		f'{metrics["symbol"]} {metrics["interval"]} — BlockRNN-LSTM (test set)',
+	)
 	ax.set_ylabel('price')
 	ax.legend()
 	fig.tight_layout()

@@ -4,11 +4,12 @@ import logging
 import warnings
 from pathlib import Path
 
+import pandas as pd
 from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from statsmodels.tsa.arima.model import ARIMA
 
-from btc_ai.config import kline_request_from_config, load_yaml
-from btc_ai.data import BinanceVisionLoader
+from btc_ai.config import load_yaml
+from btc_ai.data import load_dataset_from_experiment_cfg
 from btc_ai.eval.metrics import (
         annualized_sharpe,
         cumulative_return,
@@ -23,7 +24,8 @@ from btc_ai.eval.metrics import (
 EXPERIMENT_DIR = Path(__file__).parent
 # results_dir is derived inside main() from the config filename stem
 # (e.g. configs/btc_4h_2024.yaml → results/btc_4h_2024/).
-CACHE_DIR = Path(__file__).resolve().parents[2] / 'data' / 'raw'
+REPO_ROOT = Path(__file__).resolve().parents[2]
+CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 # Edit this list to change which (p, d, q) orders the sweep evaluates.
 # All orders run against the same data slice / split defined in config.yaml.
@@ -61,21 +63,19 @@ def main() -> None:
         results_dir.mkdir(parents=True, exist_ok=True)
 
         cfg = load_yaml(args.config)
-        req = kline_request_from_config(cfg)
-        test_fraction: float = cfg['test_fraction']
-
-        loader = BinanceVisionLoader(cache_dir=CACHE_DIR)
-        df = loader.load(req)
+        splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+        # Mirrors run.py: ARIMA has no validation slice, fold val into training.
+        df = pd.concat([splits.train, splits.validation, splits.test])
+        split = len(splits.train) + len(splits.validation)
         close = df['close'].astype('float64')
         close.index = close.index.tz_localize(None)
 
-        split = int(len(close) * (1.0 - test_fraction))
         train = close.iloc[:split]
         test = close.iloc[split:]
         ref = close.iloc[split - 1:-1]
         ref.index = test.index
 
-        ppy = periods_per_year(req.interval)
+        ppy = periods_per_year(splits.interval)
         header = [
                 'order', 'aic', 'bic',
                 'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',

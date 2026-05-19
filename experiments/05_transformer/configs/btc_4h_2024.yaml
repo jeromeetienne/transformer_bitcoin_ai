@@ -7,13 +7,7 @@
 # close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc/Sharpe are directly
 # comparable to 01/01b/02/03/04.
 
-symbol: BTCUSDT       # Binance trading pair
-interval: 4h          # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
-start: 2024-01-01     # inclusive, UTC
-end: 2024-12-01       # exclusive, UTC
-period: monthly       # 'monthly' or 'daily'. Must be set explicitly.
-                      # Use 'daily' for partial / not-yet-complete months.
-test_fraction: 0.2    # tail fraction of the loaded series held out for evaluation
+dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.yaml
 
 covariates:
   use_volume: true            # include log1p(volume) as a past covariate
@@ -36,8 +30,8 @@ model:
   random_state: 42              # determinism for reproducible runs
 
 training:
-  val_fraction: 0.1             # tail fraction of the *training* slice carved off for early stopping
   early_stopping_patience: 5    # epochs of no val_loss improvement before stopping
+                                # (validation slice comes from the dataset config above)
 
 optuna:                         # only read by optuna_sweep.py; ignored by run.py / sweep.py
   n_trials: 80                  # total trials to evaluate (TPE sampler picks each set of params)
