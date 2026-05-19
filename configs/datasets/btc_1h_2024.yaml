@@ -12,6 +12,6 @@ source:                   # one Binance Vision pull covers all splits
   period: monthly         # 'monthly' or 'daily'. Binance Vision archive granularity.
 
 splits:
-  train:      { start: 2024-01-01, end: 2024-08-01 }   # 7 months
+  train:      { start: 2023-01-01, end: 2024-08-01 }   # 7 months
   validation: { start: 2024-08-01, end: 2024-10-01 }   # 2 months — early-stopping signal for 04/05
   test:       { start: 2024-10-01, end: 2024-12-01 }   # 2 months — held out for evaluation
