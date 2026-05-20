@@ -1,0 +1,25 @@
+# Zero-shot foundation models on 1h BTC log-returns. Same target as 04_lstm /
+# 05_transformer (r_T = log(close_T / close_{T-1})), reconstructed to price as
+# close_pred = close_{T-1} * exp(r_pred), so MAE / RMSE / MAPE / dir_acc / Sharpe
+# stay on the same scale as 01..05 and the leaderboard remains apples-to-apples.
+# The model is *not* trained — fit() is a no-op for darts foundation models;
+# weights come straight from HuggingFace Hub. Both backends are run univariate
+# (no past / future covariates): TimesFM 2.5 doesn't accept covariates, and we
+# keep Chronos-2 univariate too so the head-to-head is fair on the same inputs
+# and the question stays "does the pretrained prior alone transfer to BTC?".
+
+dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.dataset.yaml
+
+backend: chronos      # this file pins the chronos-large variant; siblings: *.chronos-small.config.yaml, *.timesfm.config.yaml
+hub_model_name: amazon/chronos-2
+                      # large chronos-2 variant — encoder-only T5-style, 120M params
+                      # other chronos variants are pinned in their own *.chronos-*.config.yaml files
+
+model:
+  input_chunk_length: 256       # bars of history fed to the foundation model
+                                # (chronos-2 max=8192, timesfm-2.5 max=16384)
+  output_chunk_length: 1        # one-step-ahead forecast horizon
+  num_samples: 200              # samples drawn from the predictive quantile distribution
+  quantiles: [0.1, 0.5, 0.9]    # subset of the model's pre-trained quantiles;
+                                # median (0.5) feeds point metrics; q10 / q90
+                                # are stored alongside in predictions.parquet

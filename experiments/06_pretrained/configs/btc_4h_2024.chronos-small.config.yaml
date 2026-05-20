@@ -1,4 +1,4 @@
-# Zero-shot foundation models on 1h BTC log-returns. Same target as 04_lstm /
+# Zero-shot foundation models on 4h BTC log-returns. Same target as 04_lstm /
 # 05_transformer (r_T = log(close_T / close_{T-1})), reconstructed to price as
 # close_pred = close_{T-1} * exp(r_pred), so MAE / RMSE / MAPE / dir_acc / Sharpe
 # stay on the same scale as 01..05 and the leaderboard remains apples-to-apples.
@@ -8,14 +8,12 @@
 # keep Chronos-2 univariate too so the head-to-head is fair on the same inputs
 # and the question stays "does the pretrained prior alone transfer to BTC?".
 
-dataset: btc_1h_2024  # → configs/datasets/btc_1h_2024.dataset.yaml
+dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.dataset.yaml
 
-backend: chronos      # 'chronos' or 'timesfm' — no default; pick one explicitly
-hub_model_name: amazon/chronos-2
-                      # chronos: amazon/chronos-2 | autogluon/chronos-2-small | autogluon/chronos-2-synth
-                      # timesfm: google/timesfm-2.5-200m-pytorch
-# backend: 'timesfm'
-# hub_model_name: google/timesfm-2.5-200m-pytorch
+backend: chronos      # this file pins the chronos-small variant; siblings: *.chronos-large.config.yaml, *.timesfm.config.yaml
+hub_model_name: autogluon/chronos-2-small
+                      # small chronos-2 variant — 28M params, ~4x faster than chronos-2-large; useful for sanity checks
+                      # other chronos variants are pinned in their own *.chronos-*.config.yaml files
 
 model:
   input_chunk_length: 256       # bars of history fed to the foundation model
