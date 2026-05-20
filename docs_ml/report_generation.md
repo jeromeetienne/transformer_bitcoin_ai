@@ -17,6 +17,28 @@ Reverse-engineered from the existing reports in [docs_ml/reports/](reports/). Us
 
 The report covers a single `(experiment, trial)` pair. The trial name is the config filename with the `.config.yaml` extension stripped — e.g. `experiments/02_arima/configs/btc_4h_2024.config.yaml` → trial `btc_4h_2024`, with artefacts under `experiments/02_arima/results/btc_4h_2024/`. Substitute `${experiment_id}` (e.g. `02_arima`) and `${trial}` (e.g. `btc_4h_2024`) throughout.
 
+### Canonical trial
+
+Each experiment has exactly one **canonical trial**: the one whose config matches the per-experiment Makefile's default `CONFIG ?=` line. The canonical trial is what the `${experiment_id}.report.md` headline numbers cover.
+
+Non-canonical trials (other configs in the same `configs/` directory, e.g. `btc_4h_2024.chronos-large` next to `btc_4h_2024.chronos-small`, or `btc_eth_4h_2024` next to `btc_4h_2024`) do **not** get their own report file. They are surfaced in two places:
+
+- A **Variants** subsection inside the canonical report (see Skeleton below) — a single table with one row per variant, columns matching the headline metric table. Bold the leader.
+- The canonical row in the global leaderboard remains the Makefile-default trial; variants are referenced inline from the Variants subsection only.
+
+If a non-canonical trial is more interesting than the canonical one, change the Makefile default rather than splitting the report.
+
+### Rotating the canonical
+
+When the Makefile's `CONFIG ?=` default changes (a "canonical rotation"), the following propagate:
+
+1. **Regenerate the per-experiment report** against the new canonical. Headline metrics, Configuration table, Results table, Files produced, and How-to-reproduce all change.
+2. **The former canonical becomes a sibling row in the Variants table**, annotated `(former canonical)` in the variant-name column. Do not delete the historical context; readers need to see what was previously cited as the headline.
+3. **The cross-experiment leaderboard row in the canonical report changes** (it's the canonical's `metrics.json` now). Surrounding editorial usually flips — whatever the new canonical leads / trails is different from what the previous canonical led / trailed.
+4. **If the on-disk `sweep.csv` lives in the former canonical's results dir** (`experiments/${experiment_id}/results/${former_trial}/sweep.csv`), the new report's Sweep section explicitly retitles it `Sweep — <axis> on the <former-slice> sibling slice` and notes that the sweep ranks recipes / hyperparameters on the *sibling's* train slice, not the canonical's. Flag this as a follow-up: re-running `make ${experiment_id}_sweep` after the rotation writes a fresh sweep against the new canonical.
+5. **The global report goes stale.** Its leaderboard row for this experiment, its ladder section, its pair-by-pair table, its per-bar Sharpe table, and its Bottom line all need re-derivation. See [Global cross-experiment report](#global-cross-experiment-report).
+6. **Older per-experiment reports are not edited.** They remain snapshots at their run date, even though their leaderboard rows now disagree with the rotated canonical's. This is the cross-report-consistency rule.
+
 Read these files for the experiment+trial under report:
 
 - `experiments/${experiment_id}/configs/${trial}.config.yaml` — config table + data slice description
@@ -29,6 +51,13 @@ Read these files for the experiment+trial under report:
 - `docs_ml/reports/*.report.md` — every prior report. **Required** for the cross-experiment leaderboard table and inline links to sibling reports.
 
 Do **not** rerun experiments, recompute metrics, or invent numbers. Every numeric value in the report must come verbatim from `metrics.json` / `sweep.csv` of the experiment+trial being reported on, or from a sibling experiment's existing report.
+
+**Multi-seed exception.** When the per-experiment `README.md` reports a multi-seed comparison (mean ± std, 95 % CI, or similar) for the canonical trial, the report **must** cite both:
+
+- The single-seed value from `metrics.json` (verbatim) as the on-disk headline.
+- The README's multi-seed mean ± std and / or CI bounds as the *reproducible* number, with explicit framing that the on-disk single seed is one draw from that distribution.
+
+When the on-disk single seed sits above the CI upper bound, label it "a favourable seed" in prose. When it sits inside the CI, treat the README mean as the read-in-one-line number. This rule exists because single-seed leaderboard cells overstate certainty on stochastic trainers; the multi-seed CI is the honest reproducibility floor.
 
 ## Output
 
@@ -48,7 +77,7 @@ One paragraph naming the model class, what it predicts, and what makes this expe
 
 ## Configuration
 
-From [experiments/${experiment_id}/configs/${trial}.yaml](../../experiments/${experiment_id}/configs/${trial}.yaml):
+From [experiments/${experiment_id}/configs/${trial}.config.yaml](../../experiments/${experiment_id}/configs/${trial}.config.yaml):
 
 | Field | Value |
 |---|---|
@@ -77,6 +106,8 @@ From [experiments/${experiment_id}/results/${trial}/metrics.json](../../experime
 
 (Add AIC/BIC, training-loss, or other model-native metrics above the shared block if the experiment exposes them.)
 
+If the per-experiment `README.md` includes a multi-seed comparison for the canonical trial, follow the table with a short paragraph framing the on-disk single-seed value against the README's mean ± std and CI bounds. Per the multi-seed exception in [Inputs](#inputs), the single-seed value is the on-disk headline; the README's CI is the reproducible centre. State plainly when the on-disk seed is favourable (above the CI upper bound) or representative (inside the CI).
+
 ## Cross-experiment comparison
 
 Same data slice, same split, same metrics:
@@ -99,6 +130,22 @@ From [experiments/${experiment_id}/results/${trial}/sweep.csv](../../experiments
 | … bolded leaders … |
 
 Sort by the metric that matters most for the experiment (Sharpe for trading-aware models, RMSE/MAE for level-only).
+
+**Sibling-slice sweep.** If the `sweep.csv` lives in a *non-canonical* results directory — usually because the sweep was last run before a [canonical rotation](#rotating-the-canonical), or because `make ${experiment_id}_sweep` was invoked with `CONFIG=` pointing at a sibling — retitle the section `## Sweep — <axis> on the <sibling-slice> sibling slice` and link to the sibling path explicitly. State that the test window is identical (so the metrics are on the same scale) but the train slice differs, and that no canonical-slice sweep currently exists on disk. Flag the re-run as a follow-up.
+
+## Variants (omit if the experiment has only one trial with on-disk results)
+
+When the experiment has more than one config in `experiments/${experiment_id}/configs/` *and* more than one corresponding `results/` directory, list them here. Sort rows by the metric that matters most for the experiment (Sharpe for trading-aware models, RMSE/MAE for level-only) with the canonical row in whatever position the sort gives it — **do not** force the canonical to the top; the variant ranking is informative.
+
+Include extra columns whenever they differ across variants and a reader would want to see the delta at a glance — common candidates: `train`, `recipe`, `backend`, `num_samples`. Annotate the variant column with `(canonical)` on the Makefile-default row and `(former canonical)` on rows that previously held the canonical pin (see [Rotating the canonical](#rotating-the-canonical)).
+
+| Variant | <axis cols…> | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
+|---|---|---|---|---|---|---|---|
+| `${trial}` (canonical) | … | **…** | **…** | … | **…** | **…** | **…** |
+| `<other-trial>` | … | … | … | … | … | … | … |
+| `<former-canonical>` (former canonical) | … | … | … | … | … | … | … |
+
+One paragraph below the table: what the variant axis is (backend, asset, interval, recipe, train-slice length…), what flips between variants, and whether any variant outperforms the canonical row enough to justify rotating the Makefile default. When a config / results pair exists but its `hub_model_name` or other load-bearing field disagrees with the filename, flag the mismatch inline with a `⚠` so a leaderboard reader does not mis-attribute the row.
 
 ## Interpretation
 
@@ -128,15 +175,17 @@ One short paragraph stating the headline finding, in bold where appropriate, plu
 - [experiments/${experiment_id}/results/${trial}/predictions.parquet](../../experiments/${experiment_id}/results/${trial}/predictions.parquet)
 - [experiments/${experiment_id}/results/${trial}/plot.png](../../experiments/${experiment_id}/results/${trial}/plot.png)
 - [experiments/${experiment_id}/results/${trial}/sweep.csv](../../experiments/${experiment_id}/results/${trial}/sweep.csv)  ← only if exists
+- [experiments/${experiment_id}/results/${trial}/training_curves.png](../../experiments/${experiment_id}/results/${trial}/training_curves.png)  ← only for experiments that train (neural-net / fine-tuning)
 
 ## How to reproduce
 
 ```
-make ${experiment_id} CONFIG=experiments/${experiment_id}/configs/${trial}.yaml
-make ${experiment_id}_sweep CONFIG=experiments/${experiment_id}/configs/${trial}.yaml   # only if there is a sweep target in the Makefile
+make ${experiment_id} CONFIG=experiments/${experiment_id}/configs/${trial}.config.yaml
+make ${experiment_id}_sweep CONFIG=experiments/${experiment_id}/configs/${trial}.config.yaml   # only if there is a sweep target in the Makefile
+make ${experiment_id}_optuna CONFIG=experiments/${experiment_id}/configs/${trial}.config.yaml  # only if there is an optuna target; results are not consumed by the headline numbers
 ```
 
-(The CONFIG= override is optional when running the trial that matches the per-experiment Makefile's default `CONFIG ?=`; required for any other trial.)
+(The CONFIG= override is optional when running the canonical trial — the one matching the per-experiment Makefile's default `CONFIG ?=`; required for any other trial.)
 ```
 
 ## Style rules
@@ -167,6 +216,7 @@ The single-file synthesis across every per-experiment report. Lives at `docs_ml/
 
 - After **any** per-experiment report is written or updated. The global report is a derived artifact; it goes stale the moment a row in any leaderboard changes.
 - After data-slice shifts that affect comparability (e.g. the recent `1h → 4h` switch). The data-slice picture section is load-bearing — it tells the reader which rows are apples-to-apples.
+- After a [canonical rotation](#rotating-the-canonical) in any experiment. The global leaderboard row, ladder section, pair-by-pair table, per-bar Sharpe table, and Bottom line all need re-derivation.
 
 ### Inputs
 
@@ -204,7 +254,9 @@ A table with one row per experiment showing `interval (config)`, `rows_total (ar
 
 ## Leaderboard — `<slice>` slice
 
-One leaderboard table per data slice present (e.g. one 4h, one 1h). Each is a `| Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | annualized_sharpe |` table, sorted by experiment id. **Bold the leader** in each metric column. Editorial paragraph below the table: who leads what, what's surprising, what flipped vs. expectations.
+One leaderboard table per **test window** present (the train slice may differ between rows; the global leaderboard compares the test-window numbers). Each is a `| Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | annualized_sharpe |` table, sorted by experiment id. **Bold the leader** in each metric column. Each row is the canonical trial's `metrics.json` verbatim — never a variant. Editorial paragraph below the table: who leads what, what's surprising, what flipped vs. expectations. When the leadership has shifted since the previous global synthesis (e.g. after a canonical rotation), state the flip explicitly and link to the previous and current per-experiment reports.
+
+When a canonical row's per-experiment `README.md` reports a multi-seed CI for the same recipe, the leaderboard editorial **must** name the on-disk single-seed value against the CI — single-seed leaderboard cells overstate certainty on stochastic trainers, and the global synthesis is where that disclaimer belongs.
 
 ## The complexity-doesn't-pay arc (or equivalent ladder section)
 
@@ -233,6 +285,8 @@ Numbered list of cross-experiment identities the artifacts confirm (e.g. ARIMA (
 ## Per-bar Sharpe significance
 
 Table with one row per experiment whose `annualized_sharpe` is not NaN. Columns: `Experiment | Sharpe (annualized) | √ppy | per-bar Sharpe | √N_test | SE | ratio (σ)`. `per_bar = annualized / √ppy`; `SE = 1 / √N_test`. Bold any row with ratio > 2.5 σ as cleanly significant. State plainly that this approximation assumes i.i.d. per-bar strategy returns (which they probably aren't on crypto) and therefore upper-bounds the real significance.
+
+When the per-experiment `README.md` reports a multi-seed CI for the canonical, add **three rows** for that experiment instead of one: single-seed on disk, multi-seed mean, multi-seed CI lower bound. The editorial then names the honest range (e.g. "borderline-to-clean depending on which number you cite") rather than a single σ ratio. The single-seed row may bold-clear 2.5 σ on a favourable draw; the CI lower bound is the conservative read.
 
 ## Regime caveat
 
@@ -274,3 +328,4 @@ When the global report is regenerated:
 
 - It **may** state that a leaderboard row in a per-experiment report would change if that report were re-generated today. It **must not** edit the per-experiment report to fix it. Per-experiment reports are snapshots; the global report is the live synthesis.
 - Conversely, when a per-experiment report changes (Prompt 1 was just run), the global report is now stale and must be regenerated (Prompt 2). The two are coupled.
+- After a [canonical rotation](#rotating-the-canonical), the global report's per-bar Sharpe table and ladder rows for that experiment shift. The prior canonical does **not** stay in the global tables as a sibling row — that belongs in the per-experiment Variants section. The global is canonical-only, except for explicitly-labeled multi-seed rows under [Per-bar Sharpe significance](#per-bar-sharpe-significance) and short-form variant call-outs under a Variants-and-recipes subsection when the variant's metrics flip a load-bearing claim.

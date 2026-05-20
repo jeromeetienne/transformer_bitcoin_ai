@@ -1,11 +1,11 @@
 # Report — `06_pretrained`
 
-**Run date:** 2026-05-19
-**Status:** completed (single fit on fresh 4h slice, Chronos-2 backend; no sweep yet — pending `make 06_pretrained_sweep` for the Chronos ↔ TimesFM head-to-head)
+**Run date:** 2026-05-20
+**Status:** completed (canonical trial: `btc_4h_2024.chronos-small`; two siblings on disk for the backend × size head-to-head)
 
 ## What this experiment is
 
-First **zero-shot foundation model** in the lineup. Runs Amazon's Chronos-2 (encoder-only T5-style, ≈ 120 M parameters) — selected via `backend:` in the config — with **no training**: weights come straight from HuggingFace Hub, `fit()` is a no-op, and walk-forward 1-step probabilistic forecasts run on the held-out test slice. Differentiator vs. all earlier experiments: this model has never seen Bitcoin. The question is whether the prior learned on millions of unrelated time series transfers to BTC 4h log-returns.
+First **zero-shot foundation model** in the lineup. Runs Amazon's Chronos-2 (encoder-only T5-style; `autogluon/chronos-2-small` is 28 M parameters, `amazon/chronos-2` is 120 M) or Google's TimesFM 2.5 (decoder-only patch-transformer, 200 M parameters), selected via `backend:` and `hub_model_name:` in the per-variant config — with **no training**: weights come straight from HuggingFace Hub, `fit()` is a no-op, and walk-forward 1-step probabilistic forecasts run on the held-out test slice. Differentiator vs. all earlier experiments: the model has never seen Bitcoin. The question is whether the prior learned on millions of unrelated time series transfers to BTC 4h log-returns.
 
 ```
 HF Hub weights ──► darts FoundationModel ──► historical_forecasts(retrain=False, num_samples=200)
@@ -13,88 +13,112 @@ HF Hub weights ──► darts FoundationModel ──► historical_forecasts(re
                                               └──► quantile(0.1) / 0.5 / 0.9 ──► reconstruct close
 ```
 
-Library: **darts** (`darts.models.Chronos2Model`, with `darts.models.TimesFM2p5Model` as the alternative backend). Walk-forward shape: same `historical_forecasts(retrain=False, last_points_only=True)` as 02 / 04 / 05, plus `num_samples=200` per step — each forecast is a stochastic draw, and three quantiles (q10 / q50 / q90) are stored alongside the median in `predictions.parquet`. The median (q50) feeds the leaderboard metrics. See [experiments/06_pretrained/README.md](../../experiments/06_pretrained/README.md) for the full narrative.
+Library: **darts** (`darts.models.Chronos2Model`, `darts.models.TimesFM2p5Model`). Walk-forward shape: `historical_forecasts(retrain=False, last_points_only=True)` matches 02 / 04 / 05, plus `num_samples = 200` per step — each forecast is a stochastic draw, and three quantiles (q10 / q50 / q90) are stored alongside the median in `predictions.parquet`. The median (q50) feeds the leaderboard metrics. See [experiments/06_pretrained/README.md](../../experiments/06_pretrained/README.md) for the full narrative.
 
 ## Configuration
 
-From [experiments/06_pretrained/configs/btc_4h_2024.chronos-small.config.yaml](../../experiments/06_pretrained/configs/btc_4h_2024.chronos-small.config.yaml):
+From [experiments/06_pretrained/configs/btc_4h_2024.chronos-small.config.yaml](../../experiments/06_pretrained/configs/btc_4h_2024.chronos-small.config.yaml) (the canonical trial; matches the per-experiment Makefile's default `CONFIG ?=`):
 
 | Field | Value |
 |---|---|
 | symbol | `BTCUSDT` |
 | interval | `4h` |
-| start | `2024-01-01` UTC (inclusive) |
-| end | `2024-12-01` UTC (exclusive) |
-| period | `monthly` |
-| test_fraction | `0.2` |
+| dataset | `btc_4h_2024` ([configs/datasets/btc_4h_2024.dataset.yaml](../../configs/datasets/btc_4h_2024.dataset.yaml)) |
+| train window | `2023-01-01` → `2024-08-01` UTC |
+| val window | `2024-08-01` → `2024-10-01` UTC (unused — zero-shot has no early stopping) |
+| test window | `2024-10-01` → `2024-12-01` UTC |
 | backend | `chronos` |
-| hub_model_name | `amazon/chronos-2` |
+| hub_model_name | `autogluon/chronos-2-small` (28 M parameters) |
 | model.input_chunk_length | `256` (≈ 42 days at 4h) |
 | model.output_chunk_length | `1` |
 | model.num_samples | `200` |
 | model.quantiles | `[0.1, 0.5, 0.9]` |
 
-Total bars: **2 009**. Train: **1 607** (Scaler-fit slice; the model itself does not train). Test: **402**. No val slice — zero-shot has no early stopping.
+Total bars: **4 199**. Scaler-fit slice ("train" — the model itself does not train): **3 833**. Test: **366**.
 
-## Results — single fit (Chronos-2 on 4h)
+## Results — single fit (Chronos-2 small, zero-shot)
 
-From [experiments/06_pretrained/results/btc_4h_2024/metrics.json](../../experiments/06_pretrained/results/btc_4h_2024/metrics.json):
+From [experiments/06_pretrained/results/btc_4h_2024.chronos-small/metrics.json](../../experiments/06_pretrained/results/btc_4h_2024.chronos-small/metrics.json):
 
 | Metric | Value |
 |---|---|
-| MAE | 519.78 USD |
-| RMSE | **780.99** USD |
-| MAPE | 0.6721 % |
-| Directional accuracy | 0.5323 |
-| Cumulative return | **0.6975** |
-| Annualized Sharpe | **7.5915** |
+| MAE | 546.66 USD |
+| RMSE | 817.81 USD |
+| MAPE | 0.7003 % |
+| Directional accuracy | 0.4754 (below coin-flip — see Interpretation) |
+| Cumulative return | 0.2225 |
+| Annualized Sharpe | 2.9722 |
 
 ## Cross-experiment comparison
 
-4h-slice leaderboard. Same data slice, same split, same metrics:
+4h-slice leaderboard. Same `btc_4h_2024` data slice, same `2024-10-01` → `2024-12-01` test window, same metrics:
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
-| [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | 782.42 | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
-| [03_xgboost (n_feat=31)](03_xgboost.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
-| [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
-| [05_transformer](05_transformer.report.md) | 813.10 | 1 090.78 | 1.0786 % | 0.4913 | 0.4468 | 5.8675 |
-| **06_pretrained (chronos-2)** | 519.78 | **780.99** | 0.6721 % | 0.5323 | **0.6975** | **7.5915** |
+| [01_baseline](01_baseline.report.md) | 540.96 | 813.14 | 0.6922 % | NaN | — | — |
+| [02_arima (3, 1, 3)](02_arima.report.md) | **539.15** | 808.79 | 0.6903 % | 0.5082 | **0.5269** | **6.8559** |
+| [03_xgboost (n_feat=31)](03_xgboost.report.md) | 550.85 | 808.65 | 0.7096 % | 0.5082 | 0.4149 | 6.1388 |
+| [04_lstm](04_lstm.report.md) | 539.23 | 808.29 | **0.6909 %** | **0.5301** | 0.4284 | 4.8221 |
+| [05_transformer](05_transformer.report.md) | 891.09 | 1 271.26 | 1.1499 % | 0.5055 | 0.1219 | 2.5390 |
+| **06_pretrained (chronos-2 small)** | **546.66** | **817.81** | **0.7003 %** | **0.4754** | **0.2225** | **2.9722** |
 
-**06_pretrained takes the 4h leaderboard on RMSE, cum_ret, and Sharpe** — and does so as a zero-shot model that has never seen Bitcoin. RMSE 780.99 is **lower than 02_arima's 782.42** even though MAE is $2.62 higher; the foundation model makes fewer outsized errors. dir_acc 0.5323 is second-best after ARIMA(1, 1, 1)'s 0.5547 — among models that express direction (excluding the no-opinion naive), only ARIMA finds more.
+The zero-shot prior does **not** transfer at chronos-2-small. dir_acc 0.4754 is below coin-flip — the small Chronos checkpoint actively *misreads* direction on this slice — and Sharpe 2.97 trails every other ML model except the TFT. MAE 546.66 sits $7.51 above ARIMA(3, 1, 3)'s 539.15 (within sweep-noise) but RMSE 817.81 is the worst in the leaderboard ex-TFT. The leaderboards in older reports (e.g. [06_pretrained's prior run](#), [05_transformer.report.md](05_transformer.report.md)) cite a different slice (rows_test ≈ 401) and an earlier ARIMA order (1, 1, 1) — they are snapshots and have not been re-edited; only this report's table reflects the current `metrics.json` files. See the Variants section below for the timesfm head-to-head, which tells a different story.
+
+## Variants
+
+The experiment ships three variants in `experiments/06_pretrained/configs/`, all on the same 4h test window. The Makefile default pins the small variant for sanity-check speed; the headline result lives in `timesfm`:
+
+| Variant | hub_model_name | params | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
+|---|---|---|---|---|---|---|---|---|
+| `btc_4h_2024.chronos-small` (canonical) | `autogluon/chronos-2-small` | 28 M | **546.66** | **817.81** | **0.7003 %** | 0.4754 | 0.2225 | 2.9722 |
+| `btc_4h_2024.chronos-large` | `amazon/chronos-2` | 120 M | 560.59 | 837.11 | 0.7159 % | 0.4344 | 0.1116 | 1.9004 |
+| `btc_4h_2024.timesfm` | `google/timesfm-2.5-200m-pytorch` | 200 M | 570.79 | 843.75 | 0.7309 % | **0.4863** | **0.3164** | **4.1080** |
+
+The variant axis is **backend × parameter count**. Three observations:
+
+- **Bigger Chronos is worse, not better.** The 120 M chronos-large is uniformly behind the 28 M chronos-small across every metric (MAE +13.93, dir_acc −0.041, Sharpe −1.07). The extra 92 M parameters of pretrained TS prior actively hurt on this slice. The small variant is not just a sanity-check checkpoint — it's the better Chronos for this data.
+- **TimesFM wins the trading metrics by a margin large enough to matter.** Sharpe 4.108 vs. chronos-small's 2.972 is a 38 % relative lift; cum_ret 0.316 vs. 0.223 is a 42 % lift. dir_acc 0.4863 is still below coin-flip but it's the highest among the three. The decoder-only TimesFM prior is meaningfully better-tuned for BTC than either Chronos-2 checkpoint at this size and context length.
+- **All three lose to ARIMA(3, 1, 3) on every metric.** Even the best variant (timesfm, Sharpe 4.11) trails the linear baseline (Sharpe 6.86). The pretrained prior alone is not enough to beat a 7-parameter AR / MA model on this slice. That is the experiment's honest answer to its motivating question.
+
+A backend rotation isn't justified — timesfm wins trading metrics, but the small chronos checkpoint wins point error, and the experiment's design intent is the head-to-head itself (not picking a winner). Leaving the canonical pinned at chronos-small keeps the per-experiment headline aligned with the smallest, fastest variant; the timesfm result is loud enough in this Variants table.
 
 ## Interpretation
 
-1. **The pretrained prior transfers to 4h BTC.** Chronos-2's Sharpe 7.5915 leads every trained model on the 4h slice: XGBoost (6.4233), ARIMA(1, 1, 1) (6.0569), TFT (5.8675), LSTM (4.2660). Per-bar Sharpe = 7.5915 / √2190 = 0.1622; SE = 1 / √402 = 0.0499; ratio ≈ **3.25 σ** — clearly significant at any sensible threshold. The "zero-shot doesn't transfer to BTC" hypothesis from the prior 1h run (where TimesFM produced dir_acc 0.4677, below coin-flip) does **not** hold on this 4h slice with the Chronos-2 backend.
-2. **RMSE leader despite mid-pack MAE.** MAE 519.78 sits $2.62 above ARIMA's 517.16 — within sweep-noise of the floor — but RMSE 780.99 is $1.43 *below* ARIMA's 782.42. Lower RMSE with similar MAE means **fewer outsized error bars** — the foundation model hedges effectively on the bars where the trained models miss big. The probabilistic prior on next-step values squeezes the tails of the error distribution.
-3. **dir_acc 0.5323 — second-best in the leaderboard, all without training on BTC.** Only ARIMA(1, 1, 1) finds more direction. The 120 M-parameter foundation model with no covariates beats the gradient booster (0.5365 → close, sets aside) and clearly beats the deep-learning models trained on this slice (LSTM 0.4938, TFT 0.4913).
-4. **The probabilistic head is the architectural novelty.** `num_samples = 200` per step and `quantiles = [0.1, 0.5, 0.9]` are produced explicitly. q10 and q90 are stored alongside the median in `predictions.parquet` and shown as a shaded band on `plot.png`. None of 01 – 05 produce calibrated prediction intervals. Interval coverage is *not* summarised in `metrics.json` — pulling `(close ∈ [pred_lo, pred_hi])` from the parquet would close that gap and is a clean follow-up analysis.
-5. **Backend was Chronos-2 in this run.** Earlier 1h artifacts ran with TimesFM 2.5 (different model family, different prior, very different result). The Chronos vs. TimesFM head-to-head — the design intent of this experiment — needs sibling runs on the same 4h slice; per-variant configs now live at [`btc_4h_2024.chronos-small.config.yaml`](../../experiments/06_pretrained/configs/btc_4h_2024.chronos-small.config.yaml), [`btc_4h_2024.chronos-large.config.yaml`](../../experiments/06_pretrained/configs/btc_4h_2024.chronos-large.config.yaml), and [`btc_4h_2024.timesfm.config.yaml`](../../experiments/06_pretrained/configs/btc_4h_2024.timesfm.config.yaml). `make 06_pretrained_sweep` is the vehicle.
+1. **dir_acc 0.4754 on the canonical row is below coin-flip.** On `366` test bars, chronos-small's median forecast points the wrong way 191 times out of 366. Sharpe 2.97 is positive only because the strategy is long/flat (no shorts) and the test slice's drift was strongly up — the strategy collects the drift on the bars it correctly stays long, and only forgoes profit on the bars it goes flat. A symmetric long/short rule on chronos-small's median would lose money on this slice.
+2. **RMSE 817.81 is now worst-ex-TFT.** In the earlier 1h slice and earlier 4h run, the foundation model's probabilistic head squeezed RMSE below ARIMA's. Not anymore. With 366 test bars (a much narrower window than the prior 401-row slice) the foundation model's hedging shows up less — fewer chances to average down the outliers — and ARIMA / XGBoost / LSTM all post RMSE below 810.
+3. **Bigger Chronos is uniformly worse — and that's not within noise.** chronos-large trails chronos-small by $13.93 on MAE, 0.041 on dir_acc, and 1.07 on Sharpe. The same architecture family, same context length, same num_samples — only the parameter count changes. On near-random-walk financial data the extra capacity adds variance to the predictive distribution without adding signal. This is consistent with the "complexity-doesn't-pay" arc the global report tracks.
+4. **TimesFM's better Sharpe is bigger samples + decoder-only prior.** Same `num_samples = 200` and same `input_chunk_length = 256`, but the decoder-only patch-transformer family has a different inductive bias from Chronos's encoder-only T5. Sharpe 4.108 / per-bar `0.0878` against `SE = 0.0523` gives a `1.68 σ` ratio — interesting but not significant. Treat the 38 % Sharpe lift as a meaningful direction signal, not a publication number.
+5. **NaN dir_acc on naive is by design.** [src/btc_ai/eval/metrics.py](../../src/btc_ai/eval/metrics.py) returns NaN when the predicted direction is constant (the naive baseline always predicts no-change). The foundation models all express direction — even when they get it wrong — so they get a finite dir_acc.
 
 ### Bottom line
 
-**A 120 M-parameter zero-shot foundation model leads the 4h leaderboard on Sharpe (7.5915), cum_ret (69.75 %), and RMSE (780.99)** with `dir_acc 0.5323` — second-best after ARIMA(1, 1, 1). Per-bar Sharpe sanity check: 0.1622 against SE 0.0499 — ratio **3.25 σ**, the strongest signal in the series. Test slice covers approximately Sep 25 → Dec 1 2024 (post-election BTC rally); the foundation-model prior may be especially well-tuned to this regime and has not been tested out-of-regime. **This is the strongest "ML actually works on Bitcoin" finding in the series so far** — pending the Chronos-vs-TimesFM head-to-head and an out-of-regime check.
+**Zero-shot transfer is real but weak at chronos-small** — Sharpe 2.97 is positive only thanks to the strategy's long/flat asymmetry on an uptrending slice. Per-bar Sharpe `0.0635` against `SE = 0.0523` → `1.21 σ`, **not** significant. The TimesFM variant lifts Sharpe to 4.11 (`1.68 σ`) and cum_ret to 0.32 — still not significant, still trailing ARIMA. Test slice covers `2024-10-01` → `2024-12-01` (post-election BTC rally, 366 bars at 4h). **No variant of zero-shot beats the linear baseline on this slice;** the question of whether *fine-tuning* closes that gap is answered in [07_finetuned](07_finetuned.report.md).
 
 ## Caveats
 
-- **Single backend.** This run is Chronos-2 only. The design intent is a head-to-head with `backend: timesfm`; needs a second run on the same slice via `make 06_pretrained_sweep`.
-- **Univariate only.** TimesFM 2.5 does not accept covariates; Chronos-2 supports them but is kept univariate to make the head-to-head fair on the same inputs. Adding covariates to Chronos-2 only is a clean follow-up ablation, not v1.
-- **No fine-tuning.** Both `darts` foundation-model classes support partial / full fine-tuning; this run does not. The question being asked is specifically about the zero-shot prior.
-- **Walk-forward without re-estimation.** Weights are frozen across the entire test window. Matches 02 / 04 / 05's walk-forward shape.
+- **Three variants, one slice.** The backend × parameter-count cell is filled in; an `input_chunk_length` sweep is not yet on disk. `make 06_pretrained_sweep` was the original vehicle for that and has not been re-run on the current slice.
+- **Univariate only.** TimesFM 2.5 does not accept covariates; Chronos-2 supports them but is kept univariate so the head-to-head stays fair on identical inputs. Adding covariates to Chronos-2 only is a clean follow-up ablation.
+- **No fine-tuning.** Zero-shot is the question this experiment is asking; fine-tuning is [07_finetuned](07_finetuned.report.md).
+- **Walk-forward without re-estimation.** Weights frozen across the entire test window. Matches 02 / 04 / 05's walk-forward shape.
 - `output_chunk_length: 1`. One-step-ahead only.
-- **Single stochastic sample seed.** `num_samples = 200` gives a reasonable distribution within one seed; two runs may produce slightly different quantile bands.
-- Long/flat strategy on the median (q50) forecast, no shorting, no transaction costs. The q10 / q90 bands are not used in the strategy yet.
+- **Single stochastic seed per variant.** `num_samples = 200` per step gives a reasonable predictive distribution within one seed, but two runs may produce slightly different quantile bands. Multi-seed runs would tighten the per-variant numbers (07's headline relies on 5-seed comparison; 06 does not).
+- Long/flat strategy on the median (q50) forecast, no shorting, no transaction costs. q10 / q90 bands are stored but not used in the strategy.
+- **Single test regime.** The test slice is the post-election BTC rally; no variant has been tested out-of-regime.
 
 ## Files produced
 
-- [experiments/06_pretrained/results/btc_4h_2024/metrics.json](../../experiments/06_pretrained/results/btc_4h_2024/metrics.json) (fresh 4h, Chronos-2)
-- [experiments/06_pretrained/results/btc_4h_2024/predictions.parquet](../../experiments/06_pretrained/results/btc_4h_2024/predictions.parquet)
-- [experiments/06_pretrained/results/btc_4h_2024/plot.png](../../experiments/06_pretrained/results/btc_4h_2024/plot.png)
+- [experiments/06_pretrained/results/btc_4h_2024.chronos-small/metrics.json](../../experiments/06_pretrained/results/btc_4h_2024.chronos-small/metrics.json) (canonical)
+- [experiments/06_pretrained/results/btc_4h_2024.chronos-small/predictions.parquet](../../experiments/06_pretrained/results/btc_4h_2024.chronos-small/predictions.parquet)
+- [experiments/06_pretrained/results/btc_4h_2024.chronos-small/plot.png](../../experiments/06_pretrained/results/btc_4h_2024.chronos-small/plot.png)
+- Variant artefacts (same set per variant): [`btc_4h_2024.chronos-large/`](../../experiments/06_pretrained/results/btc_4h_2024.chronos-large/), [`btc_4h_2024.timesfm/`](../../experiments/06_pretrained/results/btc_4h_2024.timesfm/)
 
 ## How to reproduce
 
 ```
-make 06_pretrained
-make 06_pretrained_sweep         # head-to-head across backends + context lengths; not yet on disk
+make 06_pretrained                                                                         # canonical: chronos-small
+make 06_pretrained CONFIG=experiments/06_pretrained/configs/btc_4h_2024.chronos-large.config.yaml
+make 06_pretrained CONFIG=experiments/06_pretrained/configs/btc_4h_2024.timesfm.config.yaml
+make 06_pretrained_sweep                                                                   # backend × context-length sweep (not yet on disk for current slice)
 ```
+
+(The `CONFIG=` override is required for any non-canonical variant.)

@@ -1,7 +1,7 @@
 # All paths in this file are relative to experiments/07_finetuned/.
 # Invoked from the root via `$(MAKE) -C experiments/07_finetuned <target>`.
 
-CONFIG ?= configs/btc_4h_2024.config.yaml
+CONFIG ?= configs/btc_4h_2020_2024_encoder_only.chronos-2-small.config.yaml
 
 # Silence Lightning and Torch noise (PyTorch Lightning pytree deprecation, Apple Metal Performance Shaders pin_memory notice).
 # Set in env so it survives Lightning's in-process filter resets and reaches DataLoader workers.
