@@ -101,7 +101,7 @@ def build_objective(
 		overrides = {name: suggest(trial, name, spec) for name, spec in search_space.items()}
 		pruning_cb = PruningCallback(trial, monitor='val_loss')
 		try:
-			metrics, _ = train_and_evaluate(
+			aggregate, _, _ = train_and_evaluate(
 				cfg,
 				model_overrides=overrides,
 				extra_pl_callbacks=[pruning_cb],
@@ -113,7 +113,7 @@ def build_objective(
 			# The trial's params are still recorded in the storage with state=PRUNED.
 			logger.warning('trial %d failed (%s); marking pruned', trial.number, exc)
 			raise optuna.TrialPruned() from exc
-		value = float(metrics[objective_key])
+		value = float(aggregate[objective_key])
 		print(
 			f'trial {trial.number:>3d} {objective_key}={value:.6f} '
 			f'params={overrides}',

@@ -4,14 +4,36 @@
 # Lag / rolling features at the first bar of validation or test legitimately
 # read history from the previous slice — that's the walk-forward setup, not
 # leakage, and the bars themselves never cross.
+#
+# Each of `training`, `validation`, `test` is an array of CSV selectors. With
+# a single selector per array the loader behaves exactly like the prior
+# single-source shape; adding a selector (e.g. an extra symbol) makes the
+# training set larger for the sequence experiments (04 LSTM, 05 Transformer,
+# 06 Pretrained, 07 Pretrained-Finetune), which consume train selectors as
+# `list[TimeSeries]`. The per-series experiments (01 Naive, 01b MovingAverage,
+# 02 ARIMA, 03 GradientBoosting) fit one model per test symbol and aggregate
+# test metrics (macro mean) across symbols.
 
-source:                   # one Binance Vision pull covers all splits
-  market: spot            # 'spot' | 'futures/um' | 'futures/cm'
-  symbol: BTCUSDT         # Binance trading pair
-  interval: 4h            # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
-  period: monthly         # 'monthly' or 'daily'. Binance Vision archive granularity.
+training:
+  - market: spot           # Binance market: 'spot' | 'futures/um' | 'futures/cm'
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 4h           # kline interval (must match every other selector in this file)
+    period: monthly        # Binance Vision archive granularity: 'monthly' or 'daily'
+    start: 2023-01-01      # UTC, inclusive
+    end:   2024-08-01      # UTC, exclusive — 7 months of training bars
 
-splits:
-  train:      { start: 2023-01-01, end: 2024-08-01 }   # 7 months
-  validation: { start: 2024-08-01, end: 2024-10-01 }   # 2 months — early-stopping signal for 04/05
-  test:       { start: 2024-10-01, end: 2024-12-01 }   # 2 months — held out for evaluation
+validation:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 4h           # kline interval (must equal training interval)
+    period: monthly        # Binance Vision archive granularity
+    start: 2024-08-01      # UTC, inclusive
+    end:   2024-10-01      # UTC, exclusive — 2 months, early-stopping signal for 04/05/07
+
+test:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 4h           # kline interval (must equal training interval)
+    period: monthly        # Binance Vision archive granularity
+    start: 2024-10-01      # UTC, inclusive
+    end:   2024-12-01      # UTC, exclusive — 2 months held out for evaluation

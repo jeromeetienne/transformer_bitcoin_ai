@@ -10,7 +10,17 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from btc_ai.config import load_yaml
-from btc_ai.data import load_dataset_from_experiment_cfg
+from btc_ai.data import (
+        DatasetSplits,
+        concat_selector_frames,
+        group_selectors_by_symbol,
+        load_dataset_from_experiment_cfg,
+)
+from btc_ai.eval.aggregate import (
+        PerSymbolResult,
+        concat_predictions,
+        write_aggregated_metrics_json,
+)
 from btc_ai.eval.metrics import directional_accuracy, mae, mape, rmse
 
 EXPERIMENT_DIR = Path(__file__).parent
@@ -34,11 +44,41 @@ def main() -> None:
 
         cfg = load_yaml(args.config)
         splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+
+        results: list[PerSymbolResult] = []
+        for (market, symbol), per_symbol in group_selectors_by_symbol(splits).items():
+                result = _run_one_symbol(market, symbol, per_symbol)
+                logger.info(
+                        '%s %s: mae=%.2f rmse=%.2f mape=%.4f',
+                        market, symbol,
+                        result.metrics['mae'], result.metrics['rmse'], result.metrics['mape'],
+                )
+                results.append(result)
+
+        payload = write_aggregated_metrics_json(
+                results,
+                results_dir / 'metrics.json',
+                experiment='01_baseline_naive',
+                dataset=cfg['dataset'],
+                interval=splits.interval,
+        )
+
+        concat_predictions(results).to_parquet(results_dir / 'predictions.parquet')
+
+        _plot(results, splits.interval, results_dir / 'plot.png')
+
+        print(json.dumps(payload, indent=2))
+
+
+def _run_one_symbol(market: str, symbol: str, splits: DatasetSplits) -> PerSymbolResult:
         # Naive baseline doesn't use a validation slice: fold val into the
         # "pre-test" segment so behavior matches the legacy single-split path.
-        df = pd.concat([splits.train, splits.validation, splits.test])
-        split = len(splits.train) + len(splits.validation)
-        logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
+        train_df = concat_selector_frames(splits.train)
+        test_df = concat_selector_frames(splits.test)
+        val_df = (concat_selector_frames(splits.validation)
+                  if len(splits.validation) > 0 else train_df.iloc[0:0])
+        df = pd.concat([train_df, val_df, test_df])
+        split = len(train_df) + len(val_df)
 
         close = df['close']
         test = close.iloc[split:]
@@ -46,37 +86,35 @@ def main() -> None:
         ref.index = test.index
         y_pred = ref
 
-        metrics = {
-                'experiment': '01_baseline_naive',
-                'dataset': cfg['dataset'],
-                'symbol': splits.symbol_test,
-                'interval': splits.interval,
-                'rows_total': int(len(close)),
-                'rows_test': int(len(test)),
-                'mae': mae(test, y_pred),
-                'rmse': rmse(test, y_pred),
-                'mape': mape(test, y_pred),
-                'directional_accuracy': directional_accuracy(test, y_pred, ref),
-        }
-
-        (results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
-
         predictions = pd.DataFrame({'close': test, 'pred': y_pred})
-        predictions.to_parquet(results_dir / 'predictions.parquet')
-
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(test.index, test.values, label='close', linewidth=1)
-        ax.plot(y_pred.index, y_pred.values, label='naive pred', linewidth=1, alpha=0.7)
-        ax.set_title(
-                f'{splits.symbol_test} {splits.interval} — naive baseline (test set)',
+        return PerSymbolResult(
+                symbol=symbol,
+                market=market,
+                n_test_rows=int(len(test)),
+                metrics={
+                        'mae': mae(test, y_pred),
+                        'rmse': rmse(test, y_pred),
+                        'mape': mape(test, y_pred),
+                        'directional_accuracy': directional_accuracy(test, y_pred, ref),
+                },
+                predictions=predictions,
         )
-        ax.set_ylabel('price')
-        ax.legend()
-        fig.tight_layout()
-        fig.savefig(results_dir / 'plot.png', dpi=120)
-        plt.close(fig)
 
-        print(json.dumps(metrics, indent=2))
+
+def _plot(results: list[PerSymbolResult], interval: str, out_path: Path) -> None:
+        n = len(results)
+        fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
+        for ax, r in zip(axes[:, 0], results):
+                test = r.predictions['close']
+                pred = r.predictions['pred']
+                ax.plot(test.index, test.values, label='close', linewidth=1)
+                ax.plot(pred.index, pred.values, label='naive pred', linewidth=1, alpha=0.7)
+                ax.set_title(f'{r.symbol} {interval} — naive baseline (test set)')
+                ax.set_ylabel('price')
+                ax.legend()
+        fig.tight_layout()
+        fig.savefig(out_path, dpi=120)
+        plt.close(fig)
 
 
 if __name__ == '__main__':

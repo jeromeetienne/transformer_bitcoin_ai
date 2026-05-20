@@ -13,7 +13,17 @@ import xgboost as xgb
 from features import build_features
 
 from btc_ai.config import load_yaml
-from btc_ai.data import load_dataset_from_experiment_cfg
+from btc_ai.data import (
+        DatasetSplits,
+        concat_selector_frames,
+        group_selectors_by_symbol,
+        load_dataset_from_experiment_cfg,
+)
+from btc_ai.eval.aggregate import (
+        PerSymbolResult,
+        concat_predictions,
+        write_aggregated_metrics_json,
+)
 from btc_ai.eval.metrics import (
         annualized_sharpe,
         cumulative_return,
@@ -26,8 +36,6 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
@@ -49,20 +57,53 @@ def main() -> None:
         model_cfg = cfg['model']
 
         splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+        ppy = periods_per_year(splits.interval)
+
+        results: list[PerSymbolResult] = []
+        for (market, symbol), per_symbol in group_selectors_by_symbol(splits).items():
+                result = _run_one_symbol(market, symbol, per_symbol, feat_cfg, model_cfg, ppy)
+                logger.info(
+                        '%s %s: mae=%.2f sharpe=%.3f',
+                        market, symbol,
+                        result.metrics['mae'], result.metrics['annualized_sharpe'],
+                )
+                results.append(result)
+
+        payload = write_aggregated_metrics_json(
+                results,
+                results_dir / 'metrics.json',
+                experiment='03_gradient_boosting',
+                dataset=cfg['dataset'],
+                interval=splits.interval,
+        )
+
+        concat_predictions(results).to_parquet(results_dir / 'predictions.parquet')
+
+        _plot(results, splits.interval, results_dir / 'plot.png')
+
+        print(json.dumps(payload, indent=2))
+
+
+def _run_one_symbol(
+        market: str, symbol: str, splits: DatasetSplits,
+        feat_cfg: dict, model_cfg: dict, ppy: int,
+) -> PerSymbolResult:
         # XGBoost doesn't use a validation slice: fold val into the training segment
         # so behavior matches the legacy single-split path. Split before feature
         # building would lose continuity for lag/rolling features that cross the
         # train/test boundary, so we concat then split by index.
-        df = pd.concat([splits.train, splits.validation, splits.test])
-        pre_test_rows = len(splits.train) + len(splits.validation)
-        logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
+        train_df = concat_selector_frames(splits.train)
+        test_df = concat_selector_frames(splits.test)
+        val_df = (concat_selector_frames(splits.validation)
+                  if len(splits.validation) > 0 else train_df.iloc[0:0])
+        df = pd.concat([train_df, val_df, test_df])
+        pre_test_rows = len(train_df) + len(val_df)
 
         X, y, ref = build_features(df, feat_cfg)
-        logger.info('built %d feature rows × %d cols (after dropna)', len(X), X.shape[1])
 
-        # build_features drops the leading rows that don't have enough history for
-        # the longest lag/rolling window. Translate the bar-level pre_test_rows
-        # index into a feature-row index via the index intersection.
+        # build_features drops leading rows that don't have enough history for the
+        # longest lag/rolling window. Translate the bar-level pre_test_rows index
+        # into a feature-row index via the index intersection.
         split = X.index.get_indexer([df.index[pre_test_rows]])[0]
         X_train, y_train = X.iloc[:split], y.iloc[:split]
         X_test, y_test = X.iloc[split:], y.iloc[split:]
@@ -80,8 +121,6 @@ def main() -> None:
                 n_jobs=-1,
                 objective='reg:squarederror',
         )
-
-        logger.info('fitting XGBoost on %d training rows', len(X_train))
         model.fit(X_train, y_train)
 
         y_pred = pd.Series(model.predict(X_test), index=X_test.index, name='r_pred')
@@ -89,26 +128,6 @@ def main() -> None:
         pred_close = ref_test * np.exp(y_pred)
 
         strat = strategy_returns(close_test, pred_close, ref_test)
-        ppy = periods_per_year(splits.interval)
-
-        metrics = {
-                'experiment': '03_gradient_boosting',
-                'dataset': cfg['dataset'],
-                'symbol': splits.symbol_test,
-                'interval': splits.interval,
-                'rows_total': int(len(X)),
-                'rows_train': int(len(X_train)),
-                'rows_test': int(len(X_test)),
-                'n_features': int(X.shape[1]),
-                'mae': mae(close_test, pred_close),
-                'rmse': rmse(close_test, pred_close),
-                'mape': mape(close_test, pred_close),
-                'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
-                'cumulative_return': cumulative_return(strat),
-                'annualized_sharpe': annualized_sharpe(strat, ppy),
-        }
-
-        (results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
 
         predictions = pd.DataFrame({
                 'close': close_test,
@@ -116,21 +135,40 @@ def main() -> None:
                 'ref': ref_test,
                 'strategy_return': strat,
         })
-        predictions.to_parquet(results_dir / 'predictions.parquet')
-
-        fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(close_test.index, close_test.values, label='close', linewidth=1)
-        ax.plot(pred_close.index, pred_close.values, label='XGBoost pred', linewidth=1, alpha=0.7)
-        ax.set_title(
-                f'{splits.symbol_test} {splits.interval} — XGBoost (test set)',
+        return PerSymbolResult(
+                symbol=symbol,
+                market=market,
+                n_test_rows=int(len(X_test)),
+                metrics={
+                        'mae': mae(close_test, pred_close),
+                        'rmse': rmse(close_test, pred_close),
+                        'mape': mape(close_test, pred_close),
+                        'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
+                        'cumulative_return': cumulative_return(strat),
+                        'annualized_sharpe': annualized_sharpe(strat, ppy),
+                },
+                predictions=predictions,
+                extras={'rows_train': int(len(X_train)), 'n_features': int(X.shape[1])},
         )
-        ax.set_ylabel('price')
-        ax.legend()
-        fig.tight_layout()
-        fig.savefig(results_dir / 'plot.png', dpi=120)
-        plt.close(fig)
 
-        print(json.dumps(metrics, indent=2))
+
+def _plot(results: list[PerSymbolResult], interval: str, out_path: Path) -> None:
+        n = len(results)
+        fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
+        for ax, r in zip(axes[:, 0], results):
+                close_test = r.predictions['close']
+                pred_close = r.predictions['pred']
+                ax.plot(close_test.index, close_test.values, label='close', linewidth=1)
+                ax.plot(
+                        pred_close.index, pred_close.values,
+                        label='XGBoost pred', linewidth=1, alpha=0.7,
+                )
+                ax.set_title(f'{r.symbol} {interval} — XGBoost (test set)')
+                ax.set_ylabel('price')
+                ax.legend()
+        fig.tight_layout()
+        fig.savefig(out_path, dpi=120)
+        plt.close(fig)
 
 
 if __name__ == '__main__':

@@ -5,13 +5,26 @@
 # read history from the previous slice — that's the walk-forward setup, not
 # leakage, and the bars themselves never cross.
 
-source:                   # one Binance Vision pull covers all splits
-  market: spot            # 'spot' | 'futures/um' | 'futures/cm'
-  symbol: BTCUSDT         # Binance trading pair
-  interval: 1h            # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
-  period: monthly         # 'monthly' or 'daily'. Binance Vision archive granularity.
+training:
+  - market: spot           # Binance market: 'spot' | 'futures/um' | 'futures/cm'
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 1h           # kline interval (must match every other selector in this file)
+    period: monthly        # Binance Vision archive granularity: 'monthly' or 'daily'
+    start: 2023-01-01      # UTC, inclusive
+    end:   2024-08-01      # UTC, exclusive — 7 months of training bars
 
-splits:
-  train:      { start: 2023-01-01, end: 2024-08-01 }   # 7 months
-  validation: { start: 2024-08-01, end: 2024-10-01 }   # 2 months — early-stopping signal for 04/05
-  test:       { start: 2024-10-01, end: 2024-12-01 }   # 2 months — held out for evaluation
+validation:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 1h           # kline interval (must equal training interval)
+    period: monthly        # Binance Vision archive granularity
+    start: 2024-08-01      # UTC, inclusive
+    end:   2024-10-01      # UTC, exclusive — 2 months, early-stopping signal for 04/05/07
+
+test:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 1h           # kline interval (must equal training interval)
+    period: monthly        # Binance Vision archive granularity
+    start: 2024-10-01      # UTC, inclusive
+    end:   2024-12-01      # UTC, exclusive — 2 months held out for evaluation

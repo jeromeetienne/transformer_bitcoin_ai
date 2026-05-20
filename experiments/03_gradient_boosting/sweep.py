@@ -9,7 +9,12 @@ import xgboost as xgb
 from features import build_features
 
 from btc_ai.config import load_yaml
-from btc_ai.data import load_dataset_from_experiment_cfg
+from btc_ai.data import (
+        DatasetSplits,
+        concat_selector_frames,
+        group_selectors_by_symbol,
+        load_dataset_from_experiment_cfg,
+)
 from btc_ai.eval.metrics import (
         annualized_sharpe,
         cumulative_return,
@@ -22,14 +27,12 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 # Edit this list to change which (n_estimators, max_depth, learning_rate) combos
 # the sweep evaluates. All combos run against the same data slice / split / feature
-# set defined in config.yaml. Fixed regularization + RNG come from config.yaml too.
+# set defined in config.yaml, repeated per test (market, symbol).
 GRID: list[dict[str, float | int]] = [
         {'n_estimators': 200,  'max_depth': 3, 'learning_rate': 0.10},
         {'n_estimators': 200,  'max_depth': 5, 'learning_rate': 0.10},
@@ -61,8 +64,44 @@ def main() -> None:
         model_cfg = cfg['model']
 
         splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
-        df = pd.concat([splits.train, splits.validation, splits.test])
-        pre_test_rows = len(splits.train) + len(splits.validation)
+        ppy = periods_per_year(splits.interval)
+
+        header = [
+                'symbol', 'market',
+                'n_estimators', 'max_depth', 'learning_rate',
+                'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',
+        ]
+        rows: list[dict[str, object]] = []
+
+        for (market, symbol), per_symbol in group_selectors_by_symbol(splits).items():
+                print(f'\n=== {market} {symbol} ===')
+                print(
+                        f'{"n_est":>6} {"depth":>6} {"lr":>6} '
+                        f'{"mae":>10} {"rmse":>10} {"mape":>9} {"dir_acc":>9} '
+                        f'{"cum_ret":>10} {"sharpe":>8}'
+                )
+                print('-' * 87)
+                rows.extend(_sweep_one_symbol(market, symbol, per_symbol, feat_cfg, model_cfg, ppy))
+
+        out = results_dir / 'sweep.csv'
+        with open(out, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=header)
+                writer.writeheader()
+                writer.writerows(rows)
+        print(f'\nwrote {out}')
+
+
+def _sweep_one_symbol(
+        market: str, symbol: str, splits: DatasetSplits,
+        feat_cfg: dict, model_cfg: dict, ppy: int,
+) -> list[dict[str, object]]:
+        train_df = concat_selector_frames(splits.train)
+        test_df = concat_selector_frames(splits.test)
+        val_df = (concat_selector_frames(splits.validation)
+                  if len(splits.validation) > 0 else train_df.iloc[0:0])
+        df = pd.concat([train_df, val_df, test_df])
+        pre_test_rows = len(train_df) + len(val_df)
+
         X, y, ref = build_features(df, feat_cfg)
         split = X.index.get_indexer([df.index[pre_test_rows]])[0]
         X_train, y_train = X.iloc[:split], y.iloc[:split]
@@ -70,19 +109,7 @@ def main() -> None:
         ref_test = ref.iloc[split:]
         close_test = ref_test * np.exp(y_test)
 
-        ppy = periods_per_year(splits.interval)
-        header = [
-                'n_estimators', 'max_depth', 'learning_rate',
-                'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',
-        ]
-        print(
-                f'{"n_est":>6} {"depth":>6} {"lr":>6} '
-                f'{"mae":>10} {"rmse":>10} {"mape":>9} {"dir_acc":>9} '
-                f'{"cum_ret":>10} {"sharpe":>8}'
-        )
-        print('-' * 87)
-
-        rows: list[dict[str, object]] = []
+        out: list[dict[str, object]] = []
         for params in GRID:
                 try:
                         model = xgb.XGBRegressor(
@@ -102,6 +129,8 @@ def main() -> None:
                         pred_close = ref_test * np.exp(y_pred)
                         strat = strategy_returns(close_test, pred_close, ref_test)
                         row = {
+                                'symbol': symbol,
+                                'market': market,
                                 'n_estimators': int(params['n_estimators']),
                                 'max_depth': int(params['max_depth']),
                                 'learning_rate': float(params['learning_rate']),
@@ -119,20 +148,14 @@ def main() -> None:
                                 f'{row["mape"] * 100:>8.3f}% {row["dir_acc"]:>9.4f} '
                                 f'{row["cum_ret"] * 100:>9.3f}% {row["sharpe"]:>8.3f}'
                         )
-                        rows.append(row)
+                        out.append(row)
                 except Exception as exc:  # noqa: BLE001
                         print(
                                 f'{int(params["n_estimators"]):>6d} '
                                 f'{int(params["max_depth"]):>6d} '
                                 f'{float(params["learning_rate"]):>6.3f} FAILED: {exc}'
                         )
-
-        out = results_dir / 'sweep.csv'
-        with open(out, 'w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=header)
-                writer.writeheader()
-                writer.writerows(rows)
-        print(f'\nwrote {out}')
+        return out
 
 
 if __name__ == '__main__':

@@ -20,13 +20,26 @@
 #
 # All boundaries are UTC, [start, end) — start inclusive, end exclusive.
 
-source:                   # one Binance Vision pull covers all splits
-  market: spot            # 'spot' | 'futures/um' | 'futures/cm'
-  symbol: BTCUSDT         # Binance trading pair
-  interval: 4h            # kline interval: 1m, 5m, 15m, 1h, 4h, 1d, ...
-  period: monthly         # 'monthly' or 'daily'. Binance Vision archive granularity.
+training:
+  - market: spot           # Binance market: 'spot' | 'futures/um' | 'futures/cm'
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 4h           # kline interval (must match every other selector in this file)
+    period: monthly        # Binance Vision archive granularity: 'monthly' or 'daily'
+    start: 2020-01-01      # UTC, inclusive
+    end:   2024-08-01      # UTC, exclusive — 55 months, ~10100 bars
 
-splits:
-  train:      { start: 2020-01-01, end: 2024-08-01 }   # 55 months — ~10100 bars
-  validation: { start: 2024-08-01, end: 2024-10-01 }   # 2 months — unchanged vs btc_4h_2024
-  test:       { start: 2024-10-01, end: 2024-12-01 }   # 2 months — unchanged vs btc_4h_2024
+validation:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 4h           # kline interval (must equal training interval)
+    period: monthly        # Binance Vision archive granularity
+    start: 2024-08-01      # UTC, inclusive
+    end:   2024-10-01      # UTC, exclusive — 2 months, unchanged vs btc_4h_2024
+
+test:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair
+    interval: 4h           # kline interval (must equal training interval)
+    period: monthly        # Binance Vision archive granularity
+    start: 2024-10-01      # UTC, inclusive
+    end:   2024-12-01      # UTC, exclusive — 2 months, unchanged vs btc_4h_2024

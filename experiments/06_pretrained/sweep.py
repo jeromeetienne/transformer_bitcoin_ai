@@ -60,17 +60,17 @@ def main() -> None:
 	rows: list[dict[str, object]] = []
 	for params in GRID:
 		try:
-			metrics, _ = train_and_evaluate(cfg, model_overrides=params)
+			aggregate, _, _ = train_and_evaluate(cfg, model_overrides=params)
 			row = {
 				'backend': str(params['backend']),
 				'hub_model_name': str(params['hub_model_name']),
 				'input_chunk_length': int(params['input_chunk_length']),
-				'mae': metrics['mae'],
-				'rmse': metrics['rmse'],
-				'mape': metrics['mape'],
-				'dir_acc': metrics['directional_accuracy'],
-				'cum_ret': metrics['cumulative_return'],
-				'sharpe': metrics['annualized_sharpe'],
+				'mae': aggregate['mae'],
+				'rmse': aggregate['rmse'],
+				'mape': aggregate['mape'],
+				'dir_acc': aggregate['directional_accuracy'],
+				'cum_ret': aggregate['cumulative_return'],
+				'sharpe': aggregate['annualized_sharpe'],
 			}
 			print(
 				f'{row["backend"]:>8} {row["hub_model_name"]:>34} '

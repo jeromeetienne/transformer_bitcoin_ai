@@ -8,14 +8,13 @@ from run import train_and_evaluate
 from btc_ai.config import load_yaml
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 
 # Edit this list to change which fine-tuning recipes the sweep evaluates. All
 # rows share the same data slice / split defined in config.yaml; the model
 # constants (output_chunk_length, num_samples, quantiles, random_state,
 # batch_size, early_stopping_patience) come from config.yaml too unless a row
-# overrides them explicitly.
+# overrides them explicitly. Metrics shown here are the aggregate macro means
+# across test symbols (single-symbol configs report the same value either way).
 CHRONOS_SMALL = 'autogluon/chronos-2-small'
 CHRONOS = 'amazon/chronos-2'
 TIMESFM = 'google/timesfm-2.5-200m-pytorch'
@@ -95,7 +94,7 @@ def main() -> None:
 		try:
 			# train_and_evaluate consumes a *copy* of params and pops finetune/training
 			# keys out — sweep.py keeps the original dict intact for logging.
-			metrics, _ = train_and_evaluate(cfg, model_overrides=dict(params))
+			out = train_and_evaluate(cfg, model_overrides=dict(params))
 			row = {
 				'backend': str(params['backend']),
 				'hub_model_name': str(params['hub_model_name']),
@@ -103,13 +102,13 @@ def main() -> None:
 				'enable_finetuning': finetuning_str,
 				'learning_rate': float(params['learning_rate']),  # type: ignore[arg-type]
 				'n_epochs': int(params['n_epochs']),  # type: ignore[arg-type]
-				'epochs_trained': int(metrics['epochs_trained']),
-				'mae': metrics['mae'],
-				'rmse': metrics['rmse'],
-				'mape': metrics['mape'],
-				'directional_accuracy': metrics['directional_accuracy'],
-				'cumulative_return': metrics['cumulative_return'],
-				'annualized_sharpe': metrics['annualized_sharpe'],
+				'epochs_trained': int(out.epochs_trained),
+				'mae': out.aggregate['mae'],
+				'rmse': out.aggregate['rmse'],
+				'mape': out.aggregate['mape'],
+				'directional_accuracy': out.aggregate['directional_accuracy'],
+				'cumulative_return': out.aggregate['cumulative_return'],
+				'annualized_sharpe': out.aggregate['annualized_sharpe'],
 			}
 			print(
 				f'{row["backend"]:>8} {row["hub_model_name"]:>34} '
@@ -130,12 +129,12 @@ def main() -> None:
 				f'{finetuning_str:>32} FAILED: {exc}',
 			)
 
-	out = results_dir / 'sweep.csv'
-	with open(out, 'w', newline='') as f:
+	out_path = results_dir / 'sweep.csv'
+	with open(out_path, 'w', newline='') as f:
 		writer = csv.DictWriter(f, fieldnames=header)
 		writer.writeheader()
 		writer.writerows(rows)
-	print(f'\nwrote {out}')
+	print(f'\nwrote {out_path}')
 
 
 if __name__ == '__main__':

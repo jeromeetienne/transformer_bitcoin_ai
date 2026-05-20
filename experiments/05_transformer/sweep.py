@@ -74,19 +74,19 @@ def main() -> None:
 	rows: list[dict[str, object]] = []
 	for params in GRID:
 		try:
-			metrics, _ = train_and_evaluate(cfg, model_overrides=params)
+			aggregate, _, _ = train_and_evaluate(cfg, model_overrides=params)
 			row = {
 				'input_chunk_length': int(params['input_chunk_length']),
 				'hidden_size': int(params['hidden_size']),
 				'num_attention_heads': int(params['num_attention_heads']),
 				'lstm_layers': int(params['lstm_layers']),
 				'dropout': float(params['dropout']),
-				'mae': metrics['mae'],
-				'rmse': metrics['rmse'],
-				'mape': metrics['mape'],
-				'dir_acc': metrics['directional_accuracy'],
-				'cum_ret': metrics['cumulative_return'],
-				'sharpe': metrics['annualized_sharpe'],
+				'mae': aggregate['mae'],
+				'rmse': aggregate['rmse'],
+				'mape': aggregate['mape'],
+				'dir_acc': aggregate['directional_accuracy'],
+				'cum_ret': aggregate['cumulative_return'],
+				'sharpe': aggregate['annualized_sharpe'],
 			}
 			print(
 				f'{row["input_chunk_length"]:>4d} {row["hidden_size"]:>4d} '

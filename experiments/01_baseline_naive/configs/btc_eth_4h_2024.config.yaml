@@ -1,0 +1,3 @@
+# Multi-symbol smoke-test config: BTCUSDT + ETHUSDT 4h, calendar 2024 windows.
+# Verifies the naive baseline reports two per-symbol entries and a macro-mean aggregate.
+dataset: btc_eth_4h_2024

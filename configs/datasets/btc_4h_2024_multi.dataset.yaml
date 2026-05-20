@@ -1,0 +1,36 @@
+# Smoke-test config for the multi-symbol refactor. Adds an ETHUSDT training
+# selector to the BTCUSDT 2024 setup; validation and test remain BTCUSDT-only.
+# For per-series experiments the ETHUSDT training selector has no matching
+# test selector, so group_selectors_by_symbol ignores it and the run produces
+# the same aggregate metrics as btc_4h_2024.dataset.yaml. That equivalence is
+# the regression check.
+
+training:
+  - market: spot           # Binance market
+    symbol: BTCUSDT        # Binance trading pair (matches test)
+    interval: 4h           # kline interval (uniform across the config)
+    period: monthly        # Binance Vision archive granularity
+    start: 2023-01-01      # UTC, inclusive
+    end:   2024-08-01      # UTC, exclusive
+  - market: spot           # Binance market
+    symbol: ETHUSDT        # Binance trading pair (no test match — ignored by per-series experiments)
+    interval: 4h           # kline interval (uniform across the config)
+    period: monthly        # Binance Vision archive granularity
+    start: 2023-01-01      # UTC, inclusive
+    end:   2024-08-01      # UTC, exclusive
+
+validation:
+  - market: spot
+    symbol: BTCUSDT
+    interval: 4h
+    period: monthly
+    start: 2024-08-01
+    end:   2024-10-01
+
+test:
+  - market: spot
+    symbol: BTCUSDT
+    interval: 4h
+    period: monthly
+    start: 2024-10-01
+    end:   2024-12-01

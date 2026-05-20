@@ -1,0 +1,45 @@
+# Multi-symbol smoke-test config: BTCUSDT + ETHUSDT 4h, calendar 2024 windows.
+# Verifies the per-series matching rule produces two PerSymbolResult entries
+# (one per test symbol) and the aggregate macro mean.
+
+training:
+  - market: spot
+    symbol: BTCUSDT
+    interval: 4h
+    period: monthly
+    start: 2023-01-01
+    end:   2024-08-01
+  - market: spot
+    symbol: ETHUSDT
+    interval: 4h
+    period: monthly
+    start: 2023-01-01
+    end:   2024-08-01
+
+validation:
+  - market: spot
+    symbol: BTCUSDT
+    interval: 4h
+    period: monthly
+    start: 2024-08-01
+    end:   2024-10-01
+  - market: spot
+    symbol: ETHUSDT
+    interval: 4h
+    period: monthly
+    start: 2024-08-01
+    end:   2024-10-01
+
+test:
+  - market: spot
+    symbol: BTCUSDT
+    interval: 4h
+    period: monthly
+    start: 2024-10-01
+    end:   2024-12-01
+  - market: spot
+    symbol: ETHUSDT
+    interval: 4h
+    period: monthly
+    start: 2024-10-01
+    end:   2024-12-01

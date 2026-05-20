@@ -9,7 +9,12 @@ from statsmodels.tools.sm_exceptions import ConvergenceWarning
 from statsmodels.tsa.arima.model import ARIMA
 
 from btc_ai.config import load_yaml
-from btc_ai.data import load_dataset_from_experiment_cfg
+from btc_ai.data import (
+        DatasetSplits,
+        concat_selector_frames,
+        group_selectors_by_symbol,
+        load_dataset_from_experiment_cfg,
+)
 from btc_ai.eval.metrics import (
         annualized_sharpe,
         cumulative_return,
@@ -22,13 +27,12 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
 # Edit this list to change which (p, d, q) orders the sweep evaluates.
-# All orders run against the same data slice / split defined in config.yaml.
+# All orders run against the same data slice / split defined in config.yaml,
+# repeated per test (market, symbol).
 ORDERS: list[tuple[int, int, int]] = [
         (0, 1, 0),  # random walk — should match naive last-value
         (1, 1, 0),  # AR(1) on first differences
@@ -82,9 +86,42 @@ def main() -> None:
 
         cfg = load_yaml(args.config)
         splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
-        # Mirrors run.py: ARIMA has no validation slice, fold val into training.
-        df = pd.concat([splits.train, splits.validation, splits.test])
-        split = len(splits.train) + len(splits.validation)
+        ppy = periods_per_year(splits.interval)
+
+        header = [
+                'symbol', 'market', 'order', 'aic', 'bic',
+                'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',
+        ]
+        rows: list[dict[str, object]] = []
+
+        for (market, symbol), per_symbol in group_selectors_by_symbol(splits).items():
+                print(f'\n=== {market} {symbol} ===')
+                print(
+                        f'{"order":<11} {"aic":>10} {"bic":>10} '
+                        f'{"mae":>9} {"rmse":>9} {"mape":>9} {"dir_acc":>9} '
+                        f'{"cum_ret":>10} {"sharpe":>8}'
+                )
+                print('-' * 95)
+                rows.extend(_sweep_one_symbol(market, symbol, per_symbol, ppy))
+
+        out = results_dir / 'sweep.csv'
+        with open(out, 'w', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=header)
+                writer.writeheader()
+                writer.writerows(rows)
+        print(f'\nwrote {out}')
+
+
+def _sweep_one_symbol(
+        market: str, symbol: str, splits: DatasetSplits, ppy: int,
+) -> list[dict[str, object]]:
+        train_df = concat_selector_frames(splits.train)
+        test_df = concat_selector_frames(splits.test)
+        val_df = (concat_selector_frames(splits.validation)
+                  if len(splits.validation) > 0 else train_df.iloc[0:0])
+        df = pd.concat([train_df, val_df, test_df])
+        split = len(train_df) + len(val_df)
+
         close = df['close'].astype('float64')
         close.index = close.index.tz_localize(None)
 
@@ -93,19 +130,7 @@ def main() -> None:
         ref = close.iloc[split - 1:-1]
         ref.index = test.index
 
-        ppy = periods_per_year(splits.interval)
-        header = [
-                'order', 'aic', 'bic',
-                'mae', 'rmse', 'mape', 'dir_acc', 'cum_ret', 'sharpe',
-        ]
-        print(
-                f'{"order":<11} {"aic":>10} {"bic":>10} '
-                f'{"mae":>9} {"rmse":>9} {"mape":>9} {"dir_acc":>9} '
-                f'{"cum_ret":>10} {"sharpe":>8}'
-        )
-        print('-' * 95)
-
-        rows: list[dict[str, object]] = []
+        out: list[dict[str, object]] = []
         for order in ORDERS:
                 try:
                         fit = ARIMA(train, order=order).fit()
@@ -116,6 +141,8 @@ def main() -> None:
                         y_pred.index = test.index
                         strat = strategy_returns(test, y_pred, ref)
                         row = {
+                                'symbol': symbol,
+                                'market': market,
                                 'order': str(order),
                                 'aic': float(fit.aic),
                                 'bic': float(fit.bic),
@@ -132,16 +159,10 @@ def main() -> None:
                                 f'{row["mape"] * 100:>8.3f}% {row["dir_acc"]:>9.4f} '
                                 f'{row["cum_ret"] * 100:>9.3f}% {row["sharpe"]:>8.3f}'
                         )
-                        rows.append(row)
+                        out.append(row)
                 except Exception as exc:  # noqa: BLE001
                         print(f'{str(order):<11} FAILED: {exc}')
-
-        out = results_dir / 'sweep.csv'
-        with open(out, 'w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=header)
-                writer.writeheader()
-                writer.writerows(rows)
-        print(f'\nwrote {out}')
+        return out
 
 
 if __name__ == '__main__':

@@ -8,13 +8,12 @@ from run import train_and_evaluate
 from btc_ai.config import load_yaml
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 
 # Edit this list to change which (input_chunk_length, hidden_dim, n_rnn_layers, dropout)
 # combos the sweep evaluates. All combos use the same data slice / split / covariates
 # defined in config.yaml; other model params (batch_size, n_epochs, learning_rate, RNG)
-# come from config.yaml too.
+# come from config.yaml too. Metrics shown here are the aggregate macro means
+# across test symbols (single-symbol configs report the same value either way).
 GRID: list[dict[str, float | int]] = [
 	{'input_chunk_length': 24, 'hidden_dim': 16, 'n_rnn_layers': 1, 'dropout': 0.0},
 	{'input_chunk_length': 24, 'hidden_dim': 32, 'n_rnn_layers': 2, 'dropout': 0.1},
@@ -55,18 +54,18 @@ def main() -> None:
 	rows: list[dict[str, object]] = []
 	for params in GRID:
 		try:
-			metrics, _ = train_and_evaluate(cfg, model_overrides=params)
+			aggregate, _, _ = train_and_evaluate(cfg, model_overrides=params)
 			row = {
 				'input_chunk_length': int(params['input_chunk_length']),
 				'hidden_dim': int(params['hidden_dim']),
 				'n_rnn_layers': int(params['n_rnn_layers']),
 				'dropout': float(params['dropout']),
-				'mae': metrics['mae'],
-				'rmse': metrics['rmse'],
-				'mape': metrics['mape'],
-				'dir_acc': metrics['directional_accuracy'],
-				'cum_ret': metrics['cumulative_return'],
-				'sharpe': metrics['annualized_sharpe'],
+				'mae': aggregate['mae'],
+				'rmse': aggregate['rmse'],
+				'mape': aggregate['mape'],
+				'dir_acc': aggregate['directional_accuracy'],
+				'cum_ret': aggregate['cumulative_return'],
+				'sharpe': aggregate['annualized_sharpe'],
 			}
 			print(
 				f'{row["input_chunk_length"]:>4d} {row["hidden_dim"]:>4d} '

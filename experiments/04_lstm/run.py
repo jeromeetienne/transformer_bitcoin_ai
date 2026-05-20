@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,17 @@ from darts.models import BlockRNNModel
 from pytorch_lightning.callbacks import EarlyStopping
 
 from btc_ai.config import load_yaml
-from btc_ai.data import load_dataset_from_experiment_cfg
+from btc_ai.data import (
+	PerSymbolFrame,
+	build_per_symbol_frames,
+	load_dataset_from_experiment_cfg,
+)
+from btc_ai.eval.aggregate import (
+	PerSymbolResult,
+	aggregate_metrics,
+	concat_predictions,
+	write_aggregated_metrics_json,
+)
 from btc_ai.eval.metrics import (
 	annualized_sharpe,
 	cumulative_return,
@@ -29,8 +40,6 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
@@ -65,46 +74,35 @@ def build_target_and_covariates(
 	return joined['r_target'], None, joined['ref_close']
 
 
-def train_and_evaluate(
-	cfg: dict[str, Any],
-	model_overrides: dict[str, Any] | None = None,
-	extra_pl_callbacks: list[Any] | None = None,
-) -> tuple[dict[str, Any], pd.DataFrame]:
-	# End-to-end pipeline shared by run.py and sweep.py: load data, build target +
-	# past covariates, fit Scaler on train only, train BlockRNN-LSTM with val-based
-	# early stopping, walk-forward 1-step-ahead predict on the test slice, reconstruct
-	# prices, compute price + strategy metrics. Returns (metrics_dict, predictions_df).
-	# `model_overrides` lets sweep.py poke individual hyperparams without rewriting cfg.
-	# `extra_pl_callbacks` lets optuna_sweep.py inject a PyTorchLightningPruningCallback
-	# without forcing the early-stopping callback to be reconstructed in callers.
-	cov_cfg = cfg.get('covariates', {})
-	model_cfg = dict(cfg['model'])
-	if model_overrides is not None:
-		model_cfg.update(model_overrides)
-	train_cfg = cfg['training']
+@dataclass
+class _PreparedSymbol:
+	frame: PerSymbolFrame
+	target_pd: pd.Series
+	cov_pd: pd.DataFrame | None
+	ref_pd: pd.Series
+	train_end: int
+	val_end: int
+	scaler_target: Scaler
+	scaler_cov: Scaler | None
+	target_train_s: TimeSeries
+	target_val_s: TimeSeries
+	target_full_s: TimeSeries
+	cov_train_s: TimeSeries | None
+	cov_val_s: TimeSeries | None
+	cov_full_s: TimeSeries | None
 
-	splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
-	df = pd.concat([splits.train, splits.validation, splits.test])
-	pre_val_rows = len(splits.train)
-	pre_test_rows = len(splits.train) + len(splits.validation)
-	# Drop tz so darts' time indexing is unambiguous (matches 02_arima's convention).
-	df.index = df.index.tz_localize(None)
-	logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
 
+def _prepare_symbol(frame: PerSymbolFrame, cov_cfg: dict[str, Any]) -> _PreparedSymbol:
+	df = frame.df
 	target_pd, cov_pd, ref_pd = build_target_and_covariates(df, cov_cfg)
-	# build_target_and_covariates drops leading rows that lack history (diff/lag NaNs).
-	# Translate the bar-level boundary indices to target-row indices via timestamps.
-	train_end = target_pd.index.get_indexer([df.index[pre_val_rows]])[0]
-	val_end = target_pd.index.get_indexer([df.index[pre_test_rows]])[0]
-	n = len(target_pd)
-	logger.info(
-		'split: train=[0:%d] val=[%d:%d] test=[%d:%d]',
-		train_end, train_end, val_end, val_end, n,
-	)
+	if frame.val_start_ts is None:
+		raise ValueError(
+			f'{frame.market} {frame.symbol}: validation selector required for '
+			f'BlockRNN-LSTM early stopping (val_loss patience)',
+		)
+	train_end = target_pd.index.get_indexer([frame.val_start_ts])[0]
+	val_end = target_pd.index.get_indexer([frame.test_start_ts])[0]
 
-	# Cast to float32 for the torch model: MPS does not support float64 tensors,
-	# and float32 is plenty for log-returns at this magnitude. Price reconstruction
-	# downstream uses the float64 ref / target_pd, so accuracy of MAE/MAPE is preserved.
 	target_full_ts = TimeSeries.from_series(target_pd.astype('float32'))
 	cov_full_ts = (
 		TimeSeries.from_dataframe(cov_pd.astype('float32'))
@@ -121,9 +119,10 @@ def train_and_evaluate(
 	target_val_s = scaler_target.transform(target_val)
 	target_full_s = scaler_target.transform(target_full_ts)
 
-	cov_train_s = None
-	cov_val_s = None
-	cov_full_s = None
+	scaler_cov: Scaler | None = None
+	cov_train_s: TimeSeries | None = None
+	cov_val_s: TimeSeries | None = None
+	cov_full_s: TimeSeries | None = None
 	if cov_full_ts is not None:
 		scaler_cov = Scaler()
 		cov_train = cov_full_ts[:train_end]
@@ -132,6 +131,59 @@ def train_and_evaluate(
 		cov_train_s = scaler_cov.transform(cov_train)
 		cov_val_s = scaler_cov.transform(cov_val)
 		cov_full_s = scaler_cov.transform(cov_full_ts)
+
+	return _PreparedSymbol(
+		frame=frame,
+		target_pd=target_pd,
+		cov_pd=cov_pd,
+		ref_pd=ref_pd,
+		train_end=train_end,
+		val_end=val_end,
+		scaler_target=scaler_target,
+		scaler_cov=scaler_cov,
+		target_train_s=target_train_s,
+		target_val_s=target_val_s,
+		target_full_s=target_full_s,
+		cov_train_s=cov_train_s,
+		cov_val_s=cov_val_s,
+		cov_full_s=cov_full_s,
+	)
+
+
+def train_and_evaluate(
+	cfg: dict[str, Any],
+	model_overrides: dict[str, Any] | None = None,
+	extra_pl_callbacks: list[Any] | None = None,
+) -> tuple[dict[str, float], list[PerSymbolResult], str]:
+	# End-to-end pipeline shared by run.py and sweep.py. Trains one BlockRNN-LSTM
+	# over a list of per-symbol target series (multi-series fit), then walk-forwards
+	# per test symbol and aggregates metrics. Returns (payload, per-symbol results, interval).
+	# `model_overrides` lets sweep.py poke individual hyperparams without rewriting cfg.
+	# `extra_pl_callbacks` lets optuna_sweep.py inject a PyTorchLightningPruningCallback.
+	cov_cfg = cfg.get('covariates', {})
+	model_cfg = dict(cfg['model'])
+	if model_overrides is not None:
+		model_cfg.update(model_overrides)
+	train_cfg = cfg['training']
+
+	splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
+	frames = build_per_symbol_frames(splits)
+	logger.info(
+		'loaded %d symbol frame(s); interval=%s', len(frames), splits.interval,
+	)
+
+	prepared = [_prepare_symbol(f, cov_cfg) for f in frames]
+
+	target_train_list = [p.target_train_s for p in prepared]
+	target_val_list = [p.target_val_s for p in prepared]
+	cov_train_list = (
+		[p.cov_train_s for p in prepared]
+		if prepared and prepared[0].cov_train_s is not None else None
+	)
+	cov_val_list = (
+		[p.cov_val_s for p in prepared]
+		if prepared and prepared[0].cov_val_s is not None else None
+	)
 
 	early_stop = EarlyStopping(
 		monitor='val_loss',
@@ -166,30 +218,41 @@ def train_and_evaluate(
 		save_checkpoints=False,
 		force_reset=True,
 	)
-	logger.info('fitting BlockRNN-LSTM on %d training rows', len(target_train_s))
+	logger.info(
+		'fitting BlockRNN-LSTM on %d series, %d train rows total',
+		len(target_train_list), sum(len(s) for s in target_train_list),
+	)
 	model.fit(
-		series=target_train_s,
-		past_covariates=cov_train_s,
-		val_series=target_val_s,
-		val_past_covariates=cov_val_s,
+		series=target_train_list,
+		past_covariates=cov_train_list,
+		val_series=target_val_list,
+		val_past_covariates=cov_val_list,
 	)
 
-	# Walk-forward 1-step prediction across the test window. retrain=False reuses the
-	# parameters fit above; the model just slides its input window across test.
-	test_start = target_full_s.time_index[val_end]
+	results = [_evaluate_symbol(p, model, splits.interval) for p in prepared]
+	return aggregate_metrics(results), results, splits.interval
+
+
+def _evaluate_symbol(
+	p: _PreparedSymbol, model: BlockRNNModel, interval: str,
+) -> PerSymbolResult:
+	frame = p.frame
+	# Walk-forward 1-step prediction across the test window. retrain=False reuses
+	# the parameters fit above; the model just slides its input window across test.
+	test_start = p.target_full_s.time_index[p.val_end]
 	preds_s = model.historical_forecasts(
-		series=target_full_s,
-		past_covariates=cov_full_s,
+		series=p.target_full_s,
+		past_covariates=p.cov_full_s,
 		start=test_start,
 		forecast_horizon=1,
 		retrain=False,
 		last_points_only=True,
 		verbose=False,
 	)
-	preds = scaler_target.inverse_transform(preds_s).to_series().rename('r_pred')
+	preds = p.scaler_target.inverse_transform(preds_s).to_series().rename('r_pred')
 
-	target_test = target_pd.iloc[val_end:]
-	ref_test = ref_pd.iloc[val_end:]
+	target_test = p.target_pd.iloc[p.val_end:]
+	ref_test = p.ref_pd.iloc[p.val_end:]
 	common = preds.index.intersection(target_test.index)
 	target_test = target_test.loc[common]
 	ref_test = ref_test.loc[common]
@@ -198,32 +261,33 @@ def train_and_evaluate(
 	close_test = ref_test * np.exp(target_test)
 	pred_close = ref_test * np.exp(preds)
 
-	ppy = periods_per_year(splits.interval)
+	ppy = periods_per_year(interval)
 	strat = strategy_returns(close_test, pred_close, ref_test)
 
-	metrics: dict[str, Any] = {
-		'experiment': '04_lstm',
-		'dataset': cfg['dataset'],
-		'symbol': splits.symbol_test,
-		'interval': splits.interval,
-		'rows_total': int(n),
-		'rows_train': int(train_end),
-		'rows_val': int(val_end - train_end),
-		'rows_test': int(len(common)),
-		'mae': mae(close_test, pred_close),
-		'rmse': rmse(close_test, pred_close),
-		'mape': mape(close_test, pred_close),
-		'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
-		'cumulative_return': cumulative_return(strat),
-		'annualized_sharpe': annualized_sharpe(strat, ppy),
-	}
 	predictions = pd.DataFrame({
 		'close': close_test,
 		'pred': pred_close,
 		'ref': ref_test,
 		'strategy_return': strat,
 	})
-	return metrics, predictions
+	return PerSymbolResult(
+		symbol=frame.symbol,
+		market=frame.market,
+		n_test_rows=int(len(common)),
+		metrics={
+			'mae': mae(close_test, pred_close),
+			'rmse': rmse(close_test, pred_close),
+			'mape': mape(close_test, pred_close),
+			'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
+			'cumulative_return': cumulative_return(strat),
+			'annualized_sharpe': annualized_sharpe(strat, ppy),
+		},
+		predictions=predictions,
+		extras={
+			'rows_train': int(p.train_end),
+			'rows_val': int(p.val_end - p.train_end),
+		},
+	)
 
 
 def main() -> None:
@@ -237,30 +301,37 @@ def main() -> None:
 	results_dir.mkdir(parents=True, exist_ok=True)
 
 	cfg = load_yaml(args.config)
-	metrics, predictions = train_and_evaluate(cfg)
+	_aggregate, results, interval = train_and_evaluate(cfg)
 
-	(results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
-	predictions.to_parquet(results_dir / 'predictions.parquet')
+	payload = write_aggregated_metrics_json(
+		results,
+		results_dir / 'metrics.json',
+		experiment='04_lstm',
+		dataset=cfg['dataset'],
+		interval=interval,
+	)
 
-	fig, ax = plt.subplots(figsize=(10, 4))
-	ax.plot(predictions.index, predictions['close'].values, label='close', linewidth=1)
-	ax.plot(
-		predictions.index,
-		predictions['pred'].values,
-		label='LSTM pred',
-		linewidth=1,
-		alpha=0.7,
-	)
-	ax.set_title(
-		f'{metrics["symbol"]} {metrics["interval"]} — BlockRNN-LSTM (test set)',
-	)
-	ax.set_ylabel('price')
-	ax.legend()
+	concat_predictions(results).to_parquet(results_dir / 'predictions.parquet')
+
+	_plot(results, interval, results_dir / 'plot.png')
+
+	print(json.dumps(payload, indent=2))
+
+
+def _plot(results: list[PerSymbolResult], interval: str, out_path: Path) -> None:
+	n = len(results)
+	fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
+	for ax, r in zip(axes[:, 0], results):
+		close_test = r.predictions['close']
+		pred_close = r.predictions['pred']
+		ax.plot(close_test.index, close_test.values, label='close', linewidth=1)
+		ax.plot(pred_close.index, pred_close.values, label='LSTM pred', linewidth=1, alpha=0.7)
+		ax.set_title(f'{r.symbol} {interval} — BlockRNN-LSTM (test set)')
+		ax.set_ylabel('price')
+		ax.legend()
 	fig.tight_layout()
-	fig.savefig(results_dir / 'plot.png', dpi=120)
+	fig.savefig(out_path, dpi=120)
 	plt.close(fig)
-
-	print(json.dumps(metrics, indent=2))
 
 
 if __name__ == '__main__':

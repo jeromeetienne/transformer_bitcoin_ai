@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,17 @@ from darts.models import Chronos2Model, TimesFM2p5Model
 from darts.utils.likelihood_models.torch import QuantileRegression
 
 from btc_ai.config import load_yaml
-from btc_ai.data import load_dataset_from_experiment_cfg
+from btc_ai.data import (
+	PerSymbolFrame,
+	build_per_symbol_frames,
+	load_dataset_from_experiment_cfg,
+)
+from btc_ai.eval.aggregate import (
+	PerSymbolResult,
+	aggregate_metrics,
+	concat_predictions,
+	write_aggregated_metrics_json,
+)
 from btc_ai.eval.metrics import (
 	annualized_sharpe,
 	cumulative_return,
@@ -29,8 +40,6 @@ from btc_ai.eval.metrics import (
 )
 
 EXPERIMENT_DIR = Path(__file__).parent
-# results_dir is derived inside main() from the config filename stem
-# (e.g. configs/btc_4h_2024.config.yaml → results/btc_4h_2024/).
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CACHE_DIR = REPO_ROOT / 'data' / 'raw'
 
@@ -58,9 +67,6 @@ def build_model(
 	model_cfg: dict[str, Any],
 	quantiles: list[float],
 ) -> Chronos2Model | TimesFM2p5Model:
-	# Both classes inherit from darts FoundationModel and share the same surface
-	# we use here (input_chunk_length, output_chunk_length, hub_model_name,
-	# likelihood, pl_trainer_kwargs). The only divergence is the class itself.
 	pl_trainer_kwargs: dict[str, Any] = {
 		'accelerator': 'auto',
 		'enable_progress_bar': False,
@@ -82,17 +88,51 @@ def build_model(
 	raise ValueError(f'unknown backend={backend!r}; expected one of {VALID_BACKENDS}')
 
 
+@dataclass
+class _PreparedSymbol:
+	frame: PerSymbolFrame
+	target_pd: pd.Series
+	ref_pd: pd.Series
+	train_end: int                  # fold val into training, so train_end == val_end of legacy code
+	scaler_target: Scaler
+	target_train_s: TimeSeries
+	target_full_s: TimeSeries
+
+
+def _prepare_symbol(frame: PerSymbolFrame) -> _PreparedSymbol:
+	# Zero-shot: fold validation (if present) into the training segment, matching
+	# the legacy single-split behavior. train_end is the boundary between
+	# train+validation and test.
+	df = frame.df
+	target_pd, ref_pd = build_target(df)
+	train_end = target_pd.index.get_indexer([frame.test_start_ts])[0]
+
+	target_full_ts = TimeSeries.from_series(target_pd.astype('float32'))
+	target_train = target_full_ts[:train_end]
+
+	scaler_target = Scaler()
+	scaler_target.fit(target_train)
+	target_train_s = scaler_target.transform(target_train)
+	target_full_s = scaler_target.transform(target_full_ts)
+
+	return _PreparedSymbol(
+		frame=frame,
+		target_pd=target_pd,
+		ref_pd=ref_pd,
+		train_end=train_end,
+		scaler_target=scaler_target,
+		target_train_s=target_train_s,
+		target_full_s=target_full_s,
+	)
+
+
 def train_and_evaluate(
 	cfg: dict[str, Any],
 	model_overrides: dict[str, Any] | None = None,
-) -> tuple[dict[str, Any], pd.DataFrame]:
-	# End-to-end pipeline shared by run.py and sweep.py: load data, build target,
-	# fit a Scaler on the train slice, instantiate the requested foundation model
-	# (chronos or timesfm), fit() it (no-op for these zero-shot models), then
-	# walk-forward 1-step probabilistic forecasts on the test slice, reconstruct
-	# prices on the median, and compute the standard metric suite.
-	# `model_overrides` lets sweep.py poke individual config values (backend,
-	# hub_model_name, input_chunk_length, num_samples) without rewriting cfg.
+) -> tuple[dict[str, float], list[PerSymbolResult], str]:
+	# End-to-end pipeline shared by run.py and sweep.py. Fits (no-op for zero-shot)
+	# the requested foundation model on the per-symbol training series, then
+	# walk-forwards per test symbol and aggregates metrics.
 	merged: dict[str, Any] = {
 		'backend': cfg['backend'],
 		'hub_model_name': cfg['hub_model_name'],
@@ -117,55 +157,49 @@ def train_and_evaluate(
 	num_samples = int(merged['num_samples'])
 
 	splits = load_dataset_from_experiment_cfg(cfg, REPO_ROOT, CACHE_DIR)
-	# Zero-shot models don't use a validation slice: fold val into the training
-	# segment so behavior matches the legacy single-split path.
-	df = pd.concat([splits.train, splits.validation, splits.test])
-	pre_test_rows = len(splits.train) + len(splits.validation)
-	# Drop tz so darts' time indexing is unambiguous (matches 02_arima/04_lstm/05_transformer).
-	df.index = df.index.tz_localize(None)
-	logger.info('loaded %d rows from %s to %s', len(df), df.index[0], df.index[-1])
+	frames = build_per_symbol_frames(splits)
+	logger.info('loaded %d symbol frame(s); interval=%s', len(frames), splits.interval)
 
-	target_pd, ref_pd = build_target(df)
-	# build_target drops the leading row (.diff() yields NaN at index 0). Translate
-	# the bar-level pre_test_rows index into a target-row index via the timestamp.
-	train_end = target_pd.index.get_indexer([df.index[pre_test_rows]])[0]
-	n = len(target_pd)
-	logger.info('split: train=[0:%d] test=[%d:%d]', train_end, train_end, n)
-
-	# Cast to float32 for the torch model: MPS does not support float64 tensors,
-	# and float32 is plenty for log-returns at this magnitude. Price reconstruction
-	# downstream uses the float64 ref / target_pd so MAE/MAPE accuracy is preserved.
-	target_full_ts = TimeSeries.from_series(target_pd.astype('float32'))
-	target_train = target_full_ts[:train_end]
-
-	scaler_target = Scaler()
-	scaler_target.fit(target_train)
-	target_full_s = scaler_target.transform(target_full_ts)
+	prepared = [_prepare_symbol(f) for f in frames]
 
 	logger.info('instantiating %s (%s)', backend, hub_model_name)
 	model = build_model(backend, hub_model_name, merged, quantiles)
 	logger.info(
-		'fit %s on %d training rows — zero-shot, no weight updates. '
+		'fit %s on %d series (zero-shot, no weight updates). '
 		'First run downloads HuggingFace weights (chronos-2-small ≈120 MB, '
 		'chronos-2 ≈300 MB, timesfm-2.5 ≈800 MB), cached at ~/.cache/huggingface/hub/.',
-		backend, len(target_train),
+		backend, len(prepared),
 	)
 	# fit() is required by the darts API but performs no weight updates for
-	# foundation models. It does, however, trigger the HuggingFace weight
-	# download on first invocation (via _create_model → hf_connector.load_model).
-	model.fit(scaler_target.transform(target_train))
+	# foundation models. It triggers the HuggingFace weight download on first
+	# invocation. Multi-series fit is supported and equally no-op per series.
+	train_list = [p.target_train_s for p in prepared]
+	model.fit(train_list if len(train_list) > 1 else train_list[0])
 	logger.info('model ready')
 
-	test_start = target_full_s.time_index[train_end]
-	test_bars = len(target_full_s) - train_end
+	results = [
+		_evaluate_symbol(p, model, splits.interval, quantiles, num_samples)
+		for p in prepared
+	]
+	return aggregate_metrics(results), results, splits.interval
+
+
+def _evaluate_symbol(
+	p: _PreparedSymbol,
+	model: Chronos2Model | TimesFM2p5Model,
+	interval: str,
+	quantiles: list[float],
+	num_samples: int,
+) -> PerSymbolResult:
+	frame = p.frame
+	test_start = p.target_full_s.time_index[p.train_end]
 	logger.info(
-		'walk-forward 1-step from %s over %d test bars (num_samples=%d)',
-		test_start, test_bars, num_samples,
+		'walk-forward 1-step from %s over %d test bars (%s %s, num_samples=%d)',
+		test_start, len(p.target_full_s) - p.train_end,
+		frame.market, frame.symbol, num_samples,
 	)
-	# verbose=True surfaces darts' tqdm bar across the test window — without
-	# it the model sits silent for the full sweep, which is several minutes.
 	preds_s = model.historical_forecasts(
-		series=target_full_s,
+		series=p.target_full_s,
 		start=test_start,
 		forecast_horizon=1,
 		retrain=False,
@@ -173,19 +207,17 @@ def train_and_evaluate(
 		num_samples=num_samples,
 		verbose=True,
 	)
-	logger.info('walk-forward complete; extracting quantiles and reconstructing prices')
 	# Stochastic series — inverse-scale on the full distribution, then extract
-	# quantiles. (Linear scaling preserves quantile order, so this and
-	# scale->quantile->inverse-scale would agree, but inverse-scaling first
-	# keeps everything on log-return scale before we slice.)
-	preds_unscaled = scaler_target.inverse_transform(preds_s)
+	# quantiles. Linear scaling preserves quantile order, so inverse-scaling first
+	# keeps everything on log-return scale before we slice.
+	preds_unscaled = p.scaler_target.inverse_transform(preds_s)
 
 	r_q_lo = preds_unscaled.quantile(quantiles[0]).to_series().rename('r_q_lo')
 	r_q_med = preds_unscaled.quantile(quantiles[1]).to_series().rename('r_q_med')
 	r_q_hi = preds_unscaled.quantile(quantiles[2]).to_series().rename('r_q_hi')
 
-	target_test = target_pd.iloc[train_end:]
-	ref_test = ref_pd.iloc[train_end:]
+	target_test = p.target_pd.iloc[p.train_end:]
+	ref_test = p.ref_pd.iloc[p.train_end:]
 	common = r_q_med.index.intersection(target_test.index)
 	target_test = target_test.loc[common]
 	ref_test = ref_test.loc[common]
@@ -198,29 +230,9 @@ def train_and_evaluate(
 	pred_close_lo = ref_test * np.exp(r_q_lo)
 	pred_close_hi = ref_test * np.exp(r_q_hi)
 
-	ppy = periods_per_year(splits.interval)
+	ppy = periods_per_year(interval)
 	strat = strategy_returns(close_test, pred_close, ref_test)
 
-	metrics: dict[str, Any] = {
-		'experiment': '06_pretrained',
-		'dataset': cfg['dataset'],
-		'backend': backend,
-		'hub_model_name': hub_model_name,
-		'symbol': splits.symbol_test,
-		'interval': splits.interval,
-		'input_chunk_length': int(merged['input_chunk_length']),
-		'num_samples': num_samples,
-		'quantiles': quantiles,
-		'rows_total': int(n),
-		'rows_train': int(train_end),
-		'rows_test': int(len(common)),
-		'mae': mae(close_test, pred_close),
-		'rmse': rmse(close_test, pred_close),
-		'mape': mape(close_test, pred_close),
-		'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
-		'cumulative_return': cumulative_return(strat),
-		'annualized_sharpe': annualized_sharpe(strat, ppy),
-	}
 	predictions = pd.DataFrame({
 		'close': close_test,
 		'pred': pred_close,
@@ -229,7 +241,21 @@ def train_and_evaluate(
 		'ref': ref_test,
 		'strategy_return': strat,
 	})
-	return metrics, predictions
+	return PerSymbolResult(
+		symbol=frame.symbol,
+		market=frame.market,
+		n_test_rows=int(len(common)),
+		metrics={
+			'mae': mae(close_test, pred_close),
+			'rmse': rmse(close_test, pred_close),
+			'mape': mape(close_test, pred_close),
+			'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
+			'cumulative_return': cumulative_return(strat),
+			'annualized_sharpe': annualized_sharpe(strat, ppy),
+		},
+		predictions=predictions,
+		extras={'rows_train': int(p.train_end)},
+	)
 
 
 def main() -> None:
@@ -245,40 +271,63 @@ def main() -> None:
 	results_dir.mkdir(parents=True, exist_ok=True)
 
 	cfg = load_yaml(args.config)
-	metrics, predictions = train_and_evaluate(cfg)
+	_aggregate, results, interval = train_and_evaluate(cfg)
 
-	(results_dir / 'metrics.json').write_text(json.dumps(metrics, indent=2) + '\n')
-	predictions.to_parquet(results_dir / 'predictions.parquet')
+	backend = str(cfg['backend'])
+	hub_model_name = str(cfg['hub_model_name'])
+	quantiles = [float(q) for q in cfg['model']['quantiles']]
 
-	label = f'{metrics["backend"]} ({metrics["hub_model_name"]})'
-	q_lo, _, q_hi = metrics['quantiles']
+	payload = write_aggregated_metrics_json(
+		results,
+		results_dir / 'metrics.json',
+		experiment='06_pretrained',
+		dataset=cfg['dataset'],
+		interval=interval,
+		extra_run_fields={
+			'backend': backend,
+			'hub_model_name': hub_model_name,
+			'input_chunk_length': int(cfg['model']['input_chunk_length']),
+			'num_samples': int(cfg['model']['num_samples']),
+			'quantiles': quantiles,
+		},
+	)
 
-	fig, ax = plt.subplots(figsize=(10, 4))
-	ax.plot(predictions.index, predictions['close'].values, label='close', linewidth=1)
-	ax.plot(
-		predictions.index,
-		predictions['pred'].values,
-		label=f'{label} median',
-		linewidth=1,
-		alpha=0.7,
-	)
-	ax.fill_between(
-		predictions.index,
-		predictions['pred_lo'].values,
-		predictions['pred_hi'].values,
-		alpha=0.2,
-		label=f'q{q_lo:g}–q{q_hi:g} band',
-	)
-	ax.set_title(
-		f'{metrics["symbol"]} {metrics["interval"]} — {label} (test set, zero-shot)',
-	)
-	ax.set_ylabel('price')
-	ax.legend()
+	concat_predictions(results).to_parquet(results_dir / 'predictions.parquet')
+
+	_plot(results, interval, backend, hub_model_name, quantiles, results_dir / 'plot.png')
+
+	print(json.dumps(payload, indent=2))
+
+
+def _plot(
+	results: list[PerSymbolResult],
+	interval: str,
+	backend: str,
+	hub_model_name: str,
+	quantiles: list[float],
+	out_path: Path,
+) -> None:
+	label = f'{backend} ({hub_model_name})'
+	q_lo, _, q_hi = quantiles
+	n = len(results)
+	fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
+	for ax, r in zip(axes[:, 0], results):
+		preds = r.predictions
+		ax.plot(preds.index, preds['close'].values, label='close', linewidth=1)
+		ax.plot(
+			preds.index, preds['pred'].values,
+			label=f'{label} median', linewidth=1, alpha=0.7,
+		)
+		ax.fill_between(
+			preds.index, preds['pred_lo'].values, preds['pred_hi'].values,
+			alpha=0.2, label=f'q{q_lo:g}–q{q_hi:g} band',
+		)
+		ax.set_title(f'{r.symbol} {interval} — {label} (test set, zero-shot)')
+		ax.set_ylabel('price')
+		ax.legend()
 	fig.tight_layout()
-	fig.savefig(results_dir / 'plot.png', dpi=120)
+	fig.savefig(out_path, dpi=120)
 	plt.close(fig)
-
-	print(json.dumps(metrics, indent=2))
 
 
 if __name__ == '__main__':
