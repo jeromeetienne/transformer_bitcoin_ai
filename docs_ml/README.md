@@ -1,6 +1,8 @@
 # docs_ml — ML article series principles
 
-A short manifesto for the article series in this folder. Six articles (one project-intro piece plus five model articles), published on a personal blog and cross-posted to LinkedIn, on machine learning applied to Bitcoin price prediction.
+A short manifesto for the article series in this folder. Eight articles (one project-intro piece plus seven model articles, one per experiment), published on a personal blog and cross-posted to LinkedIn, on machine learning applied to Bitcoin price prediction.
+
+Article numbering matches the experiment number: article `N` maps to [`experiments/0N_*/`](../experiments/), and the working title is driven by that experiment. Article 0 (the project presentation) is the only article without a matching experiment.
 
 The goal is to showcase **ML craft, not trading intuition**. The financial-flavor articles in `../docs_finance/articles/` are explicitly out of scope and should not be used as templates or sources of prose.
 
@@ -16,14 +18,16 @@ ML engineers and curious technical readers. They want to see:
 
 They do **not** want trading advice, get-rich framing, or finance jargon.
 
-## The six articles
+## The eight articles
 
 0. **Presentation of the project** — the curtain-raiser. Frames the question, the data, and the evaluation philosophy, and previews the model articles that follow. No model, no results.
-1. **Baselines you need to beat** — naive / moving-average / ARIMA as the floor every later model must clear. The specifics companion to article 0's framing.
-2. **XGBoost and feature engineering** — what classical ML brings to the table: the model is generic, the features carry the signal.
-3. **LSTM** — recurrent nets on raw sequences. Sequence length, training stability, what they do and don't learn.
-4. **Transformer** — attention applied to time series, via the Temporal Fusion Transformer in Darts.
-5. **Zero-shot foundation models** — Chronos-2 and TimesFM 2.5. What it means that a model that has never seen Bitcoin has an opinion.
+1. **Baseline** ([`01_baseline`](../experiments/01_baseline/)) — naive last-value as the zero-parameter floor every later model must clear. Also where the methodology (target, slice, split, walk-forward, metric module) is established.
+2. **ARIMA** ([`02_arima`](../experiments/02_arima/)) — the 3-parameter linear statistical floor. The classical companion to article 1.
+3. **XGBoost** ([`03_xgboost`](../experiments/03_xgboost/)) — what classical ML brings to the table: the model is generic, the features carry the signal.
+4. **LSTM** ([`04_lstm`](../experiments/04_lstm/)) — recurrent nets on raw sequences. Sequence length, training stability, what they do and don't learn.
+5. **Transformer** ([`05_transformer`](../experiments/05_transformer/)) — attention applied to time series, via the Temporal Fusion Transformer in Darts.
+6. **Pretrained foundation models** ([`06_pretrained`](../experiments/06_pretrained/)) — zero-shot Chronos-2 and TimesFM 2.5. What it means that a model that has never seen Bitcoin has an opinion.
+7. **Fine-tuned foundation models** ([`07_finetuned`](../experiments/07_finetuned/)) — the same backbones as article 6, but `fit()` updates weights against a held-out validation slice. When fine-tuning beats zero-shot, and the conditions that make it happen.
 
 ## Voice principles
 
