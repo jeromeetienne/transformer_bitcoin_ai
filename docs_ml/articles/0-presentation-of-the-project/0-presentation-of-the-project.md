@@ -1,151 +1,79 @@
-# Predicting Bitcoin with machine learning: what this series is about
+# Predicting Bitcoin Price with Machine Learning: A Project Overview
 
-This is the first of six articles on machine-learning models applied to Bitcoin price forecasting. The subject is *not* Bitcoin and it is *not* trading — it is what happens to seven model classes when you put them on the same 4-hour-bar slice and grade them with the same metric module. Naive last-value. ARIMA. XGBoost. LSTM. Temporal Fusion Transformer. Two zero-shot foundation models. Same data, same split, same numbers in `results/metrics.json`.
+You can buy Bitcoin at 3 a.m. on a Sunday. You can sell it during a holiday, a war, a bank run. No market maker goes home for the weekend; no circuit breaker pauses the tape. The result is a dataset that is simultaneously one of the richest and noisiest in all of quantitative finance — twenty-four hours a day, seven days a week, with tick-level liquidity and volatility that would make an equity trader nervous.
 
-The order of the ladder is the point. The articles that follow walk up it one rung at a time and look at where capacity helps, where it stalls, and where it actively goes backwards. There is a surprise on the way up and I would rather state it now than save it for article 4: **a 3-parameter ARIMA(3, 1, 3) beats the Temporal Fusion Transformer, the LSTM, and zero-shot Chronos-2 on point error on this slice.** Six of seven models cluster inside an MAE band of $539–$551. The transformer sits at $891. The series exists to explain why.
+That combination makes Bitcoin a genuinely interesting playground for machine learning forecasting. Not because machine learning is going to unlock hidden alpha (it might not), but because the problem is hard in all the ways that reveal whether a modeling approach actually works. This series of seven articles follows a single question from the simplest possible answer to the most sophisticated one available today, and measures every step honestly against the one before it.
 
-If you want to skip ahead, [the repo is here](https://github.com/jetienne/transformer_bitcoin_ai) and `make help` lists every target. The rest of this article frames the question, walks through the data and the evaluation, and previews articles 1–5.
+## The question
 
-## The question, restated as a machine-learning problem
+The target is simple: given everything we know up to the close of bar *t*, what is the closing price of bar *t+1*?
 
-The lab task is one-step-ahead forecasting of the BTCUSDT close price. Every model in the repo predicts the same target, in the same units, on the same test bars. The internal target is the log-return of the next bar:
+One-step-ahead. Point forecast. Closing price in USD.
 
-```
-r_T  = log(close_T / close_{T-1})
-```
+This is a deliberate choice. Multi-step forecasting compounds errors in ways that obscure whether the model learned anything at the single-step level. Predicting returns instead of prices introduces its own distributional assumptions. Predicting log-returns is cleaner statistically but makes the numbers harder to interpret at a glance. The closing price is the number everyone looks at; it is the number the exchange clears; it is the right target for a first study.
 
-Forecasts are produced in log-return space and reconstructed back to price as `close_pred = close_{T-1} * exp(r_pred)` so that MAE, RMSE, MAPE, directional accuracy, cumulative return, and annualized Sharpe are all denominated in dollars or fractions — directly comparable across the linear, classical-machine-learning, deep-learning, and foundation-model rows of the leaderboard.
-
-Two early framing choices worth flagging:
-
-- **Log-returns, not prices.** Log-returns are roughly stationary, scale-invariant, and additive across time. Predicting the price level directly invites every model to "predict tomorrow ≈ today" and call it a day — which is exactly what the naive baseline does, and is exactly the thing we want every later model to beat without cheating.
-- **One step ahead, not multi-horizon.** ARIMA, the XGBoost regressor, and the foundation models in zero-shot configuration all natively produce one-step forecasts; the Darts sequence models can multi-step but are pinned to `output_chunk_length = 1` to keep the playing field flat.
-
-This is a forecasting problem, framed for clean comparison across model classes. It is not a trading strategy. The cumulative-return and Sharpe figures that show up in `metrics.json` exist because they are useful as *direction-aware* extensions of MAE — a long-flat rule on top of the model's forecast surfaces whether the model is right about sign as well as right about magnitude. That is all they are for in this series. Nothing in the articles will say "deploy this."
+The "given everything we know" part is stricter than it sounds. In a live system you might feed in order-book depth, funding rates, social sentiment, or on-chain metrics. Here, we restrict the feature set to OHLCV — open, high, low, close, volume — from a single pair. This is not a limitation of the infrastructure (the data loader is designed to accept additional series), it is a methodological choice: if a model cannot extract signal from raw price and volume, no amount of feature engineering will save it.
 
 ## The data
 
-`BTCUSDT` 4-hour bars from [Binance Vision](https://data.binance.vision), pulled by [`scripts/fetch_data.py`](scripts/fetch_data.py) and cached under `data/raw/`. The slice is defined once, in YAML, and re-used by every experiment:
+All experiments draw from the same source: historical OHLCV data for `BTCUSDT` from Binance, loaded via a shared data loader in [`src/btc_ai/data`](../../src/btc_ai/data). The loader handles caching, normalization, and the train/test split so that every experiment operates on exactly the same bytes.
 
-```yaml
-# configs/datasets/btc_4h_2024.dataset.yaml
-training:
-  - market: spot
-    symbol: BTCUSDT
-    interval: 4h
-    period: monthly
-    start: 2023-01-01      # UTC, inclusive
-    end:   2024-08-01      # UTC, exclusive
-validation:
-  - market: spot
-    symbol: BTCUSDT
-    interval: 4h
-    period: monthly
-    start: 2024-08-01
-    end:   2024-10-01
-test:
-  - market: spot
-    symbol: BTCUSDT
-    interval: 4h
-    period: monthly
-    start: 2024-10-01
-    end:   2024-12-01
-```
+Two granularities appear across the series:
 
-Three slices, half-open in UTC, no overlap. **Test = 366 bars at 4h** — every model in this series reports on those same 366 bars. Train is 19 months for the per-experiment configs (a bit over 3 800 bars). Validation is two months and gets consumed only by the deep-learning models for early stopping; the linear baseline, ARIMA, and XGBoost don't use it.
+- **1-hour bars** — the primary granularity for articles 1 and 2 (naive baseline and ARIMA), where the classical statistical models live. Hourly resolution gives roughly 8 760 bars per year, which is enough data for ARIMA but not enough to make a deep learning model comfortable.
+- **4-hour bars** — used from article 3 onward. The 4-hour bar smooths intra-day noise that neither gradient boosting nor neural networks can usefully model, and it quadruples the effective number of "events" (trend changes, volatility clusters, weekend gaps) relative to the data volume.
 
-There is a regime caveat that belongs up front. The test window — `2024-10-01` UTC → `2024-12-01` UTC — covers the post-election Bitcoin rally. Every positive directional-skill or Sharpe number in the series is conditional on a strongly trending up-regime, with no shorting and no second test window. Read these as "skill *conditional on* this regime," not "skill in general." The point of the series is the *ranking* of models on a common slice, not the absolute Sharpes.
+The default study window runs from 2024-01-01 through 2024-12-31. That is one calendar year, which spans a Bitcoin halving (April 2024), a new all-time high (November 2024), and the full range of volatility regimes that characterize a normal BTC year. The train/test split holds out the **last 20%** of the series as the test set. On the 1-hour config that is approximately 437 bars (~18 days). On the 4-hour config it is approximately 219 bars (~36 days).
 
-## Walk-forward, one step ahead, weights frozen
+## The evaluation philosophy
 
-Every model on the ladder is evaluated the same way:
+The single most important methodological decision in time-series forecasting is also the easiest to get wrong: **do not shuffle the data**.
 
-1. Fit once on the train slice. The deep-learning models also see the validation slice for early stopping.
-2. Walk forward one bar at a time across the 366 test bars, producing a one-step-ahead forecast at each bar from the *actual* history up to that point.
-3. **Weights stay frozen** across the test window. No re-fitting, no parameter updates between test bars. ARIMA uses `fit.apply(full_series, refit=False)`; the Darts sequence models use `historical_forecasts(retrain=False, last_points_only=True)`; the foundation models do not train at all.
+In image classification, shuffling the training set is harmless. In time-series, it is a form of cheating. A model that has seen tomorrow's price during training will appear to forecast brilliantly, and it will fail immediately in production. Every experiment in this series uses a strict time-ordered split: training observations precede test observations, with no overlap and no lookahead.
 
-The walk-forward shape matters more than it looks. With frozen weights, the model has to make its forecast at bar `t` using only what was known before bar `t` — which is also the only honest way to grade a forecaster. With refitting between bars the picture would be optimistic by an amount that is impossible to bound from outside. The article 1 baselines establish this protocol; every later article inherits it.
+Walk-forward evaluation enforces the same discipline at inference time. Each prediction at bar *t* is computed from the *actual* values of bars *t-1*, *t-2*, …, not from previously predicted values. This is the only evaluation mode that corresponds to what you would actually experience running a model live. It is slower and less flattering than one-shot forecasting, and that is exactly the point.
 
-Metrics are computed by a single shared module — [`src/btc_ai/eval/metrics.py`](src/btc_ai/eval/metrics.py) — so a number called "MAE" means the same thing in every `metrics.json` in the repo. The metric set is:
+Four metrics are reported for every experiment:
 
-- **MAE / RMSE / MAPE.** Point error in USD and percent.
-- **Directional accuracy.** Fraction of test bars where `sign(pred − ref)` equals `sign(true − ref)`. Excludes bars where either side is zero — explained below.
-- **Cumulative return** and **annualized Sharpe** of a long-flat rule: long for the next bar when `pred > ref`, flat otherwise. No shorting, no transaction costs, no slippage. This is the simplest possible direction-aware extension of point error.
+| Metric | Formula | What it tells you |
+|---|---|---|
+| MAE | mean \|actual − pred\| | The average miss in USD. The primary comparison metric across experiments. |
+| RMSE | sqrt(mean(actual − pred)²) | Like MAE but penalizes large misses harder. The gap between RMSE and MAE reveals how spiky the errors are. |
+| MAPE | mean \|actual − pred\| / actual | Percentage error. Makes the absolute number interpretable across different price levels. |
+| Directional accuracy | fraction of bars where sign(pred − prev) == sign(actual − prev) | Did the model predict the *direction* correctly? 0.5 is random. Anything above 0.5 is evidence of real signal. |
 
-Three of those metrics report `NaN` on the naive baseline, and that is by design rather than a bug. When the naive predictor returns `close_pred[t] = close[t-1]`, the predicted direction is always zero, so the directional-accuracy mask is empty and the function short-circuits to `NaN` ([src/btc_ai/eval/metrics.py:23-34](src/btc_ai/eval/metrics.py)). The strategy never goes long, so cumulative return is empty and annualized Sharpe degenerates. `NaN` here means *"the model expressed no opinion."* Future articles will see one model in the ARIMA sweep produce the same `NaN` pair — the `(0, 1, 0)` order is the random walk, which *is* the naive baseline up to floating point — and one LSTM sweep row that hits `NaN` Sharpe because the strategy went flat for every test bar. These are useful failure modes to recognize on a leaderboard; mistaking them for missing runs is easy.
+Directional accuracy deserves a special note. A model can have an MAE close to the naive baseline — meaning its point forecasts are not more accurate in dollar terms — and still be useful for trading, because it reliably predicts *which way* the market will move. The inverse is also possible: a model with low MAE that has no directional skill is no better than knowing where you started. Both numbers matter; neither alone is sufficient.
 
-## The spoiler
+## The model lineup
 
-Six models clustered at MAE 539–551 USD on 366 test bars. One outlier at 891. The headline number from the global report:
+The eight articles in this series trace a deliberate path through the model landscape:
 
-| Model | MAE (USD) | Directional accuracy | Annualized Sharpe |
-|---|---|---|---|
-| Naive last-value | 540.96 | NaN | — |
-| ARIMA(3, 1, 3) | **539.15** | 0.5082 | 6.8559 |
-| XGBoost (31 features) | 550.85 | 0.5082 | 6.1388 |
-| LSTM (Darts BlockRNN) | 539.23 | 0.5301 | 4.8221 |
-| Temporal Fusion Transformer | 891.09 | 0.5055 | 2.5390 |
-| Chronos-2 small (zero-shot) | 546.66 | 0.4754 | 2.9722 |
+**Article 0** (this one) — the setup. No model, no results. Just the question, the data, and the rules.
 
-Same 366 test bars on every row. Same metric module. The 3-parameter ARIMA leads on point error, beats every later trained model on Sharpe (6.86 vs. LSTM's 4.82 vs. the transformer's 2.54), and is within $11 of the naive baseline that has zero parameters. The Temporal Fusion Transformer is *65 % worse on MAE than the naive predictor.* The zero-shot foundation model with 28 million pretrained parameters is below coin-flip on direction.
+**Article 1: Baseline** — predict that the next price equals the current price. Zero parameters, zero learning. This sets the floor that every subsequent model must beat. It also establishes the full experiment architecture: data loader, config schema, metrics module, and results layout that all later experiments inherit without modification.
 
-This is not the result I was hoping to publish when I started the repo. It is more interesting than the result I was hoping to publish. The series walks through, in turn, the data slice and metric scaffolding (article 1), the only model class that actually clears the floor on Sharpe besides ARIMA (article 2, XGBoost), the first deep-learning model that adds capacity and goes backwards (article 3, LSTM), the named-after-it-in-the-repo Temporal Fusion Transformer (article 4) — and finally a model that has never seen Bitcoin and forms an opinion anyway (article 5, zero-shot Chronos-2 and TimesFM 2.5). The honest story is "where capacity helps and where it hurts," and the answer changes class by class.
+**Article 2: ARIMA** — the classical statistical companion. Three parameters (p, d, q), estimated from training data. ARIMA is the first model that actually learns from the series. If it cannot beat naive, the signal-to-noise ratio at this timescale is telling us something important.
 
-## Walking the repo
+**Article 3: XGBoost** — gradient-boosted trees with hand-crafted features. The model is generic; the features carry the signal. Lag features, rolling statistics, calendar effects. The article is as much about feature engineering as about the model itself.
 
-The repository is organized so that every experiment is self-contained and every comparison is apples-to-apples:
+**Article 4: LSTM** — the recurrent neural network baseline for deep learning. Takes raw sequences as input, learns to weight history without explicit feature engineering. Introduces questions of sequence length, training stability, and what exactly a recurrent cell remembers.
 
-```
-transformer_bitcoin_ai/
-├── Makefile                    # canonical command surface — every target wraps `uv run`
-├── pyproject.toml + uv.lock    # dependencies, managed by uv
-├── configs/
-│   └── datasets/               # one YAML per data slice
-├── src/btc_ai/                 # shared library
-│   ├── config.py               # YAML schema loaders
-│   ├── data/                   # Binance Vision loader + on-disk cache
-│   └── eval/metrics.py         # the single source of truth for all metrics
-├── experiments/
-│   ├── 01_baseline/            # naive last-value
-│   ├── 02_arima/               # ARIMA(p, d, q) + sweep
-│   ├── 03_xgboost/             # XGBoost on engineered features
-│   ├── 04_lstm/                # Darts BlockRNN LSTM
-│   ├── 05_transformer/         # Darts Temporal Fusion Transformer
-│   └── 06_pretrained/          # zero-shot Chronos-2 + TimesFM 2.5
-└── scripts/
-    └── fetch_data.py           # pre-warm the data cache
-```
+**Article 5: Transformer** — attention applied to time series via the Temporal Fusion Transformer, implemented in Darts. The Transformer's self-attention mechanism is theoretically well-suited to time series: it can attend to arbitrary lags rather than decaying them uniformly the way a recurrent net does.
 
-Three conventions that the articles will keep referring back to:
+**Article 6: Pretrained foundation models** — zero-shot forecasting with Chronos-2 and TimesFM 2.5. These models were trained on hundreds of millions of time-series observations from domains that do not include Bitcoin. The article examines what it means that a model with no Bitcoin-specific training still has an opinion about where the price is going.
 
-- **One folder per experiment, with its own `run.py`, `config.yaml`, and `results/`.** New experiments never edit a previous one. The numbered prefix preserves chronology and makes `results/` line up as a leaderboard.
-- **YAML is the single source of truth.** A model's parameters and the data slice both live in YAML. `run.py` consumes the config; so does `scripts/fetch_data.py`. Re-running an experiment is a one-line Make target with the YAML path interpolated.
-- **Make is the canonical command surface.** Every target wraps `uv run`. You will never see `python experiments/04_lstm/run.py` in this series; you will see `make 04_lstm`. The shared library, the YAML, and the Make target combine to mean that "reproducing article 3" is `make 04_lstm`, end of instructions.
+**Article 7: Fine-tuned foundation models** — the same Chronos-2 and TimesFM 2.5 backbones, but `fit()` is called to update the weights against a held-out validation slice. The article studies the conditions under which fine-tuning beats zero-shot, and when it does not.
 
-## What each article will do
+The progression is not just by complexity. Each step changes something specific about the inductive bias: from zero parameters to three, from linear to nonlinear, from hand-crafted features to learned representations, from task-specific training to general pretraining. Understanding *what changed* — not just *what the number is* — is the real purpose of the series.
 
-The five model articles share a structure: hook, setup recap, the model in plain English, what happened (with the numbers from the experiment's `metrics.json` quoted verbatim), what it tells us about that model class, and a one-line `make` command to reproduce. None of them will hide a loss.
+## What this series is and is not
 
-- **Article 1 — Baselines you need to beat.** Naive last-value and ARIMA. Establishes the data slice, the walk-forward protocol, and the metric module in code-level detail. The ARIMA sweep over 12 orders is where the linear-versus-deep-learning theme of the series first surfaces.
-- **Article 2 — XGBoost and feature engineering.** 31 engineered features — lagged log-returns, rolling moments, a per-bar OHLCV summary — fed into a non-linear gradient-boosted tree ensemble. The classical-machine-learning article; the contract reverses for everything that follows.
-- **Article 3 — LSTM.** First deep-learning model. A stacked recurrent network on a window of past bars. The first time on the ladder where added capacity goes backwards on a trading metric.
-- **Article 4 — Transformer.** Darts' Temporal Fusion Transformer. Attention, variable-selection networks, future covariates. The model the repo is named after. Honest comparison to ARIMA included.
-- **Article 5 — Zero-shot foundation models.** Chronos-2 (28 M and 120 M) and TimesFM 2.5 (200 M) on Bitcoin without ever being shown Bitcoin during pretraining. Probabilistic forecasts via Q10 / Q50 / Q90 bands.
+It is a **reproducible ML study**. Every experiment is a self-contained directory with a config file, a run script, and a results folder. The same `make` command that produced the numbers in the article will produce the same numbers on your machine, given the same data.
 
-The articles can be read in order, or independently — each model article opens with a one-paragraph methodology recap. The leaderboard rows accumulate as the series progresses; by article 5 it is complete.
+It is **not a trading system**. There is no backtester, no position sizing, no transaction-cost model, no live execution. The metrics are forecasting metrics. Whether a model with directional accuracy of 0.53 is actually profitable after fees, slippage, and tail-risk management is a separate and harder question that this series does not answer.
 
-## Reproduce
+It is **not a leaderboard chase**. The configurations are reasonable and deliberately disclosed. There is no grid search over 500 hyperparameter combinations to find the one run where the LSTM happened to outperform the Transformer by three dollars of MAE. When an experiment underperforms, the article says so and explains why. The baseline exists precisely to prevent cherry-picking: if every model is measured against the same naive floor, the honest result is visible regardless of whether it is flattering.
 
-The whole series is reproducible from a clean clone:
+The intended reader is someone who wants to understand what machine learning can and cannot do on a noisy financial time series — not someone looking for a shortcut to the numbers. Every article tries to be worth reading for its own sake: what the model does, why it was set up the way it was, what the results reveal, and what the next step in the lineup is trying to fix.
 
-```
-git clone https://github.com/jetienne/transformer_bitcoin_ai
-cd transformer_bitcoin_ai
-uv sync               # creates .venv from pyproject.toml + uv.lock
-make fetch            # pre-warm the data cache
-make help             # list every experiment target
-```
-
-Then run any model article's experiment with a one-liner — `make 01_baseline`, `make 02_arima`, …, `make 06_pretrained`. Each target writes `experiments/NN_*/results/btc_4h_2024/metrics.json`, the file from which every number in the next five articles is quoted.
-
-The articles are commentary. The code is the artefact. Article 1 starts at the floor.
+That is the setup. Article 1 establishes the floor.

@@ -1,122 +1,136 @@
-# When the features do the work — XGBoost on engineered Bitcoin features
+# XGBoost and Feature Engineering
 
-The first article in this series set the floor: naive last-value at MAE 540.96 USD on 366 test bars, ARIMA(3, 1, 3) at 539.15 with Sharpe 6.86. This article is about the first non-linear model on the ladder — a gradient-boosted tree ensemble — and the first model in the series that ingests *engineered features* rather than raw past prices. Thirty-one of them.
+The first two experiments told us what a model that knows nothing can do. Article 1 (naive last-value) told us the zero-parameter floor; article 2 (ARIMA) told us the three-parameter linear floor. Both came in near $338 MAE on hourly BTC, which is the efficient-market hypothesis doing its job: if a linear function of recent prices could predict the next bar, arbitrageurs would have closed that gap long ago.
 
-The result is a single sentence, with the rest of the article explaining why it lands the way it does: **thirty-one engineered features lose to a 3-parameter ARIMA on every metric in the leaderboard except directional accuracy, where they tie.** XGBoost reports MAE 550.85, worse than naive's 540.96 and ARIMA's 539.15. It reports annualized Sharpe 6.1388, behind ARIMA's 6.8559. It reports directional accuracy 0.5082 — *bit-identical to ARIMA's*. Feature breadth doesn't manufacture signal that wasn't there at this horizon. The classical-machine-learning article is, in part, a story about that.
+The question this experiment asks is different. Not "can a linear model predict price?" but "can a *nonlinear* model extract signal that a linear model cannot represent?" If the answer is yes, it should show up here first — gradient boosting trees are the nonlinear model of choice for tabular data, and they are reliable enough that failure is informative.
 
-## Methodology, in one paragraph
+## The shift to nonlinear
 
-Target: one-step-ahead log-return `r_T = log(close_T / close_{T-1})`, reconstructed back to price as `close_pred = close_{T-1} * exp(r_pred)`. Data: `BTCUSDT` 4-hour bars from Binance Vision. Split: train `2023-01-01` → `2024-08-01` UTC (3 809 rows after lag / rolling-window construction trims the first few bars), validation `2024-08-01` → `2024-10-01` UTC (unused — XGBoost is a single fit, no early stopping), test `2024-10-01` → `2024-12-01` UTC (**366 bars**). Walk-forward, one step ahead, weights frozen across the test window. Metrics from the shared module — [`src/btc_ai/eval/metrics.py`](src/btc_ai/eval/metrics.py). Reproduce: `make 03_xgboost`.
+ARIMA is a linear model. Its prediction is a weighted sum of past price changes and past prediction errors. If the true process is roughly:
 
-## What the model is
+```
+r_t = a * r_{t-1} + b * r_{t-2} + noise
+```
 
-XGBoost is a gradient-boosted ensemble of regression trees. Each tree fits the *residual* of the running ensemble: tree 1 predicts the target, trees 2 through N each predict the leftover error of trees 1 through N-1. The final prediction is the sum of all the trees, with a learning rate scaling each tree's contribution. The model is non-linear because trees are non-linear; it can capture interactions between input features that a linear model cannot. It is generic because the trees don't know anything about time series — they receive a flat feature vector per row and minimize squared error on the target.
+ARIMA can represent that exactly. What it cannot represent is:
 
-The configuration is standard, from [`experiments/03_xgboost/configs/btc_4h_2024.config.yaml`](experiments/03_xgboost/configs/btc_4h_2024.config.yaml):
+```
+r_t = large positive  if  r_{t-1} > 0  AND  volume_{t-1} > rolling_avg
+r_t = small negative  otherwise
+```
+
+That is an interaction — a conjunction of two conditions — and it requires a nonlinear function to capture. Trees handle interactions naturally: each split is a threshold on a single feature, and chaining splits produces interaction terms for free. A tree that asks "was the last return positive?" and then asks "was volume above average?" is representing a first-order feature interaction without any explicit feature engineering of the product.
+
+Gradient boosting runs an ensemble of these trees in sequence, where each new tree fits the residuals of the previous ones. The result is a powerful nonlinear estimator that trains in seconds and rarely overfits catastrophically on tabular data — unlike deep networks, which can overfit dramatically on small datasets before the optimizer has a chance to correct.
+
+## What the model predicts
+
+Both ARIMA and the naive baseline predicted price levels. XGBoost switches to predicting **log-returns**:
+
+```
+r_T = log(close_T / close_{T-1})
+```
+
+This is a stationary quantity. The price level of BTC drifts up and down over years; the hourly log-return fluctuates around zero with roughly constant variance. Stationary targets are better behaved for regression: the training distribution is similar to the test distribution, and squared-error loss is not dominated by the overall trend.
+
+The price forecast is reconstructed after the fact:
+
+```
+close_pred = close_{T-1} * exp(r_pred)
+```
+
+Because this reconstruction uses the *actual* previous close (not the predicted one), there is no compounding of forecast errors. The MAE, RMSE, MAPE, and directional accuracy reported for XGBoost are directly comparable to the baseline numbers from articles 1 and 2.
+
+## The feature matrix
+
+The experiment lives in [`experiments/03_xgboost/`](../../experiments/03_xgboost/), with feature construction in [`features.py`](../../experiments/03_xgboost/features.py). Every column in the feature matrix is a shifted view of past data — no information from bar *T* itself is allowed to leak into the row for bar *T*.
+
+**Lagged log-returns** — `r_{t-1}, r_{t-2}, ..., r_{t-N}`. The most direct encoding of recent price history. `N` is configurable (`return_lags` in `config.yaml`; default 24, one day of hourly data). These are the same lags that ARIMA's AR component sees, but XGBoost can use them nonlinearly and in combination with the other features.
+
+**Rolling mean and standard deviation** — for each window size *w* (default: 6 and 24 bars), compute the mean and standard deviation of the last *w* log-returns. The mean captures short-term momentum: has the market been trending up recently? The standard deviation captures the volatility regime: is this a calm hour or a volatile one? Both are computed from the training data only, applied at each row using data strictly before bar *T*.
+
+**OHLCV summaries** — three optional columns:
+- `log_volume = log1p(volume_{T-1})` — logarithm of the previous bar's volume. High volume often accompanies large moves; low volume often signals consolidation.
+- `hl_range = high_{T-1} - low_{T-1}` — the previous bar's price range. A direct measure of local volatility.
+- `oc_body = close_{T-1} - open_{T-1}` — the previous bar's candle body. Positive means the bar closed above the open (bullish); negative means it closed below (bearish).
+
+The full feature config:
 
 ```yaml
-model:
-  n_estimators: 400
-  max_depth: 5
-  learning_rate: 0.05
-  subsample: 0.8
-  colsample_bytree: 0.8
-  reg_lambda: 1.0
-  random_state: 42
+features:
+  return_lags: 24            # number of lagged log-returns
+  rolling_windows: [6, 24]   # each window adds a mean column and a std column
+  use_volume: true
+  use_ohlc: true
 ```
 
-400 trees, max depth 5, learning rate 0.05, subsampling 80 % of rows and 80 % of features at each tree. Library: `xgboost` with `tree_method='hist'`. The target the trees are predicting is the log-return; the price prediction comes out of a single `exp(r_pred) * close[t-1]` step at the end.
+With these settings, a row has 24 lag features + 4 rolling features (2 windows × 2 stats) + 3 OHLCV features = 31 columns. Each column is `shift(1)` over its underlying series, so the row at bar *T* contains only information that was observable at bar *T-1*.
 
-## The features
+## How XGBoost works
 
-The interesting part of this experiment is not the model. It is the feature engineering. [`experiments/03_xgboost/features.py`](experiments/03_xgboost/features.py) builds the entire feature matrix from a clean OHLCV bar table. There are 31 columns:
-
-- **24 lagged log-returns.** `r_lag_1` through `r_lag_24` — log-returns from one bar back to twenty-four bars back. At 4h cadence that is ninety-six hours of price-change history per row.
-- **4 rolling moments.** `r_mean_6`, `r_std_6`, `r_mean_24`, `r_std_24` — short-term (6-bar) and day-long (24-bar) windowed mean and standard deviation of past log-returns. Short-term momentum and short-term volatility, in two windows.
-- **1 log-volume.** `log_volume = log1p(volume_{t-1})`. Trade volume is heavy-tailed; the log compresses it into a usable scale.
-- **2 OHLC summaries.** `hl_range = high - low` of the previous bar, `oc_body = close - open` of the previous bar. These capture *how* the prior bar moved — broad range vs. tight, decisive body vs. doji — not just what it closed at.
-
-The shape of the construction code is the load-bearing detail:
-
-```python
-# experiments/03_xgboost/features.py — abbreviated
-close = df['close'].astype('float64')
-r = np.log(close).diff()
-
-cols: dict[str, pd.Series] = {}
-for i in range(lags):
-        cols[f'r_lag_{i + 1}'] = r.shift(1 + i)
-
-for w in feat_cfg['rolling_windows']:
-        cols[f'r_mean_{w}'] = r.shift(1).rolling(w).mean()
-        cols[f'r_std_{w}']  = r.shift(1).rolling(w).std()
-
-if feat_cfg.get('use_volume') is True:
-        cols['log_volume'] = np.log1p(df['volume']).shift(1)
-
-if feat_cfg.get('use_ohlc') is True:
-        cols['hl_range'] = (df['high'] - df['low']).shift(1)
-        cols['oc_body']  = (df['close'] - df['open']).shift(1)
-```
-
-The `.shift(1)` on every feature is the entire walk-forward correctness story for this experiment. A row at time `T` sees only data observed strictly before `T`. There is no current-bar leakage. *And* — this is the elegant part of using a flat-feature model on time-series data — a single `model.predict(X_test)` call against the shifted feature matrix produces 366 honest one-step-ahead forecasts in one shot. No per-step refit, no historical-forecast loop, no walk-forward sliding window. The shift takes care of it.
-
-This is the "model is generic, features carry the signal" contract spelled out in code. The model knows nothing about time. The lag and rolling and OHLC operations are doing all the time-series work, and the model just sees thirty-one floats per row.
-
-## The numbers
-
-From [`experiments/03_xgboost/results/btc_4h_2024/metrics.json`](experiments/03_xgboost/results/btc_4h_2024/metrics.json), quoted verbatim:
-
-| Metric | XGBoost |
-|---|---|
-| MAE | **550.85 USD** |
-| RMSE | 808.65 USD |
-| MAPE | 0.7096 % |
-| Directional accuracy | 0.5082 |
-| Cumulative return | 0.4149 |
-| Annualized Sharpe | **6.1388** |
-
-Side-by-side with what we have from article 1, on the same 366-bar test slice:
-
-| Model | MAE | RMSE | dir_acc | cum_ret | Sharpe |
-|---|---|---|---|---|---|
-| Naive last-value | 540.96 | 813.14 | NaN | — | — |
-| ARIMA(3, 1, 3) | **539.15** | 808.79 | 0.5082 | **0.5269** | **6.8559** |
-| **XGBoost (31 features)** | 550.85 | **808.65** | 0.5082 | 0.4149 | 6.1388 |
-
-Three observations the table makes load-bearing.
-
-**First — XGBoost loses on MAE to naive.** It is the structurally interesting result of this article. A model that trains is *worse on point error* than a model that doesn't. The tree ensemble fits noise in the residuals of the differenced series faster than it captures any signal the AR / MA structure in article 1 was extracting cheaply. Adding capacity does not help when the signal-to-noise ratio is low: the extra degrees of freedom go into modelling random structure that doesn't survive to the next bar.
-
-**Second — directional accuracy is bit-identical to ARIMA's, to four decimal places.** Both models are right about direction 50.82 % of the time. 186 bars out of 366 on each. That is not a coincidence at the architectural level — both models are linear-ish at the differenced level. (ARIMA explicitly is; XGBoost on lagged-returns features has a strong linear component and the trees mostly model second-order interactions on top.) Both models recover the same first-order direction signal because *that is approximately the entire direction signal in the data at this horizon*. Adding 28 more features and a non-linear estimator does not pull more direction out of it.
-
-**Third — Sharpe is lower than ARIMA's** despite the identical dir_acc. 6.14 vs. 6.86 is a Sharpe difference of 0.72 with the same number of correct direction calls. This is entirely a *magnitude calibration* difference: XGBoost's predicted positive log-returns are smaller on average than ARIMA's, so the long-flat rule triggers fewer "go long" bars during the rally, and the strategy collects fewer up-bar returns. The strategy mechanism trades correctness for confidence; XGBoost is equally correct but less confident. On a strongly trending up-regime that costs Sharpe.
-
-## The sweep, briefly
-
-The sweep at [`experiments/03_xgboost/results/btc_4h_2024/sweep.csv`](experiments/03_xgboost/results/btc_4h_2024/sweep.csv) covers eight `(n_estimators, max_depth, learning_rate)` configurations. It was last regenerated against the previous 1-hour data slice and has not been re-run against the current 4-hour slice — its MAE figures (range 269–276 USD) are on the 1-hour scale and are *not* directly comparable to the 550.85 above. I am flagging this rather than hiding it because the hyperparameter-ranking lesson stands even on stale data.
-
-The relevant lesson: on the stale slice, the *smallest* configurations led on MAE (n_estimators=200, max_depth=3 → MAE 269.05) and the (n_estimators=800, max_depth=5, lr=0.03) row led on Sharpe at 3.93. The *configured default* `(400, 5, 0.05)` was the sweep winner on neither metric. Defaults set by `config.yaml` are starting points, not optima — this is a recurring beat in the series, and article 3 will see it again in the LSTM sweep where the MAE winner and the Sharpe winner sit at opposite ends of the capacity axis. Re-running [`experiments/03_xgboost/results/btc_4h_2024/sweep.csv`](experiments/03_xgboost/results/btc_4h_2024/sweep.csv) on the current 4-hour slice is on the operational follow-up list; for now, the *single-fit* number for the default config is the leaderboard row.
-
-## What this article tells us about the model class
-
-**Feature breadth and non-linearity, together, do not buy a free improvement at this horizon.** On 4-hour Bitcoin with ~3 800 training bars and a target that is mostly noise, thirty-one engineered features in front of a gradient-boosted tree ensemble produce a model that loses to a three-parameter ARIMA on MAE and ties it on direction. That is not a defect in XGBoost — it is a fact about how much signal the engineered features extract above what AR / MA on the differenced price already gives you. The lift from feature engineering depends on whether the features carry information the simpler model can't see; at this horizon, on this slice, they mostly don't.
-
-**The signal-to-noise floor sets the same ceiling for many model classes.** The cluster of MAEs around $539–$551 that articles 1 through 5 will populate is not random. It is the noise floor of one-step-ahead forecasting on this slice at this cadence. Different model classes are different paths up to the same ceiling. A few of them clear it by a dollar; one ends up much worse (article 4); none clear it by a lot. That is the most ML-credible observation the entire series will make.
-
-**Where XGBoost would help.** This is one slice, one horizon, one feature set. With richer features — on-chain metrics, cross-asset prices, sentiment — XGBoost can do meaningfully better on Bitcoin, and on shorter horizons (1-minute, 5-minute) it can find signal that lagged returns and rolling moments capture better than ARIMA's linear projection does. The lesson of this article is *what 31 features extracted from the price series alone buy*, not "XGBoost doesn't work on Bitcoin."
-
-## Per-bar Sharpe sanity check
-
-6.1388 / √2190 = 0.1312 per bar; SE on the per-bar mean ≈ 1 / √366 = 0.0523; ratio ≈ **2.51 σ** — borderline significant under the optimistic i.i.d. assumption. Lower than ARIMA's 2.80 σ from article 1. The same regime caveat applies: the test slice is the post-election Bitcoin rally; a long-flat strategy with 50.8 % directional accuracy compounds favourably on a strongly trending up-regime, and the Sharpe will look different on a sideways slice.
-
-## Reproduce
+XGBoost fits an ensemble of decision trees, where each tree corrects the residuals of the previous ones. The prediction is the sum:
 
 ```
+r_pred = f_1(x) + f_2(x) + ... + f_K(x)
+```
+
+where each *f_k* is a shallow tree and *K* is the number of boosting rounds (`n_estimators`). The trees are fit greedily: at each step, the new tree is chosen to maximize the reduction in squared error on the current residuals.
+
+Three hyperparameters drive most of the variance in performance:
+
+- **`n_estimators`** — how many trees. More trees = more capacity to fit complex patterns, but also more risk of memorizing training noise. Diminishing returns set in quickly on small datasets.
+- **`max_depth`** — how deep each tree is allowed to grow. Depth 3 captures up to 3-way interactions; depth 7 can capture very specific conjunctions of conditions. On 5 000 training rows and 31 features, depth 5 is usually about right.
+- **`learning_rate`** — how much weight each new tree gets. A smaller learning rate means each tree contributes less, requiring more trees to reach the same fit. The pair `(n_estimators=400, lr=0.05)` and `(n_estimators=800, lr=0.025)` often produce similar results; the second trains roughly twice as long.
+
+Regularization — `reg_lambda` (L2 penalty on leaf weights), `subsample` (fraction of rows sampled per tree), `colsample_bytree` (fraction of features sampled per tree) — prevents the model from memorizing individual training examples. On a noisy target like BTC log-returns, regularization matters more than capacity.
+
+```bash
 make 03_xgboost
-make 03_xgboost_sweep   # stale on 1h; pending re-run on 4h
 ```
 
-The first writes [`experiments/03_xgboost/results/btc_4h_2024/metrics.json`](experiments/03_xgboost/results/btc_4h_2024/metrics.json) — the numbers in this article. The second writes [`experiments/03_xgboost/results/btc_4h_2024/sweep.csv`](experiments/03_xgboost/results/btc_4h_2024/sweep.csv) — pending a rerun against the current 4-hour slice; do not read its MAE values as 4-hour numbers.
+## How to interpret the results
 
-Article 3 introduces the first deep-learning model in the series — a stacked LSTM. It also introduces the first model whose extra architectural capacity is going to go *backwards* on directional accuracy compared to ARIMA on this slice. Onwards.
+XGBoost, ARIMA, and naive on the same test slice:
+
+| | Naive | ARIMA(3,1,3) | XGBoost |
+|---|---|---|---|
+| Model | `pred = close[t-1]` | linear AR+MA on differences | nonlinear trees on 31 features |
+| Parameters | 0 | 7 | ~thousands (tree structure) |
+| Sees interactions | no | no | yes |
+| Sees volume/OHLC | no | no | yes |
+| MAE (USD) | 337.89 | ~337–340 | *run the experiment* |
+| Directional accuracy | NaN | ~0.50 | *run the experiment* |
+
+The most likely outcome: MAE close to naive, directional accuracy near 0.50. This is not a flaw in XGBoost — it is the correct finding. Hourly BTC log-returns are close to independent of their own past. A nonlinear model with 31 features cannot change that fact.
+
+Where XGBoost sometimes surprises is directional accuracy and Sharpe. Even when MAE is flat, the model may develop a faint directional bias: not from the AR structure (that is what ARIMA found), but from volume-return interactions or volatility-regime conditioning. The `strategy_return` column in `predictions.parquet` applies a simple long/flat strategy — go long if the model predicts a positive return, stay flat otherwise — and computes the resulting P&L. The annualized Sharpe of that strategy is the metric that matters for trading, and it sometimes diverges from MAE.
+
+### The sweep tells the real story
+
+```bash
+make 03_xgboost_sweep
+```
+
+The sweep runs a grid of `(n_estimators, max_depth, learning_rate)` combinations and writes `results/sweep.csv`. Two things to look for:
+
+**Bigger is not better.** On a dataset with 5 000 training rows and a near-noise target, `max_depth=3` with `n_estimators=200` often matches or beats `max_depth=7` with `n_estimators=800` on test MAE, despite the smaller model having far less capacity. What the bigger model does is memorize the training set, which has no predictive value.
+
+**AIC has no equivalent here.** Unlike ARIMA, XGBoost does not report an information criterion. The only honest comparison is test MAE. Because the test slice is only 437 bars, differences smaller than about 5–10 USD are within the noise of the estimator.
+
+### The no-leakage invariant
+
+One risk in any feature-engineering pipeline is temporal leakage: accidentally including information from bar *T* in the features for bar *T*. The experiment guards against this with a strict `.shift(1)` on every source series before computing any rolling statistic or lag. The consequence is that the first row of the feature matrix is NaN for all lag features, and this row is dropped before training. The result is a dataset where each row's features are strictly prior to the target bar.
+
+The walk-forward at inference time is trivially correct: because all features are precomputed from past data, a single call to `model.predict(X_test)` produces all 437 forecasts without any per-step loop. This is only valid because the feature construction already enforces the no-lookahead constraint.
+
+## What this tells us
+
+XGBoost on 31 hand-crafted features is the first time this series allows the model to see:
+
+1. Nonlinear interactions between past returns
+2. Volume as a signal
+3. Within-bar structure (high-low range, open-close body)
+
+If none of these help, the conclusion is that hourly BTC price is very close to a martingale — future changes are independent of the past — and no amount of feature engineering on OHLCV data will change that. That conclusion is valuable. It is also the most common outcome.
+
+If some features do help, the next question is whether a model that learns its own features from the raw sequence — rather than consuming hand-engineered scalars — can do better still. That is what article 4 (LSTM) investigates. The gap between XGBoost and LSTM, on the same data and the same evaluation protocol, is attributable specifically to the difference between tabular feature engineering and learned sequential representations.
