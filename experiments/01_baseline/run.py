@@ -58,7 +58,7 @@ def main() -> None:
         payload = write_aggregated_metrics_json(
                 results,
                 results_dir / 'metrics.json',
-                experiment='01_baseline_naive',
+                experiment='01_baseline',
                 dataset=cfg['dataset'],
                 interval=splits.interval,
         )

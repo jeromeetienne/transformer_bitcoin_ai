@@ -1,4 +1,4 @@
-# Report — `01_baseline_naive`
+# Report — `01_baseline`
 
 **Run date:** 2026-05-19
 **Status:** completed (single fit, no sweep — the experiment has no parameters to sweep)
@@ -11,11 +11,11 @@ The dumbest possible forecaster: predict that the next price equals the current 
 close_pred[t] = close[t-1]
 ```
 
-No training, no parameters, no walk-forward in the model-fitting sense — predictions are computed in a single pass over the test slice. Library: pandas. See [experiments/01_baseline_naive/README.md](../../experiments/01_baseline_naive/README.md) for the full narrative.
+No training, no parameters, no walk-forward in the model-fitting sense — predictions are computed in a single pass over the test slice. Library: pandas. See [experiments/01_baseline/README.md](../../experiments/01_baseline/README.md) for the full narrative.
 
 ## Configuration
 
-From [experiments/01_baseline_naive/configs/btc_4h_2024.config.yaml](../../experiments/01_baseline_naive/configs/btc_4h_2024.config.yaml):
+From [experiments/01_baseline/configs/btc_4h_2024.config.yaml](../../experiments/01_baseline/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|
@@ -30,7 +30,7 @@ Total bars: **2 010**. Test: **402**. (No train slice — there is nothing to fi
 
 ## Results — single fit
 
-From [experiments/01_baseline_naive/results/btc_4h_2024/metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json):
+From [experiments/01_baseline/results/btc_4h_2024/metrics.json](../../experiments/01_baseline/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -47,12 +47,12 @@ From [experiments/01_baseline_naive/results/btc_4h_2024/metrics.json](../../expe
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| **01_baseline_naive** | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
+| **01_baseline** | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | **782.42** | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
 | [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 
-01_baseline_naive sets the floor on point error: MAE 518.36, RMSE 784.09. Only 02_arima clears it on MAE, and only by $1.20 — within sweep-to-sweep noise on a 402-bar test slice. Every other 4h row — including the two with the highest Sharpe — is *worse* on MAE than this naive predictor. The take-away: on 4h BTC, point-error and directional-skill are nearly orthogonal targets. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
+01_baseline sets the floor on point error: MAE 518.36, RMSE 784.09. Only 02_arima clears it on MAE, and only by $1.20 — within sweep-to-sweep noise on a 402-bar test slice. Every other 4h row — including the two with the highest Sharpe — is *worse* on MAE than this naive predictor. The take-away: on 4h BTC, point-error and directional-skill are nearly orthogonal targets. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained_direct.report.md](06_pretrained_direct.report.md).)
 
 ## Interpretation
 
@@ -73,12 +73,12 @@ The naive baseline reports **MAE 518.36 / RMSE 784.09 / NaN dir_acc** on a 402-b
 
 ## Files produced
 
-- [experiments/01_baseline_naive/results/btc_4h_2024/metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json)
-- [experiments/01_baseline_naive/results/btc_4h_2024/predictions.parquet](../../experiments/01_baseline_naive/results/btc_4h_2024/predictions.parquet)
-- [experiments/01_baseline_naive/results/btc_4h_2024/plot.png](../../experiments/01_baseline_naive/results/btc_4h_2024/plot.png)
+- [experiments/01_baseline/results/btc_4h_2024/metrics.json](../../experiments/01_baseline/results/btc_4h_2024/metrics.json)
+- [experiments/01_baseline/results/btc_4h_2024/predictions.parquet](../../experiments/01_baseline/results/btc_4h_2024/predictions.parquet)
+- [experiments/01_baseline/results/btc_4h_2024/plot.png](../../experiments/01_baseline/results/btc_4h_2024/plot.png)
 
 ## How to reproduce
 
 ```
-make 01_baseline_naive
+make 01_baseline
 ```

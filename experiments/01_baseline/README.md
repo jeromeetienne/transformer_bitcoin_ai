@@ -1,4 +1,4 @@
-# 01_baseline_naive
+# 01_baseline
 
 The dumbest possible forecaster: **predict that the next price equals the current price.**
 
@@ -29,7 +29,7 @@ make baseline
 Or with a different config (e.g. a longer range, different symbol):
 
 ```
-uv run python experiments/01_baseline_naive/run.py --config <path-to-yaml>
+uv run python experiments/01_baseline/run.py --config <path-to-yaml>
 ```
 
 ## How to interpret the results
@@ -63,7 +63,7 @@ A model that ties naive on MAE but achieves directional accuracy > 0.5 may still
 ## Files
 
 ```
-experiments/01_baseline_naive/
+experiments/01_baseline/
 ├── README.md           # this file
 ├── config.yaml         # data slice + test_fraction
 ├── run.py              # entry point

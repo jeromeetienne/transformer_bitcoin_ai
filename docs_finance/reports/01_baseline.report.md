@@ -1,4 +1,4 @@
-# Report — `01_baseline_naive`
+# Report — `01_baseline`
 
 **Run date:** 2026-04-29
 **Status:** completed
@@ -11,11 +11,11 @@ A naive last-value forecaster: predicts that the next price equals the current p
 close_pred[t] = close[t-1]
 ```
 
-No training, no parameters, no tuning. The point is the architecture, not the model — every later experiment reuses the same shared loader, metrics, and `results/` layout. Its job is to set the **floor** that every later model must beat to be worth using. See [experiments/01_baseline_naive/README.md](../../experiments/01_baseline_naive/README.md) for the full description.
+No training, no parameters, no tuning. The point is the architecture, not the model — every later experiment reuses the same shared loader, metrics, and `results/` layout. Its job is to set the **floor** that every later model must beat to be worth using. See [experiments/01_baseline/README.md](../../experiments/01_baseline/README.md) for the full description.
 
 ## Configuration
 
-From [experiments/01_baseline_naive/config.yaml](../../experiments/01_baseline_naive/config.yaml):
+From [experiments/01_baseline/config.yaml](../../experiments/01_baseline/config.yaml):
 
 | Field | Value |
 |---|---|
@@ -31,7 +31,7 @@ Test slice (last 20%): **1 608 bars** (~67 days, late Sep → end of Nov 2024).
 
 ## Results
 
-From [experiments/01_baseline_naive/results/metrics.json](../../experiments/01_baseline_naive/results/metrics.json):
+From [experiments/01_baseline/results/metrics.json](../../experiments/01_baseline/results/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -48,7 +48,7 @@ Same data slice, same split, same metrics. The four price-aware models all sit w
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| **01_baseline_naive** | **260.50** | 396.97 | 0.341 % | NaN | — | — |
+| **01_baseline** | **260.50** | 396.97 | 0.341 % | NaN | — | — |
 | **02_arima (1, 1, 1)** | 260.50 | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
 | 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
@@ -70,12 +70,12 @@ The regime mix matters as much as model choice. The earlier Q1-only window had X
 
 ## Files produced
 
-- [experiments/01_baseline_naive/results/metrics.json](../../experiments/01_baseline_naive/results/metrics.json)
-- [experiments/01_baseline_naive/results/predictions.parquet](../../experiments/01_baseline_naive/results/predictions.parquet)
-- [experiments/01_baseline_naive/results/plot.png](../../experiments/01_baseline_naive/results/plot.png)
+- [experiments/01_baseline/results/metrics.json](../../experiments/01_baseline/results/metrics.json)
+- [experiments/01_baseline/results/predictions.parquet](../../experiments/01_baseline/results/predictions.parquet)
+- [experiments/01_baseline/results/plot.png](../../experiments/01_baseline/results/plot.png)
 
 ## How to reproduce
 
 ```
-make 01_baseline_naive
+make 01_baseline
 ```

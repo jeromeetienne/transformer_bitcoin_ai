@@ -1,7 +1,7 @@
 # Outline — Your Sharpe is mostly drift: separating skill from beta in a rising market
 
 ## One-line pitch
-The cleanest cross-cutting insight, made unmissable by [06_pretrained](../../experiments/06_pretrained/): a `dir_acc 0.5019` zero-shot model posts `Sharpe +4.29` on this window. **A chance-level directional signal produced a number that looks like skill.** Any long/flat strategy that *occasionally* says "long" — even at random — captures part of BTC's $58k → $96k rally. Apply the same lens retroactively to LSTM (+4.95) and TFT (+4.59). Only ARIMA's +7.28 has a directional signal strong enough to be doing real work on top of the drift.
+The cleanest cross-cutting insight, made unmissable by [06_pretrained_direct](../../experiments/06_pretrained_direct/): a `dir_acc 0.5019` zero-shot model posts `Sharpe +4.29` on this window. **A chance-level directional signal produced a number that looks like skill.** Any long/flat strategy that *occasionally* says "long" — even at random — captures part of BTC's $58k → $96k rally. Apply the same lens retroactively to LSTM (+4.95) and TFT (+4.59). Only ARIMA's +7.28 has a directional signal strong enough to be doing real work on top of the drift.
 
 ## Audience
 Anyone who has ever read a "AI predicts BTC, +X % Sharpe" headline and not paused. Series readers who've watched the Sharpe column accumulate across articles 3, 4, 8, 9 and want to know how much of any of it is real.
@@ -12,7 +12,7 @@ Sharpe in a rising market is **noisy times signal plus a drift baseline**. The d
 ## Structure
 
 ### 1. The hook — a 0.5019 dir_acc model with +4.29 Sharpe
-- Quote the [06_pretrained](../../experiments/06_pretrained/) Chronos-2 result as described in the original articles_todo.md description: dir_acc 0.5019, Sharpe +4.29.
+- Quote the [06_pretrained_direct](../../experiments/06_pretrained_direct/) Chronos-2 result as described in the original articles_todo.md description: dir_acc 0.5019, Sharpe +4.29.
 - (The currently-committed metrics.json reflects the more recent TimesFM run with dir_acc 0.4677 / Sharpe +2.44 — the article will note both runs and use the Chronos-2 numbers as the canonical illustration of the "chance-level dir_acc with a real Sharpe number" pattern.)
 - The provocation: *this is what beta in a rising market looks like in a Sharpe column*.
 
@@ -76,7 +76,7 @@ A short prescriptive section.
 
 ## Key code/file references
 - [src/btc_ai/eval/metrics.py](../../src/btc_ai/eval/metrics.py) `strategy_returns`, `annualized_sharpe`
-- [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretrained/results/metrics.json) — the canonical "chance-direction with positive Sharpe" data point (in either Chronos-2 or TimesFM run; both qualify)
+- [experiments/06_pretrained_direct/results/metrics.json](../../experiments/06_pretrained_direct/results/metrics.json) — the canonical "chance-direction with positive Sharpe" data point (in either Chronos-2 or TimesFM run; both qualify)
 - All of `experiments/*/results/metrics.json` — the leaderboard the lens is applied to
 
 ## Tone notes

@@ -19,7 +19,7 @@ A research repo only stays useful if every experiment can be re-run, re-compared
 ### 2. Six rules I'd give my past self
 Numbered, opinionated, short. Each rule gets a paragraph and a code/file pointer.
 
-1. **Numbered, self-contained experiments.** `experiments/${index}_${name}/`, never edit a finished one. `cp -r experiments/01_baseline_naive experiments/02_arima` is the workflow.
+1. **Numbered, self-contained experiments.** `experiments/${index}_${name}/`, never edit a finished one. `cp -r experiments/01_baseline experiments/02_arima` is the workflow.
 2. **YAML is the single source of truth.** Both `run.py` and `scripts/fetch_data.py` read the same `config.yaml`. There is no "the run I did Tuesday with the 48-bar setting" — it's in the YAML or it didn't happen.
 3. **Shared `src/btc_ai/` for loader, splitter, metrics.** Everyone uses the same `mae()`, the same `directional_accuracy()`, the same time-ordered split. If the floor moves, every model is judged against the new floor automatically.
 4. **Makefile is the canonical command surface.** `make 02_arima`, never `python run.py`. One-liner README, fewer "wait, what flags?" mistakes.
@@ -46,7 +46,7 @@ The exact thing a reader does:
 brew install uv
 uv sync
 make fetch
-make 01_baseline_naive
+make 01_baseline
 make 02_arima
 make 03_gradient_boosting
 …

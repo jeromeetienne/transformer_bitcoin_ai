@@ -11,19 +11,19 @@ Two scenarios, same point prediction:
 
 Same median. Wildly different decisions. Model A is a near-bet; Model B is a maybe wrapped in noise. **Point predictions hide that difference. Quantile bands don't.**
 
-This article is the methods post on what calibrated quantile bands give you that point predictions don't, and what's actually in the lab's first probabilistic experiment ([06_pretrained](../../experiments/06_pretrained/)). The quick preview: the band on hourly BTC is informative — it's calibrated, it's narrow, it's symmetric around zero. The model is announcing, *honestly*, that it has no useful asymmetric opinion. That's a finding even when it doesn't pay.
+This article is the methods post on what calibrated quantile bands give you that point predictions don't, and what's actually in the lab's first probabilistic experiment ([06_pretrained_direct](../../experiments/06_pretrained_direct/)). The quick preview: the band on hourly BTC is informative — it's calibrated, it's narrow, it's symmetric around zero. The model is announcing, *honestly*, that it has no useful asymmetric opinion. That's a finding even when it doesn't pay.
 
 ---
 
 ## What a quantile forecast actually is
 
-Instead of one number, the model outputs *three* (or any chosen subset of quantiles). For Chronos-2 / TimesFM 2.5 in [06_pretrained](../../experiments/06_pretrained/), we pick `[0.1, 0.5, 0.9]`:
+Instead of one number, the model outputs *three* (or any chosen subset of quantiles). For Chronos-2 / TimesFM 2.5 in [06_pretrained_direct](../../experiments/06_pretrained_direct/), we pick `[0.1, 0.5, 0.9]`:
 
 - **q0.1** — the 10th percentile of the model's predictive distribution. 10 % of plausible futures lie below this.
 - **q0.5** — the median. The point prediction.
 - **q0.9** — the 90th percentile. 10 % of plausible futures lie above this.
 
-Mathematically, the model is estimating the conditional CDF of `r_T | past` at three points. The implementation in Darts ([06_pretrained/run.py](../../experiments/06_pretrained/run.py)):
+Mathematically, the model is estimating the conditional CDF of `r_T | past` at three points. The implementation in Darts ([06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py)):
 
 ```python
 likelihood = QuantileRegression(quantiles=[0.1, 0.5, 0.9])
@@ -44,7 +44,7 @@ r_q_hi  = preds_unscaled.quantile(0.9).to_series()
 
 The model samples 200 future trajectories at each test bar from its predictive distribution; we then read the empirical 10 / 50 / 90 percentiles from those samples. With `num_samples=200`, the per-bar quantile estimates have a sampling error — bigger `num_samples` would tighten them at proportional cost. 200 is a fine default for Sharpe-level reporting; I'd use 1,000+ for a publication-grade calibration audit.
 
-The committed [predictions.parquet](../../experiments/06_pretrained/results/predictions.parquet) carries five columns per test bar: `close`, `pred` (q50 reconstructed to price), `pred_lo` (q10 reconstructed), `pred_hi` (q90 reconstructed), `ref` (`close_{T-1}`), `strategy_return`.
+The committed [predictions.parquet](../../experiments/06_pretrained_direct/results/predictions.parquet) carries five columns per test bar: `close`, `pred` (q50 reconstructed to price), `pred_lo` (q10 reconstructed), `pred_hi` (q90 reconstructed), `ref` (`close_{T-1}`), `strategy_return`.
 
 ---
 
@@ -72,7 +72,7 @@ The calibration property: across the test set, ~10 % of realized returns should 
 For the committed Chronos-2 / TimesFM 2.5 runs:
 
 ```python
-preds = pd.read_parquet('experiments/06_pretrained/results/predictions.parquet')
+preds = pd.read_parquet('experiments/06_pretrained_direct/results/predictions.parquet')
 realized = preds['close']
 inside_80 = (preds['pred_lo'] < realized) & (realized < preds['pred_hi'])
 coverage_80 = inside_80.mean()  # target 0.80
@@ -206,4 +206,4 @@ After fourteen articles of "ARIMA wins", the next phase of the lab is "make the 
 
 ---
 
-*Code: [experiments/06_pretrained/run.py](../../experiments/06_pretrained/run.py) · [06_pretrained/results/predictions.parquet](../../experiments/06_pretrained/results/predictions.parquet) · Repo: [transformer_bitcoin_ai](../../../README.md)*
+*Code: [experiments/06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) · [06_pretrained_direct/results/predictions.parquet](../../experiments/06_pretrained_direct/results/predictions.parquet) · Repo: [transformer_bitcoin_ai](../../../README.md)*

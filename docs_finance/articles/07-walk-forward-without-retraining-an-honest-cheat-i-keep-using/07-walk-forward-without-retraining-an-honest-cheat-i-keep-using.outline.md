@@ -75,7 +75,7 @@ Three reasons:
 ### 6. When the cheat stops being defensible
 Two failure modes the article explicitly acknowledges:
 - **Long test windows on highly non-stationary assets.** If the test window is *months* long and the regime shifts mid-window, the train-fitted model is increasingly out of date and the published number understates what an adaptive deployment would do. Article 10 will use this lens to discount some of the Sharpe numbers in this lab.
-- **Models with state that *should* update.** Foundation models in [06_pretrained](../../experiments/06_pretrained/) don't have this problem (zero-shot); ARIMA's tiny state is the right size to refresh. LSTM's hidden state arguably *should* update on test bars even without re-estimating weights — and Darts' `retrain=False` does keep updating the recurrent state via the sliding input window. So this is only a partial concern.
+- **Models with state that *should* update.** Foundation models in [06_pretrained_direct](../../experiments/06_pretrained_direct/) don't have this problem (zero-shot); ARIMA's tiny state is the right size to refresh. LSTM's hidden state arguably *should* update on test bars even without re-estimating weights — and Darts' `retrain=False` does keep updating the recurrent state via the sliding input window. So this is only a partial concern.
 
 The article should not pretend the harness is universal. It's the right benchmark for *this lab's* research questions; production deployments should refit.
 
@@ -107,7 +107,7 @@ A short subsection on why every feature in this lab uses `.shift(1)`:
 - [experiments/02_arima/run.py](../../experiments/02_arima/run.py) `apply(refit=False)`
 - [experiments/04_lstm/run.py](../../experiments/04_lstm/run.py) `historical_forecasts(retrain=False)`
 - [experiments/05_transformer/run.py](../../experiments/05_transformer/run.py) — same Darts pattern
-- [experiments/06_pretrained/run.py](../../experiments/06_pretrained/run.py) — zero-shot inherits the same pattern
+- [experiments/06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) — zero-shot inherits the same pattern
 - [experiments/03_gradient_boosting/features.py](../../experiments/03_gradient_boosting/features.py) — `.shift(1)` discipline
 
 ## Tone notes

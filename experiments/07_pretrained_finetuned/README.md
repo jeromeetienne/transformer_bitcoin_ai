@@ -1,6 +1,6 @@
-# 07_pretrained_finetune
+# 07_pretrained_finetuned
 
-Natural follow-up to [`06_pretrained`](../06_pretrained/): same two foundation-model backends — Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (encoder-only T5-style, 120M parameters) or Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (decoder-only patch-transformer, 200M parameters) — but with `enable_finetuning` set so `fit()` actually updates weights against a held-out validation slice before walk-forward inference.
+Natural follow-up to [`06_pretrained_direct`](../06_pretrained_direct/): same two foundation-model backends — Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (encoder-only T5-style, 120M parameters) or Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (decoder-only patch-transformer, 200M parameters) — but with `enable_finetuning` set so `fit()` actually updates weights against a held-out validation slice before walk-forward inference.
 
 ```
 HuggingFace Hub weights
@@ -20,7 +20,7 @@ historical_forecasts(retrain=False, num_samples=1000)
     ▼  quantile(0.1) / 0.5 / 0.9 ──► reconstruct close
 ```
 
-The target is the same bar-T log-return `r_T = log(close_T / close_{T-1})` used by [`04_lstm`](../04_lstm/), [`05_transformer`](../05_transformer/), and [`06_pretrained`](../06_pretrained/); predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_q0.5)`. MAE / RMSE / MAPE / directional_accuracy / Sharpe stay directly comparable to all prior experiments.
+The target is the same bar-T log-return `r_T = log(close_T / close_{T-1})` used by [`04_lstm`](../04_lstm/), [`05_transformer`](../05_transformer/), and [`06_pretrained_direct`](../06_pretrained_direct/); predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_q0.5)`. MAE / RMSE / MAPE / directional_accuracy / Sharpe stay directly comparable to all prior experiments.
 
 ## Headline result
 
@@ -38,7 +38,7 @@ On the extended `btc_4h_2020_2024` slice, **encoder-only fine-tuning of `autoglu
 The CIs on Sharpe and cumulative_return exclude the zero-shot value at 95% confidence. Every single seed independently beats zero-shot on both metrics. Reproduce with:
 
 ```
-make 07_pretrained_finetune CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
+make 07_pretrained_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
 ```
 
 (See [Reproducing the multi-seed result](#reproducing-the-multi-seed-result) below for how to sweep `random_state`.)
@@ -88,10 +88,10 @@ Library: **[darts](https://unit8co.github.io/darts/)** (`darts.models.Chronos2Mo
 ## How to run
 
 ```
-make 07_pretrained_finetune CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml   # the winning recipe
-make 07_pretrained_finetune CONFIG=configs/btc_4h_2024_encoder_only.config.yaml        # encoder-only, 1.6yr slice (loses to zero-shot)
-make 07_pretrained_finetune CONFIG=configs/btc_4h_2024.config.yaml                     # head-only, 1.6yr slice (loses worse)
-make 07_pretrained_finetune CONFIG=configs/btc_1h_2024.config.yaml                     # 1h slice, head-only
+make 07_pretrained_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml   # the winning recipe
+make 07_pretrained_finetuned CONFIG=configs/btc_4h_2024_encoder_only.config.yaml        # encoder-only, 1.6yr slice (loses to zero-shot)
+make 07_pretrained_finetuned CONFIG=configs/btc_4h_2024.config.yaml                     # head-only, 1.6yr slice (loses worse)
+make 07_pretrained_finetuned CONFIG=configs/btc_1h_2024.config.yaml                     # 1h slice, head-only
 ```
 
 Pick a backend in the config — there is **no default**, you must set one:
@@ -114,7 +114,7 @@ finetune:
   #   unfreeze:
   #     - '*output_patch_embedding*' # head-only — observed to lose to zero-shot
   # enable_finetuning: true          # full fine-tuning (every parameter trainable)
-  # enable_finetuning: false         # zero-shot — equivalent to 06_pretrained
+  # enable_finetuning: false         # zero-shot — equivalent to 06_pretrained_direct
 ```
 
 Training knobs from `btc_4h_2020_2024_encoder_only.config.yaml`:
@@ -152,12 +152,12 @@ TimesFM 2.5's head and encoder names differ from Chronos-2's; the default patter
 The headline numbers in this README come from five runs of the same config with `random_state` set to 42, 7, 13, 5, and 99 in turn. To reproduce on your machine:
 
 ```bash
-CONFIG=experiments/07_pretrained_finetune/configs/btc_4h_2020_2024_encoder_only.config.yaml
-RESULTS_DIR=experiments/07_pretrained_finetune/results/btc_4h_2020_2024_encoder_only
+CONFIG=experiments/07_pretrained_finetuned/configs/btc_4h_2020_2024_encoder_only.config.yaml
+RESULTS_DIR=experiments/07_pretrained_finetuned/results/btc_4h_2020_2024_encoder_only
 
 for seed in 42 7 13 5 99; do
     sed -i '' "s/random_state: [0-9]*/random_state: $seed/" "$CONFIG"   # macOS BSD sed
-    make 07_pretrained_finetune CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
+    make 07_pretrained_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
     cp "$RESULTS_DIR/metrics.json" "$RESULTS_DIR/metrics_seed${seed}.json"
 done
 ```
@@ -182,9 +182,9 @@ The headline table compares 07 fine-tuned (encoder-only, chronos-2-small, extend
 
 - **Five seeds is a small sample.** The Sharpe and cumulative_return improvements are formally significant at 95% with n=5, but the per-seed spread is meaningful (Sharpe std 0.42 on a mean of 5.52). More seeds would tighten the bars.
 - **Single test regime.** The test slice (2024-10 to 2024-12, 366 four-hour bars) is shared across every comparison run in this repo, so the comparison isolates the fine-tuning effect — but it's a single market period. Generalization to other regimes (2021 bull, 2022 bear, 2023 chop) is not tested here.
-- **Zero-shot baseline uses different `num_samples`.** 06_pretrained's `num_samples: 200` vs 07's `num_samples: 1000`. Bumping 07's count tightened the trading metrics meaningfully (Sharpe mean 5.02 → 5.41 between the two settings). For a perfectly apples-to-apples comparison, 06 should also be re-run at `num_samples: 1000`. The 1.4-Sharpe-point gap probably wouldn't close completely, but the precise number would shift.
+- **Zero-shot baseline uses different `num_samples`.** 06_pretrained_direct's `num_samples: 200` vs 07's `num_samples: 1000`. Bumping 07's count tightened the trading metrics meaningfully (Sharpe mean 5.02 → 5.41 between the two settings). For a perfectly apples-to-apples comparison, 06 should also be re-run at `num_samples: 1000`. The 1.4-Sharpe-point gap probably wouldn't close completely, but the precise number would shift.
 - **Univariate.** No past covariates (volume, OHLC range/body) and no future covariates (hour-of-day, day-of-week). TimesFM doesn't accept any; Chronos-2 does but we deliberately match 06 for parity.
-- **Walk-forward without re-estimation.** Fine-tuning happens once in `fit()`; `retrain=False` keeps weights frozen across the entire test window. Matches [`02_arima`](../02_arima/) / [`04_lstm`](../04_lstm/) / [`05_transformer`](../05_transformer/) / [`06_pretrained`](../06_pretrained/).
+- **Walk-forward without re-estimation.** Fine-tuning happens once in `fit()`; `retrain=False` keeps weights frozen across the entire test window. Matches [`02_arima`](../02_arima/) / [`04_lstm`](../04_lstm/) / [`05_transformer`](../05_transformer/) / [`06_pretrained_direct`](../06_pretrained_direct/).
 - **`output_chunk_length: 1`.** One-step-ahead only. Multi-horizon is a one-line config change but changes the loss surface.
 - **Unfreeze patterns are backend-specific.** The default targets the Chronos-2 head. TimesFM needs introspection; the comment in the config flags this.
 - **Apple Metal Performance Shaders memory pressure** at `input_chunk_length=256` + full fine-tuning. Encoder-only and head-only fit; full fine-tuning of `amazon/chronos-2` (120M parameters) at this `batch_size` may exceed Apple Metal Performance Shaders memory — drop `batch_size` to 16 or 8, or switch to CUDA.
@@ -193,10 +193,10 @@ The headline table compares 07 fine-tuned (encoder-only, chronos-2-small, extend
 ## Sweeping fine-tuning recipes
 
 ```
-make 07_pretrained_finetune_sweep CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
+make 07_pretrained_finetuned_sweep CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
 ```
 
-Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which (backend, hub_model_name, input_chunk_length, learning_rate, n_epochs, fine-tuning mode) combos are tried. Output: a printed table to stdout (in source order, easy to scan) and a `results/<config_stem>/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in `configs/*.config.yaml` set via `make 07_pretrained_finetune`.
+Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which (backend, hub_model_name, input_chunk_length, learning_rate, n_epochs, fine-tuning mode) combos are tried. Output: a printed table to stdout (in source order, easy to scan) and a `results/<config_stem>/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in `configs/*.config.yaml` set via `make 07_pretrained_finetuned`.
 
 What to look at in the sweep:
 
@@ -210,7 +210,7 @@ What to look at in the sweep:
 `save_checkpoints=True` writes `.ckpt` files under `results/darts_checkpoints/darts_logs/{dataset}_{backend}/`. `force_reset=True` wipes the previous checkpoint for the same `{dataset, backend}` pair at the start of each run, so they don't accumulate within a configuration. The whole tree can be wiped with:
 
 ```
-make 07_pretrained_finetune_clean_checkpoints
+make 07_pretrained_finetuned_clean_checkpoints
 ```
 
 or transitively via the top-level `make clean` (which wipes everything under any `results/`).
@@ -218,7 +218,7 @@ or transitively via the top-level `make clean` (which wipes everything under any
 ## Files
 
 ```
-experiments/07_pretrained_finetune/
+experiments/07_pretrained_finetuned/
 ├── README.md                                           # this file
 ├── Makefile                                            # `make help` shows run / sweep / clean_checkpoints targets
 ├── configs/

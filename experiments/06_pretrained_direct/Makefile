@@ -1,5 +1,5 @@
-# All paths in this file are relative to experiments/06_pretrained/.
-# Invoked from the root via `$(MAKE) -C experiments/06_pretrained <target>`.
+# All paths in this file are relative to experiments/06_pretrained_direct/.
+# Invoked from the root via `$(MAKE) -C experiments/06_pretrained_direct <target>`.
 
 CONFIG ?= configs/btc_4h_2024.chronos-small.config.yaml
 

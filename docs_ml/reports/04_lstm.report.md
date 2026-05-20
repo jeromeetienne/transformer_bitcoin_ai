@@ -64,12 +64,12 @@ From [experiments/04_lstm/results/btc_4h_2024/metrics.json](../../experiments/04
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| [01_baseline_naive](01_baseline_naive.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
+| [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | **782.42** | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
 | [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | **04_lstm** | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 
-04_lstm leads no column. It ties naive on MAE within $4, loses on direction (0.4938 < 0.5), loses Sharpe to both ARIMA(1, 1, 1) and XGBoost. On this 4h slice the LSTM is the first model to add capacity *and* go backwards on the trading metrics relative to a 3-parameter linear baseline. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
+04_lstm leads no column. It ties naive on MAE within $4, loses on direction (0.4938 < 0.5), loses Sharpe to both ARIMA(1, 1, 1) and XGBoost. On this 4h slice the LSTM is the first model to add capacity *and* go backwards on the trading metrics relative to a 3-parameter linear baseline. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained_direct.report.md](06_pretrained_direct.report.md).)
 
 ## Sweep — 6 (input_chunk_length, hidden_dim, n_rnn_layers, dropout) configs
 

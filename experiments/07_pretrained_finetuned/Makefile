@@ -1,5 +1,5 @@
-# All paths in this file are relative to experiments/07_pretrained_finetune/.
-# Invoked from the root via `$(MAKE) -C experiments/07_pretrained_finetune <target>`.
+# All paths in this file are relative to experiments/07_pretrained_finetuned/.
+# Invoked from the root via `$(MAKE) -C experiments/07_pretrained_finetuned <target>`.
 
 CONFIG ?= configs/btc_4h_2024.config.yaml
 

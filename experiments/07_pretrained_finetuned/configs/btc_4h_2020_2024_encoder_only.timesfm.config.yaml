@@ -3,7 +3,7 @@
 # so the only deliberate delta is dataset size — same backend, same recipe,
 # same learning rate, same patience. Compare metrics directly: if more data
 # delays val_loss divergence and lifts trading metrics back toward / past
-# 06_pretrained zero-shot, the 1.6-year slice was the bottleneck. If metrics
+# 06_pretrained_direct zero-shot, the 1.6-year slice was the bottleneck. If metrics
 # stay flat or regress, the foundation model has already absorbed all the
 # signal this asset has at 4h cadence.
 

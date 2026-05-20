@@ -62,12 +62,12 @@ From [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../e
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| [01_baseline_naive](01_baseline_naive.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
+| [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | **782.42** | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
 | **03_gradient_boosting (n_feat=31)** | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 
-03_gradient_boosting is the **cum_ret / Sharpe leader** on the 4h slice but is *third* on MAE — **31 engineered features lose to a 3-parameter ARIMA on point error**, and lose to a *zero*-parameter naive predictor too. The Sharpe lead over ARIMA(1, 1, 1) is narrow (6.42 vs. 6.06); the cum_ret lead is wider (50 % vs. 33 %) because XGBoost's directional confidence translates into more bars long during the rally. The honest reading: extra capacity buys directional aggression at the cost of point-error fit. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
+03_gradient_boosting is the **cum_ret / Sharpe leader** on the 4h slice but is *third* on MAE — **31 engineered features lose to a 3-parameter ARIMA on point error**, and lose to a *zero*-parameter naive predictor too. The Sharpe lead over ARIMA(1, 1, 1) is narrow (6.42 vs. 6.06); the cum_ret lead is wider (50 % vs. 33 %) because XGBoost's directional confidence translates into more bars long during the rally. The honest reading: extra capacity buys directional aggression at the cost of point-error fit. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained_direct.report.md](06_pretrained_direct.report.md).)
 
 ## Sweep — 8 (n_estimators, max_depth, learning_rate) configs
 

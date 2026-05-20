@@ -1,7 +1,7 @@
 # Outline — Probabilistic forecasts, finally: what a q10/q50/q90 band changes
 
 ## One-line pitch
-Methods post, generalized beyond [06_pretrained](../../experiments/06_pretrained/). The first experiment in the lineup with calibrated prediction intervals, via `QuantileRegression([0.1, 0.5, 0.9])` and `num_samples=200`. What intervals give you that point predictions don't: risk-aware position sizing, calibration diagnostics, the difference between "the model predicts +1 %" and "the model says 20 % chance of -2 %, 20 % chance of +3 %". The negative finding worth showing: on hourly BTC the q10 – q90 spread is *narrow and centred on the last value* — quantile loss is doing exactly what it should; there's just no asymmetry to exploit. Ties back to why every prior post talked about Sharpe but never about uncertainty.
+Methods post, generalized beyond [06_pretrained_direct](../../experiments/06_pretrained_direct/). The first experiment in the lineup with calibrated prediction intervals, via `QuantileRegression([0.1, 0.5, 0.9])` and `num_samples=200`. What intervals give you that point predictions don't: risk-aware position sizing, calibration diagnostics, the difference between "the model predicts +1 %" and "the model says 20 % chance of -2 %, 20 % chance of +3 %". The negative finding worth showing: on hourly BTC the q10 – q90 spread is *narrow and centred on the last value* — quantile loss is doing exactly what it should; there's just no asymmetry to exploit. Ties back to why every prior post talked about Sharpe but never about uncertainty.
 
 ## Audience
 Quants, risk managers, and ML practitioners who've shipped point predictors and felt the absence of a confidence interval. Series readers who watched the foundation models in Article 11 produce calibrated bands and want to know what to do with them.
@@ -22,7 +22,7 @@ A point prediction tells you what the model thinks the next bar will be. A calib
 - Instead of one number, the model outputs *three* (q10, q50, q90) — or an arbitrary set of quantiles.
 - Mathematically: estimate the conditional CDF of `r_T` at three (or N) points.
 - Calibration property: across the test set, ~10 % of realizations should fall below q10, ~80 % between q10 and q90, ~10 % above q90. If they do, the model is calibrated.
-- Code: from [06_pretrained/run.py](../../experiments/06_pretrained/run.py):
+- Code: from [06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py):
   ```python
   likelihood = QuantileRegression(quantiles=[0.1, 0.5, 0.9])
   preds = model.historical_forecasts(..., num_samples=200)
@@ -41,7 +41,7 @@ Three concrete uses, in order of payoff:
 **c. Decision threshold tuning.** The default strategy gate (`pred > ref`) flips on the median's sign. A risk-averse alternative is "long only when q10 > 0" — i.e., the model is 90 % confident even the worst-case trajectory is positive. Tighter trigger, fewer trades, higher per-trade conviction.
 
 ### 4. The negative finding on hourly BTC
-- The q10–q90 band on this data, from [06_pretrained](../../experiments/06_pretrained/), is roughly *symmetric around zero* and *narrow*. The model is saying: "I think the next bar's log-return is in [-X, +X] with 80 % confidence, and my best guess is approximately 0".
+- The q10–q90 band on this data, from [06_pretrained_direct](../../experiments/06_pretrained_direct/), is roughly *symmetric around zero* and *narrow*. The model is saying: "I think the next bar's log-return is in [-X, +X] with 80 % confidence, and my best guess is approximately 0".
 - *That* is the model being honest. It's not a failure of the quantile head; it's a faithful report of the underlying distribution.
 - Calibration is roughly correct: ~10 % of realized returns fall outside the 80 % band on each side. (The article will commit to running the calibration check before publication; if I haven't, I'll say so.)
 - Translation: the model has no asymmetric opinion. The strategy gate "long when q10 > 0" almost never fires (because the q10 is almost always negative — small but negative). A risk-averse band-driven strategy would simply not trade.
@@ -91,11 +91,11 @@ Aspirational table:
 (The lab doesn't yet have the coverage_80 numbers committed; Article 13's roadmap commits to producing them.)
 
 ### 11. Reproducing the band
-- The committed `predictions.parquet` from [06_pretrained](../../experiments/06_pretrained/) has `pred`, `pred_lo`, `pred_hi` columns — q50, q10, q90.
+- The committed `predictions.parquet` from [06_pretrained_direct](../../experiments/06_pretrained_direct/) has `pred`, `pred_lo`, `pred_hi` columns — q50, q10, q90.
 - The committed `plot.png` shows the close + median + shaded q10–q90 band.
 - A reader who wants to inspect can:
   ```python
-  preds = pd.read_parquet('experiments/06_pretrained/results/predictions.parquet')
+  preds = pd.read_parquet('experiments/06_pretrained_direct/results/predictions.parquet')
   band_width = preds['pred_hi'] - preds['pred_lo']
   coverage_80 = ((preds['pred_lo'] < preds['close']) & (preds['close'] < preds['pred_hi'])).mean()
   ```
@@ -108,9 +108,9 @@ Aspirational table:
 
 ## Key code/file references
 - [src/btc_ai/eval/metrics.py](../../src/btc_ai/eval/metrics.py) — point metrics; coverage metrics still TBD
-- [experiments/06_pretrained/run.py](../../experiments/06_pretrained/run.py) — `QuantileRegression([0.1, 0.5, 0.9])` setup
-- [experiments/06_pretrained/results/predictions.parquet](../../experiments/06_pretrained/results/predictions.parquet) — `close, pred, pred_lo, pred_hi, ref, strategy_return`
-- [experiments/06_pretrained/results/plot.png](../../experiments/06_pretrained/results/plot.png) — visual
+- [experiments/06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) — `QuantileRegression([0.1, 0.5, 0.9])` setup
+- [experiments/06_pretrained_direct/results/predictions.parquet](../../experiments/06_pretrained_direct/results/predictions.parquet) — `close, pred, pred_lo, pred_hi, ref, strategy_return`
+- [experiments/06_pretrained_direct/results/plot.png](../../experiments/06_pretrained_direct/results/plot.png) — visual
 
 ## Tone notes
 - Methods post, but practical. The "what would I do with a band" use cases should be concrete.

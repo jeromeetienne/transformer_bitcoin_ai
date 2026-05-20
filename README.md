@@ -26,12 +26,12 @@ The Makefile is the canonical command surface — every target wraps `uv run`.
 
 ```
 make fetch                                         # pre-warm data cache
-make 01_baseline_naive                             # naive last-value baseline
+make 01_baseline                             # naive last-value baseline
 make 02_arima                                      # ARIMA(p, d, q) baseline
 make 03_gradient_boosting                          # XGBoost on engineered features
 make 04_lstm                                       # Darts BlockRNN-LSTM
 make 05_transformer                                # Darts Temporal Fusion Transformer
-make 06_pretrained                                 # zero-shot Chronos-2 / TimesFM 2.5
+make 06_pretrained_direct                                 # zero-shot Chronos-2 / TimesFM 2.5
 make help                                          # list all targets (incl. *_sweep variants)
 ```
 
@@ -64,7 +64,7 @@ transformer_bitcoin_ai/
 │   └── eval/
 │       └── metrics.py          # MAE, RMSE, MAPE, directional accuracy
 ├── experiments/                # one folder per experiment
-│   ├── 01_baseline_naive/      # last-value forecast (the architecture probe)
+│   ├── 01_baseline/      # last-value forecast (the architecture probe)
 │   │   ├── run.py
 │   │   ├── config.yaml
 │   │   └── results/            # metrics.json, predictions.parquet, plot.png
@@ -72,7 +72,7 @@ transformer_bitcoin_ai/
 │   ├── 03_gradient_boosting/   # XGBoost on engineered features (+ sweep)
 │   ├── 04_lstm/                # Darts BlockRNN-LSTM (+ sweep)
 │   ├── 05_transformer/         # Darts Temporal Fusion Transformer (+ sweep)
-│   └── 06_pretrained/          # zero-shot Chronos-2 / TimesFM 2.5 foundation models (+ sweep)
+│   └── 06_pretrained_direct/          # zero-shot Chronos-2 / TimesFM 2.5 foundation models (+ sweep)
 └── scripts/
     └── fetch_data.py           # CLI that pre-warms data cache from a config.yaml
 ```
@@ -81,7 +81,7 @@ transformer_bitcoin_ai/
 
 - **Tooling is `uv`.** `uv init`, `uv add`, `uv run`. `uv.lock` is committed; `.venv/` is not.
 - **All commands go through the Makefile.** Don't invoke `python` directly.
-- **Each experiment is self-contained**: `run.py` + `config.yaml` + `results/`. Never edit a past experiment — copy it to the next number (`cp -r experiments/01_baseline_naive experiments/02_arima`).
+- **Each experiment is self-contained**: `run.py` + `config.yaml` + `results/`. Never edit a past experiment — copy it to the next number (`cp -r experiments/01_baseline experiments/02_arima`).
 - **The YAML is the single source of truth** for both data selection and model params. `run.py` and `scripts/fetch_data.py` both consume the same `--config`.
 - **Shared code lives in `src/btc_ai/`** so every experiment is evaluated identically.
 - **Numbered prefixes** (`01_`, `02_`) preserve chronology and make leaderboards readable.

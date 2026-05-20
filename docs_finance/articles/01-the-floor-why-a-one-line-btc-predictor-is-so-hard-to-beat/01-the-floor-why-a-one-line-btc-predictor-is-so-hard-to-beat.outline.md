@@ -47,8 +47,8 @@ On a near-random-walk like 1h BTC, MAE measures **volatility, not skill**. A one
 - Foreshadow: in [02_arima](../../experiments/02_arima/), an `ARIMA(1,1,0)` improves dir_acc to 0.5373 / Sharpe +7.52 with a single coefficient, while the naive MAE is barely beaten. That's the lesson — small directional improvements matter more than small MAE improvements.
 
 ### 6. Reproducing the floor (5-line repo demo)
-- Show the actual run: `make 01_baseline_naive`.
-- Pull the relevant snippet from [run.py](../../experiments/01_baseline_naive/run.py) — the prediction is literally `close.shift(1)` on the test slice.
+- Show the actual run: `make 01_baseline`.
+- Pull the relevant snippet from [run.py](../../experiments/01_baseline/run.py) — the prediction is literally `close.shift(1)` on the test slice.
 - Show the produced `metrics.json`.
 - Note the loader, splitter, and metrics module are shared across every experiment in [src/btc_ai/](../../src/btc_ai/) — so when later posts say "ARIMA beats this", it really is the same number, same slice, same file.
 
@@ -63,11 +63,11 @@ On a near-random-walk like 1h BTC, MAE measures **volatility, not skill**. A one
 - Tease: ARIMA(1,1,0) does, XGBoost mostly doesn't, the transformer the repo is named after... well, see Article 9.
 
 ## Key code/file references
-- [experiments/01_baseline_naive/run.py](../../experiments/01_baseline_naive/run.py) — 70-line implementation
-- [experiments/01_baseline_naive/config.yaml](../../experiments/01_baseline_naive/config.yaml) — data slice
-- [experiments/01_baseline_naive/results/metrics.json](../../experiments/01_baseline_naive/results/metrics.json) — the headline numbers
+- [experiments/01_baseline/run.py](../../experiments/01_baseline/run.py) — 70-line implementation
+- [experiments/01_baseline/config.yaml](../../experiments/01_baseline/config.yaml) — data slice
+- [experiments/01_baseline/results/metrics.json](../../experiments/01_baseline/results/metrics.json) — the headline numbers
 - [src/btc_ai/eval/metrics.py](../../src/btc_ai/eval/metrics.py) — shared MAE / RMSE / MAPE / directional accuracy
-- [experiments/01_baseline_naive/README.md](../../experiments/01_baseline_naive/README.md) — README this article popularizes
+- [experiments/01_baseline/README.md](../../experiments/01_baseline/README.md) — README this article popularizes
 
 ## Tone notes
 - Lab-notebook honest, not hype. The naive baseline is presented as a *worthy adversary*, not a punchline.

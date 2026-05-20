@@ -19,7 +19,7 @@ If that sounds modest, the test is Article 6. In Article 6 I'll claim that the s
 Every experiment lives in `experiments/${index}_${name}/`. The numbering is chronological, not categorical. I never edit a finished one. The workflow is:
 
 ```
-cp -r experiments/01_baseline_naive experiments/02_arima
+cp -r experiments/01_baseline experiments/02_arima
 # now edit 02_arima/run.py and 02_arima/config.yaml
 ```
 
@@ -108,7 +108,7 @@ The repo uses [`uv`](https://docs.astral.sh/uv/) for environment management. `uv
 brew install uv          # macOS
 uv sync                  # creates .venv/ from pyproject.toml + uv.lock
 make fetch               # pre-warm data cache
-make 01_baseline_naive   # reproduce article 1's numbers
+make 01_baseline   # reproduce article 1's numbers
 ```
 
 Four commands. No "works on my laptop". `uv` has resolved every "did you install the right pandas version?" headache I've had since adopting it. There's no requirements.txt, no conda environment.yaml, no Dockerfile (yet — I'll add one if/when somebody asks). The lockfile is the contract.
@@ -184,12 +184,12 @@ git clone <repo>
 cd transformer_bitcoin_ai
 uv sync
 make fetch
-make 01_baseline_naive
+make 01_baseline
 make 02_arima
 make 03_gradient_boosting
 make 04_lstm
 make 05_transformer
-make 06_pretrained
+make 06_pretrained_direct
 ```
 
 The deep-learning ones (04 / 05 / 06) take single-digit minutes each on Apple MPS or a recent CUDA GPU; the rest are seconds. Every `metrics.json` you produce should match the ones I quote in this series, modulo seed-level noise on the deep models.

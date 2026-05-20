@@ -79,7 +79,7 @@ preds_s = model.historical_forecasts(
 
 The mechanism is exactly Level 2: at bar `t`, the model receives the input chunk `[t - input_chunk_length, t)` from the *actually observed* series, predicts bar `t`, the chunk slides, repeat.
 
-The same code shape works for [05_transformer/run.py](../../experiments/05_transformer/run.py) (TFT, with future covariates) and [06_pretrained/run.py](../../experiments/06_pretrained/run.py) (foundation models, zero-shot). One harness, three model families.
+The same code shape works for [05_transformer/run.py](../../experiments/05_transformer/run.py) (TFT, with future covariates) and [06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) (foundation models, zero-shot). One harness, three model families.
 
 ### XGBoost — implicit walk-forward via `.shift(1)`
 
@@ -135,7 +135,7 @@ The harness is therefore a **lower bound** on what a properly-retrained deployme
 
 Three reasons to choose Level 2 over Level 1 for this lab:
 
-1. **Computational tractability.** TFT in [05_transformer](../../experiments/05_transformer/) takes ~5 minutes to train on a laptop GPU. Refitting at every test bar would be ~130 hours per experiment. The foundation models in [06_pretrained](../../experiments/06_pretrained/) sidestep this by being zero-shot, but the LSTM and TFT don't have that luxury.
+1. **Computational tractability.** TFT in [05_transformer](../../experiments/05_transformer/) takes ~5 minutes to train on a laptop GPU. Refitting at every test bar would be ~130 hours per experiment. The foundation models in [06_pretrained_direct](../../experiments/06_pretrained_direct/) sidestep this by being zero-shot, but the LSTM and TFT don't have that luxury.
 2. **Across-model comparability.** With every model frozen and then evaluated identically, the metric is *only* sensitive to the model's predictions on the test bars. A retrain-each-step harness conflates "the model captures a real signal" with "the model adapts well to new data" — two claims worth measuring separately. Level 2 measures the first; a hypothetical Level 1 harness would measure both, mixed.
 3. **Reproducibility.** Frozen parameters means a given `metrics.json` is exactly reproducible from a YAML + lockfile + cached data. Article 2's discipline depends on this. A retrain-each-step harness has many more degrees of freedom (which retrain cadence? Which window? Re-validate every refit?), and reproducibility starts to leak as a function of those choices.
 
@@ -170,7 +170,7 @@ Concretely:
 - [03_gradient_boosting/features.py](../../experiments/03_gradient_boosting/features.py) — `r.shift(1 + i)` for lag features, `r.shift(1).rolling(w)` for rolling stats, `volume.shift(1)`, OHLC body / range from bar `T-1`.
 - [04_lstm/run.py](../../experiments/04_lstm/run.py) — past covariates are bar-`t` OHLCV, but Darts strictly feeds past covariates only at bars `< t` for the forecast at bar `t`.
 - [05_transformer/run.py](../../experiments/05_transformer/run.py) — same as LSTM, plus future covariates that are deterministic timestamp encodings (legitimately known at any future bar).
-- [06_pretrained/run.py](../../experiments/06_pretrained/run.py) — univariate; the only past data the model sees is the strictly-past target series.
+- [06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) — univariate; the only past data the model sees is the strictly-past target series.
 
 The recurring pattern: any column that uses bar-`t` data is fed to the model only at predict-step `t+1`. No exceptions. The shared loader / splitter / metrics module from Article 2 makes this enforceable because the same `build_features` and `build_target_and_covariates` functions are reused, not reimplemented per experiment.
 
@@ -211,4 +211,4 @@ Article 8 — *An LSTM, a 24-bar window, and the question of how much past matte
 
 ---
 
-*Code: [02_arima/run.py](../../experiments/02_arima/run.py) · [04_lstm/run.py](../../experiments/04_lstm/run.py) · [05_transformer/run.py](../../experiments/05_transformer/run.py) · [06_pretrained/run.py](../../experiments/06_pretrained/run.py) · Repo: [transformer_bitcoin_ai](../../../README.md)*
+*Code: [02_arima/run.py](../../experiments/02_arima/run.py) · [04_lstm/run.py](../../experiments/04_lstm/run.py) · [05_transformer/run.py](../../experiments/05_transformer/run.py) · [06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) · Repo: [transformer_bitcoin_ai](../../../README.md)*

@@ -4,7 +4,7 @@
 
 ---
 
-[06_pretrained](../../experiments/06_pretrained/) is the experiment in the lineup with the most flattering paragraph in the README and the least flattering numbers on the leaderboard. It runs Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (120 M parameters, encoder-only T5-style) and Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (200 M parameters, decoder-only patch-transformer) — two state-of-the-art **foundation models for time series**. Pretrained on millions of unrelated time series. *Zero-shot* on hourly BTCUSDT — no fine-tuning, no training, weights downloaded straight from HuggingFace Hub.
+[06_pretrained_direct](../../experiments/06_pretrained_direct/) is the experiment in the lineup with the most flattering paragraph in the README and the least flattering numbers on the leaderboard. It runs Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (120 M parameters, encoder-only T5-style) and Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (200 M parameters, decoder-only patch-transformer) — two state-of-the-art **foundation models for time series**. Pretrained on millions of unrelated time series. *Zero-shot* on hourly BTCUSDT — no fine-tuning, no training, weights downloaded straight from HuggingFace Hub.
 
 If a generic prior over plausible time-series futures transfers to crypto, this is the experiment that will show it. If it doesn't, this is the experiment that says "the bottleneck on hourly BTC is the data, not the architecture, not the parameter count" — about as clearly as the lab can ever say it.
 
@@ -16,7 +16,7 @@ The result was the second one. This article is about why that's actually the mos
 
 ### Chronos-2 — the canonical run
 
-The first 06_pretrained run, with `backend: chronos, hub_model_name: amazon/chronos-2, input_chunk_length: 256`:
+The first 06_pretrained_direct run, with `backend: chronos, hub_model_name: amazon/chronos-2, input_chunk_length: 256`:
 
 ```json
 {
@@ -105,11 +105,11 @@ That's not a critique of Chronos-2 or TimesFM. They're doing the right thing —
 
 ## How the experiment is wired
 
-Worth a short walkthrough because the architecture of `06_pretrained` is unusual relative to `04_lstm` / `05_transformer`.
+Worth a short walkthrough because the architecture of `06_pretrained_direct` is unusual relative to `04_lstm` / `05_transformer`.
 
 ### Both backends inherit one Darts surface
 
-From [06_pretrained/run.py](../../experiments/06_pretrained/run.py):
+From [06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py):
 
 ```python
 def build_model(backend, hub_model_name, model_cfg, quantiles):
@@ -127,7 +127,7 @@ def build_model(backend, hub_model_name, model_cfg, quantiles):
         return TimesFM2p5Model(**common_kwargs)
 ```
 
-Both classes inherit from `darts.models.forecasting.foundation_model.FoundationModel`. The only divergence is the class itself; the rest of the pipeline (Scaler, walk-forward eval, quantile extraction, price reconstruction) is identical. That's the whole point of using `darts` here — Chronos-2 vs TimesFM 2.5 is a `backend:` field in [config.yaml](../../experiments/06_pretrained/config.yaml), not two separate experiments.
+Both classes inherit from `darts.models.forecasting.foundation_model.FoundationModel`. The only divergence is the class itself; the rest of the pipeline (Scaler, walk-forward eval, quantile extraction, price reconstruction) is identical. That's the whole point of using `darts` here — Chronos-2 vs TimesFM 2.5 is a `backend:` field in [config.yaml](../../experiments/06_pretrained_direct/config.yaml), not two separate experiments.
 
 ### `fit()` is a no-op
 
@@ -154,7 +154,7 @@ Same `historical_forecasts(retrain=False)` harness as LSTM and TFT (Article 7). 
 
 ### Univariate by design
 
-Both backends are run *without* covariates. The 06_pretrained README has the full justification, but the short version: TimesFM 2.5 doesn't accept covariates at all, and we keep Chronos-2 univariate to match. With one backend forced to univariate, giving the other extra inputs would muddy the head-to-head — any difference in metrics would conflate "which prior is stronger?" with "did the covariates help?". Adding covariates to Chronos-2 only is a clean follow-up ablation, listed in Article 13's roadmap.
+Both backends are run *without* covariates. The 06_pretrained_direct README has the full justification, but the short version: TimesFM 2.5 doesn't accept covariates at all, and we keep Chronos-2 univariate to match. With one backend forced to univariate, giving the other extra inputs would muddy the head-to-head — any difference in metrics would conflate "which prior is stronger?" with "did the covariates help?". Adding covariates to Chronos-2 only is a clean follow-up ablation, listed in Article 13's roadmap.
 
 ---
 
@@ -184,7 +184,7 @@ That's the data-is-the-bottleneck claim, made with the cleanest possible evidenc
 
 ## Reproducing
 
-Pick a backend explicitly in [config.yaml](../../experiments/06_pretrained/config.yaml) — there is no default:
+Pick a backend explicitly in [config.yaml](../../experiments/06_pretrained_direct/config.yaml) — there is no default:
 
 ```yaml
 backend: chronos          # or 'timesfm'
@@ -196,13 +196,13 @@ hub_model_name: amazon/chronos-2
 Then:
 
 ```
-make 06_pretrained         # the headline run
-make 06_pretrained_sweep   # backends × input_chunk_lengths
+make 06_pretrained_direct         # the headline run
+make 06_pretrained_direct_sweep   # backends × input_chunk_lengths
 ```
 
 First run downloads HF weights (~120–800 MB depending on backend, cached at `~/.cache/huggingface/hub/`). Walk-forward over 1,600 test bars takes single-digit minutes on Apple MPS or a recent CUDA GPU; CPU is several times slower.
 
-The sweep is configurable in [sweep.py](../../experiments/06_pretrained/sweep.py)'s `GRID` — useful for asking "does Chronos-2's `chronos-2-small` (28 M) match `chronos-2` (120 M)?" (often yes, on hourly BTC), or "does `input_chunk_length=512` improve over `256`?" (rarely, on hourly BTC).
+The sweep is configurable in [sweep.py](../../experiments/06_pretrained_direct/sweep.py)'s `GRID` — useful for asking "does Chronos-2's `chronos-2-small` (28 M) match `chronos-2` (120 M)?" (often yes, on hourly BTC), or "does `input_chunk_length=512` improve over `256`?" (rarely, on hourly BTC).
 
 ---
 
@@ -214,4 +214,4 @@ Article 13 — *Where this repo goes next* — is the roadmap, and it's mostly b
 
 ---
 
-*Code: [experiments/06_pretrained/](../../experiments/06_pretrained/) · [06_pretrained/README.md](../../experiments/06_pretrained/README.md) · Repo: [transformer_bitcoin_ai](../../../README.md)*
+*Code: [experiments/06_pretrained_direct/](../../experiments/06_pretrained_direct/) · [06_pretrained_direct/README.md](../../experiments/06_pretrained_direct/README.md) · Repo: [transformer_bitcoin_ai](../../../README.md)*

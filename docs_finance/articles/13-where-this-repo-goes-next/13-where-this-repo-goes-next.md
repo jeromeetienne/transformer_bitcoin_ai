@@ -240,7 +240,7 @@ If a year from now the leaderboard still has ARIMA on top after a multi-window, 
 
 ## Open invitation
 
-The repo is reproducible: `brew install uv && uv sync && make 06_pretrained`. The structure is set up to make extension cheap (Article 2). Any item from this roadmap that someone wants to add is welcome as a PR — the experiment numbering convention (`07_arimax_funding`, `08_daily_rerun`, …) makes it easy to slot new work in without disturbing the existing leaderboard.
+The repo is reproducible: `brew install uv && uv sync && make 06_pretrained_direct`. The structure is set up to make extension cheap (Article 2). Any item from this roadmap that someone wants to add is welcome as a PR — the experiment numbering convention (`07_arimax_funding`, `08_daily_rerun`, …) makes it easy to slot new work in without disturbing the existing leaderboard.
 
 The next post in the series ([Article 14 — *Stop annualizing your Sharpe*](../../articles_todo.md)) is the optional methodological piece prompted by the +7.28 Sharpe headlines. Per-bar Sharpe ≈ 0.080, SE ≈ 0.025 on 1,608 bars — about 3σ from zero, which is the right size of claim to make. The `√8760` multiplier makes the number look like a hedge fund. Useful to write because every BTC ML post on the internet does this and never says it.
 

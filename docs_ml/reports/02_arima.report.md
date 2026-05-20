@@ -53,12 +53,12 @@ From [experiments/02_arima/results/btc_4h_2024/metrics.json](../../experiments/0
 
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
-| [01_baseline_naive](01_baseline_naive.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
+| [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | **02_arima (1, 1, 1)** | **517.16** | **782.42** | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
 | [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 
-02_arima leads four columns out of six (MAE, RMSE, MAPE, dir_acc) on the 4h slice with the smallest non-trivial parametric model in the leaderboard — three estimated parameters. It only loses cum_ret and Sharpe to 03_gradient_boosting (50 % vs. 33 % cumulative; 6.42 vs. 6.06 Sharpe), and only by a hair. The MAE win over naive is **$1.20** — a margin that would not survive a different train/test split, and is best read as "ARIMA ties naive on point error but adds directional skill where naive has none." (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
+02_arima leads four columns out of six (MAE, RMSE, MAPE, dir_acc) on the 4h slice with the smallest non-trivial parametric model in the leaderboard — three estimated parameters. It only loses cum_ret and Sharpe to 03_gradient_boosting (50 % vs. 33 % cumulative; 6.42 vs. 6.06 Sharpe), and only by a hair. The MAE win over naive is **$1.20** — a margin that would not survive a different train/test split, and is best read as "ARIMA ties naive on point error but adds directional skill where naive has none." (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained_direct.report.md](06_pretrained_direct.report.md).)
 
 ## Sweep — 12 (p, d, q) orders
 
@@ -84,7 +84,7 @@ The (3, 1, 3) row leads on five columns simultaneously: AIC, MAE, RMSE, MAPE, cu
 ## Interpretation
 
 1. **AIC and Sharpe agree on (3, 1, 3).** Lowest AIC (25 543.88), lowest MAE (514.07), highest Sharpe (6.40). Unusually, the in-sample selection criterion picks the same order the out-of-sample trading metric prefers. The disagreement that *does* show up is between AIC/Sharpe and **directional accuracy** — the configured (1, 1, 1) leads dir_acc at 0.5547, while (3, 1, 3) is at 0.5274 despite a richer AR / MA spec. Different criteria can rank differently; this sweep makes that visible.
-2. **(0, 1, 0) returns the naive baseline exactly.** AIC 25 546.20 with MAE 518.358631840796 — bit-identical to [01_baseline_naive's metrics.json](../../experiments/01_baseline_naive/results/btc_4h_2024/metrics.json). That row is the random-walk specification (no AR, no MA, one difference); mathematically it *is* `close_pred[t] = close[t-1]`. Pipeline sanity check passes.
+2. **(0, 1, 0) returns the naive baseline exactly.** AIC 25 546.20 with MAE 518.358631840796 — bit-identical to [01_baseline's metrics.json](../../experiments/01_baseline/results/btc_4h_2024/metrics.json). That row is the random-walk specification (no AR, no MA, one difference); mathematically it *is* `close_pred[t] = close[t-1]`. Pipeline sanity check passes.
 3. **(1, 0, 1) — only un-differenced order in the sweep — collapses on Sharpe** to 0.5560. Differencing is load-bearing: BTC price levels are non-stationary, and an ARMA without differencing fits the level and fails the strategy. d ≥ 1 is non-optional.
 4. **MAE differences between (1, 1, 1) and (3, 1, 3) are $3** on a 402-bar slice. On a different split, the rank order between them could flip. The robust reading is that *both* are useful, with (3, 1, 3) more aggressive on direction and (1, 1, 1) marginally better at the no-opinion direction-call.
 5. **(5, 1, 5) is the overfit shape.** Higher AIC than smaller orders, worse MAE, lower Sharpe than (3, 1, 3) — extra AR / MA coefficients past 3 deliver no signal on this data slice and add variance.
