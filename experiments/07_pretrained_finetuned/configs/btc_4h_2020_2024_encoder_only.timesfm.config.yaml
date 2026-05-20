@@ -24,7 +24,7 @@ finetune:
       - '*output_patch_embedding*'         # keep the head static (the directional prior we want to preserve)
 
 training:
-  early_stopping_patience: 5              # epochs of no val_loss improvement before stop
+  early_stopping_patience: 3              # epochs of no val_loss improvement before stop
 
 model:
   input_chunk_length: 256                  # bars of history fed to the foundation model
