@@ -8,7 +8,7 @@ The hypothesis is correct. But getting there required learning three lessons the
 
 ## The three things that had to be true
 
-The experiment is in [`experiments/07_finetuned/`](../../experiments/07_finetuned/). The winning configuration used `autogluon/chronos-2-small`, the 4.7-year `btc_4h_2020_2024` dataset, and encoder-only fine-tuning with checkpoint restoration. None of those choices were obvious in advance. Earlier configurations of this experiment all *lost* to zero-shot on every metric. Here is what changed.
+The experiment is in [`experiments/07_finetuned/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/07_finetuned). The winning configuration used `autogluon/chronos-2-small`, the 4.7-year `btc_4h_2020_2024` dataset, and encoder-only fine-tuning with checkpoint restoration. None of those choices were obvious in advance. Earlier configurations of this experiment all *lost* to zero-shot on every metric. Here is what changed.
 
 ### Lesson 1: dataset size matters
 

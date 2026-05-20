@@ -36,7 +36,7 @@ The median is used for the standard metrics rather than the mean, because on hea
 
 ## The experiment
 
-The experiment is in [`experiments/06_pretrained/`](../../experiments/06_pretrained/). Because there is no training, there is no three-way split: the scaler is fit on the training slice (to normalize the input series to a range the model expects), but the model weights are not updated.
+The experiment is in [`experiments/06_pretrained/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/06_pretrained). Because there is no training, there is no three-way split: the scaler is fit on the training slice (to normalize the input series to a range the model expects), but the model weights are not updated.
 
 ```bash
 make 06_pretrained

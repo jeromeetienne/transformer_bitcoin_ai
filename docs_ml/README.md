@@ -18,13 +18,17 @@ The tone is direct and precise. Mathematical notation is used when it adds clari
 
 The writing is also entertaining and didactic. A reader who does not work in machine learning should still be able to follow along, enjoy the ride, and come away having learned something real. Analogies, concrete intuitions, and a bit of wit make the material accessible without making it shallow. The goal is that someone curious about how machine learning actually works — not just that it exists — finds each article worth reading for its own sake, not just as a portfolio artifact.
 
+## Linking requirement
+
+All links in articles must point to GitHub at the head of the default branch — never to local file paths. Use the full `https://github.com/…/blob/HEAD/…` form for files and `https://github.com/…/tree/HEAD/…` for directories. A reader arriving from anywhere (Medium, a PDF, a forwarded email) must be able to follow every link without cloning the repository.
+
 ## The eight articles
 
 0. **Presentation of the project** — the curtain-raiser. Frames the question, the data, and the evaluation philosophy, and previews the model articles that follow. No model, no results.
-1. **Baseline** ([`01_baseline`](../experiments/01_baseline/)) — naive last-value as the zero-parameter floor every later model must clear. Also where the methodology (target, slice, split, walk-forward, metric module) is established.
-2. **ARIMA** ([`02_arima`](../experiments/02_arima/)) — the 3-parameter linear statistical floor. The classical companion to article 1.
-3. **XGBoost** ([`03_xgboost`](../experiments/03_xgboost/)) — what classical ML brings to the table: the model is generic, the features carry the signal.
-4. **LSTM** ([`04_lstm`](../experiments/04_lstm/)) — recurrent nets on raw sequences. Sequence length, training stability, what they do and don't learn.
-5. **Transformer** ([`05_transformer`](../experiments/05_transformer/)) — attention applied to time series, via the Temporal Fusion Transformer in Darts.
-6. **Pretrained foundation models** ([`06_pretrained`](../experiments/06_pretrained/)) — zero-shot Chronos-2 and TimesFM 2.5. What it means that a model that has never seen Bitcoin has an opinion.
-7. **Fine-tuned foundation models** ([`07_finetuned`](../experiments/07_finetuned/)) — the same backbones as article 6, but `fit()` updates weights against a held-out validation slice. When fine-tuning beats zero-shot, and the conditions that make it happen.
+1. **Baseline** ([`01_baseline`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/01_baseline)) — naive last-value as the zero-parameter floor every later model must clear. Also where the methodology (target, slice, split, walk-forward, metric module) is established.
+2. **ARIMA** ([`02_arima`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/02_arima)) — the 3-parameter linear statistical floor. The classical companion to article 1.
+3. **XGBoost** ([`03_xgboost`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/03_xgboost)) — what classical ML brings to the table: the model is generic, the features carry the signal.
+4. **LSTM** ([`04_lstm`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/04_lstm)) — recurrent nets on raw sequences. Sequence length, training stability, what they do and don't learn.
+5. **Transformer** ([`05_transformer`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/05_transformer)) — attention applied to time series, via the Temporal Fusion Transformer in Darts.
+6. **Pretrained foundation models** ([`06_pretrained`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/06_pretrained)) — zero-shot Chronos-2 and TimesFM 2.5. What it means that a model that has never seen Bitcoin has an opinion.
+7. **Fine-tuned foundation models** ([`07_finetuned`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/07_finetuned)) — the same backbones as article 6, but `fit()` updates weights against a held-out validation slice. When fine-tuning beats zero-shot, and the conditions that make it happen.

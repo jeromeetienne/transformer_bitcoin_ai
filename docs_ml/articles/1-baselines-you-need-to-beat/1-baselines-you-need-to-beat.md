@@ -20,9 +20,9 @@ The practical consequence is that any model that learns from historical price mu
 
 ### How the experiment works
 
-The experiment is in [`experiments/01_baseline/`](../../experiments/01_baseline/). It is deliberately minimal:
+The experiment is in [`experiments/01_baseline/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/01_baseline). It is deliberately minimal:
 
-1. Load OHLCV for `BTCUSDT 1h` via the shared data loader ([`src/btc_ai/data`](../../src/btc_ai/data)).
+1. Load OHLCV for `BTCUSDT 1h` via the shared data loader ([`src/btc_ai/data`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/src/btc_ai/data)).
 2. Hold out the last 20% of the series as the test set. No shuffling. The split is chronological.
 3. For each test bar *t*, predict `close[t-1]`.
 4. Compute MAE, RMSE, MAPE, and directional accuracy on the test slice.
@@ -82,7 +82,7 @@ The default configuration uses `(3, 1, 3)`. Here is what each number means, conc
 
 ### Walk-forward evaluation
 
-The experiment in [`experiments/02_arima/`](../../experiments/02_arima/) follows the same split as the naive baseline: fit on the training slice, evaluate on the held-out 20%. The key detail is how the walk-forward is implemented:
+The experiment in [`experiments/02_arima/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/02_arima) follows the same split as the naive baseline: fit on the training slice, evaluate on the held-out 20%. The key detail is how the walk-forward is implemented:
 
 1. Fit `ARIMA(close_train, order=(p, d, q))` using `statsmodels`. The AR/MA coefficients are estimated once on training data — no leakage.
 2. Extend the fitted model to the full series via `fit.apply(full_series, refit=False)`. This keeps the trained coefficients frozen while allowing the model to condition on actual test-set observations as they arrive.

@@ -43,7 +43,7 @@ Because this reconstruction uses the *actual* previous close (not the predicted 
 
 ## The feature matrix
 
-The experiment lives in [`experiments/03_xgboost/`](../../experiments/03_xgboost/), with feature construction in [`features.py`](../../experiments/03_xgboost/features.py). Every column in the feature matrix is a shifted view of past data — no information from bar *T* itself is allowed to leak into the row for bar *T*.
+The experiment lives in [`experiments/03_xgboost/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/03_xgboost), with feature construction in [`features.py`](https://github.com/jeromeetienne/transformer_bitcoin_ai/blob/HEAD/experiments/03_xgboost/features.py). Every column in the feature matrix is a shifted view of past data — no information from bar *T* itself is allowed to leak into the row for bar *T*.
 
 **Lagged log-returns** — `r_{t-1}, r_{t-2}, ..., r_{t-N}`. The most direct encoding of recent price history. `N` is configurable (`return_lags` in `config.yaml`; default 24, one day of hourly data). These are the same lags that ARIMA's AR component sees, but XGBoost can use them nonlinearly and in combination with the other features.
 

@@ -41,7 +41,7 @@ Whether Bitcoin actually has exploitable intraday seasonality at the hourly leve
 
 ## The experiment
 
-The experiment is in [`experiments/05_transformer/`](../../experiments/05_transformer/), using the Darts `TFTModel`. The pipeline is identical to the LSTM experiment: same data loader, same target (log-return), same three-way split, same walk-forward evaluation. The only differences are the model class and the addition of the future covariate channel.
+The experiment is in [`experiments/05_transformer/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/05_transformer), using the Darts `TFTModel`. The pipeline is identical to the LSTM experiment: same data loader, same target (log-return), same three-way split, same walk-forward evaluation. The only differences are the model class and the addition of the future covariate channel.
 
 ```bash
 make 05_transformer

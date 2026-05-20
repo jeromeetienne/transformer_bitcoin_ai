@@ -35,7 +35,7 @@ Stacking layers connects the output of one LSTM to the input of the next, allowi
 
 ## The experiment
 
-The experiment is in [`experiments/04_lstm/`](../../experiments/04_lstm/), using the Darts `BlockRNNModel` with `model='LSTM'`. Darts provides the same high-level API as the Transformer experiment that follows, so the only architectural difference between articles 4 and 5 is the model class.
+The experiment is in [`experiments/04_lstm/`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/04_lstm), using the Darts `BlockRNNModel` with `model='LSTM'`. Darts provides the same high-level API as the Transformer experiment that follows, so the only architectural difference between articles 4 and 5 is the model class.
 
 **Target**: bar-*T* log-return `r_T = log(close_T / close_{T-1})`, same as XGBoost. Predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_pred)` for metric comparability.
 

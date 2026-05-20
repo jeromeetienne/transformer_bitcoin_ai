@@ -16,7 +16,7 @@ The "given everything we know" part is stricter than it sounds. In a live system
 
 ## The data
 
-All experiments draw from the same source: historical OHLCV data for `BTCUSDT` from Binance, loaded via a shared data loader in [`src/btc_ai/data`](../../src/btc_ai/data). The loader handles caching, normalization, and the train/test split so that every experiment operates on exactly the same bytes.
+All experiments draw from the same source: historical OHLCV data for `BTCUSDT` from Binance, loaded via a shared data loader in [`src/btc_ai/data`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/src/btc_ai/data). The loader handles caching, normalization, and the train/test split so that every experiment operates on exactly the same bytes.
 
 Two granularities appear across the series:
 
