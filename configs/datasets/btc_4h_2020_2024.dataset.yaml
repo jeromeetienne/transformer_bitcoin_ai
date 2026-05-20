@@ -3,7 +3,7 @@
 # train window starts at 2020-01-01 instead of 2023-01-01 — roughly 4.7 years
 # of history vs 1.6, or ~3x more training bars (~10100 vs ~3500).
 #
-# Motivation: 07_pretrained_finetuned on the 1.6-year slice consistently
+# Motivation: 07_finetuned on the 1.6-year slice consistently
 # over-fits within ~3 epochs (train_loss collapses, val_loss diverges) and
 # every fine-tuning recipe — head-only, encoder-only, full — lands worse than
 # 06_pretrained_direct zero-shot on the trading metrics. The hypothesis is that

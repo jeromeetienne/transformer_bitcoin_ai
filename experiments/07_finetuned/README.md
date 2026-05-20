@@ -1,4 +1,4 @@
-# 07_pretrained_finetuned
+# 07_finetuned
 
 Natural follow-up to [`06_pretrained_direct`](../06_pretrained_direct/): same two foundation-model backends — Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (encoder-only T5-style, 120M parameters) or Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (decoder-only patch-transformer, 200M parameters) — but with `enable_finetuning` set so `fit()` actually updates weights against a held-out validation slice before walk-forward inference.
 
@@ -38,7 +38,7 @@ On the extended `btc_4h_2020_2024` slice, **encoder-only fine-tuning of `autoglu
 The CIs on Sharpe and cumulative_return exclude the zero-shot value at 95% confidence. Every single seed independently beats zero-shot on both metrics. Reproduce with:
 
 ```
-make 07_pretrained_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
+make 07_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
 ```
 
 (See [Reproducing the multi-seed result](#reproducing-the-multi-seed-result) below for how to sweep `random_state`.)
@@ -88,10 +88,10 @@ Library: **[darts](https://unit8co.github.io/darts/)** (`darts.models.Chronos2Mo
 ## How to run
 
 ```
-make 07_pretrained_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml   # the winning recipe
-make 07_pretrained_finetuned CONFIG=configs/btc_4h_2024_encoder_only.config.yaml        # encoder-only, 1.6yr slice (loses to zero-shot)
-make 07_pretrained_finetuned CONFIG=configs/btc_4h_2024.config.yaml                     # head-only, 1.6yr slice (loses worse)
-make 07_pretrained_finetuned CONFIG=configs/btc_1h_2024.config.yaml                     # 1h slice, head-only
+make 07_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml   # the winning recipe
+make 07_finetuned CONFIG=configs/btc_4h_2024_encoder_only.config.yaml        # encoder-only, 1.6yr slice (loses to zero-shot)
+make 07_finetuned CONFIG=configs/btc_4h_2024.config.yaml                     # head-only, 1.6yr slice (loses worse)
+make 07_finetuned CONFIG=configs/btc_1h_2024.config.yaml                     # 1h slice, head-only
 ```
 
 Pick a backend in the config — there is **no default**, you must set one:
@@ -152,12 +152,12 @@ TimesFM 2.5's head and encoder names differ from Chronos-2's; the default patter
 The headline numbers in this README come from five runs of the same config with `random_state` set to 42, 7, 13, 5, and 99 in turn. To reproduce on your machine:
 
 ```bash
-CONFIG=experiments/07_pretrained_finetuned/configs/btc_4h_2020_2024_encoder_only.config.yaml
-RESULTS_DIR=experiments/07_pretrained_finetuned/results/btc_4h_2020_2024_encoder_only
+CONFIG=experiments/07_finetuned/configs/btc_4h_2020_2024_encoder_only.config.yaml
+RESULTS_DIR=experiments/07_finetuned/results/btc_4h_2020_2024_encoder_only
 
 for seed in 42 7 13 5 99; do
     sed -i '' "s/random_state: [0-9]*/random_state: $seed/" "$CONFIG"   # macOS BSD sed
-    make 07_pretrained_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
+    make 07_finetuned CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
     cp "$RESULTS_DIR/metrics.json" "$RESULTS_DIR/metrics_seed${seed}.json"
 done
 ```
@@ -193,10 +193,10 @@ The headline table compares 07 fine-tuned (encoder-only, chronos-2-small, extend
 ## Sweeping fine-tuning recipes
 
 ```
-make 07_pretrained_finetuned_sweep CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
+make 07_finetuned_sweep CONFIG=configs/btc_4h_2020_2024_encoder_only.config.yaml
 ```
 
-Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which (backend, hub_model_name, input_chunk_length, learning_rate, n_epochs, fine-tuning mode) combos are tried. Output: a printed table to stdout (in source order, easy to scan) and a `results/<config_stem>/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in `configs/*.config.yaml` set via `make 07_pretrained_finetuned`.
+Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which (backend, hub_model_name, input_chunk_length, learning_rate, n_epochs, fine-tuning mode) combos are tried. Output: a printed table to stdout (in source order, easy to scan) and a `results/<config_stem>/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in `configs/*.config.yaml` set via `make 07_finetuned`.
 
 What to look at in the sweep:
 
@@ -210,7 +210,7 @@ What to look at in the sweep:
 `save_checkpoints=True` writes `.ckpt` files under `results/darts_checkpoints/darts_logs/{dataset}_{backend}/`. `force_reset=True` wipes the previous checkpoint for the same `{dataset, backend}` pair at the start of each run, so they don't accumulate within a configuration. The whole tree can be wiped with:
 
 ```
-make 07_pretrained_finetuned_clean_checkpoints
+make 07_finetuned_clean_checkpoints
 ```
 
 or transitively via the top-level `make clean` (which wipes everything under any `results/`).
@@ -218,7 +218,7 @@ or transitively via the top-level `make clean` (which wipes everything under any
 ## Files
 
 ```
-experiments/07_pretrained_finetuned/
+experiments/07_finetuned/
 ├── README.md                                           # this file
 ├── Makefile                                            # `make help` shows run / sweep / clean_checkpoints targets
 ├── configs/

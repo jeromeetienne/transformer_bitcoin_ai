@@ -492,7 +492,7 @@ def main() -> None:
 	payload = write_aggregated_metrics_json(
 		out.results,
 		results_dir / 'metrics.json',
-		experiment='07_pretrained_finetuned',
+		experiment='07_finetuned',
 		dataset=cfg['dataset'],
 		interval=out.interval,
 		extra_run_fields={

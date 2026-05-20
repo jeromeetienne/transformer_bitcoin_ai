@@ -15,7 +15,7 @@ CONFIG ?= experiments/01_baseline/configs/btc_4h_2024.config.yaml
 	04_lstm 04_lstm_sweep 04_lstm_optuna 04_lstm_optuna_dashboard \
 	05_transformer 05_transformer_sweep 05_transformer_optuna 05_transformer_optuna_dashboard \
 	06_pretrained_direct 06_pretrained_direct_sweep \
-	07_pretrained_finetuned 07_pretrained_finetuned_sweep 07_pretrained_finetuned_clean_checkpoints
+	07_finetuned 07_finetuned_sweep 07_finetuned_clean_checkpoints
 
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  %-28s %s\n", $$1, $$2}'
@@ -82,11 +82,11 @@ clean:          ## remove cached data and experiment results
 06_pretrained_direct_sweep:   ## sweep foundation-model backends + context lengths on the same data slice
 	$(MAKE) -C experiments/06_pretrained_direct sweep
 
-07_pretrained_finetuned:        ## run experiments/07_pretrained_finetuned (fine-tuned Chronos-2 / TimesFM 2.5)
-	$(MAKE) -C experiments/07_pretrained_finetuned run
+07_finetuned:        ## run experiments/07_finetuned (fine-tuned Chronos-2 / TimesFM 2.5)
+	$(MAKE) -C experiments/07_finetuned run
 
-07_pretrained_finetuned_sweep:  ## sweep fine-tuning recipes (fine-tuning mode, learning_rate, n_epochs) on the same data slice
-	$(MAKE) -C experiments/07_pretrained_finetuned sweep
+07_finetuned_sweep:  ## sweep fine-tuning recipes (fine-tuning mode, learning_rate, n_epochs) on the same data slice
+	$(MAKE) -C experiments/07_finetuned sweep
 
-07_pretrained_finetuned_clean_checkpoints:  ## remove experiments/07_pretrained_finetuned/results/darts_checkpoints/
-	$(MAKE) -C experiments/07_pretrained_finetuned clean_checkpoints
+07_finetuned_clean_checkpoints:  ## remove experiments/07_finetuned/results/darts_checkpoints/
+	$(MAKE) -C experiments/07_finetuned clean_checkpoints
