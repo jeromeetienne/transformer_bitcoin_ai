@@ -6,7 +6,7 @@
 
 This is the article that asks readers to be uncomfortable with most of the numbers in the rest of the series. Including, retrospectively, the ones I've been quoting since Article 3.
 
-The provocation is one row in the leaderboard from [06_pretrained_direct](../../experiments/06_pretrained_direct/). Amazon's Chronos-2 — a 120 M-parameter foundation model trained on millions of unrelated time series, dropped onto hourly BTCUSDT zero-shot, no fine-tuning, no covariates — produces:
+The provocation is one row in the leaderboard from [06_pretrained](../../experiments/06_pretrained/). Amazon's Chronos-2 — a 120 M-parameter foundation model trained on millions of unrelated time series, dropped onto hourly BTCUSDT zero-shot, no fine-tuning, no covariates — produces:
 
 - **`directional_accuracy = 0.5019`** (chance, to within sampling noise)
 - **`annualized_sharpe = +4.29`**
@@ -18,7 +18,7 @@ That should be jarring. **A chance-level directional signal is not a strategy.**
 
 This article is what's actually going on, and what it implies for *every* Sharpe number this lab has reported.
 
-(Methodological note: the canonical 06_pretrained_direct run has been re-pointed to TimesFM 2.5 between drafts; the committed `metrics.json` reflects TimesFM at dir_acc 0.4677 / Sharpe +2.44 on the same slice, which makes the same point even more starkly — sub-chance dir_acc with a positive Sharpe. The article anchors on the Chronos-2 numbers from the original run because the "chance dir_acc + nominal Sharpe" pattern is the one I want to highlight, and Chronos-2 lands cleanly at chance directional accuracy. Either run illustrates the article's point.)
+(Methodological note: the canonical 06_pretrained run has been re-pointed to TimesFM 2.5 between drafts; the committed `metrics.json` reflects TimesFM at dir_acc 0.4677 / Sharpe +2.44 on the same slice, which makes the same point even more starkly — sub-chance dir_acc with a positive Sharpe. The article anchors on the Chronos-2 numbers from the original run because the "chance dir_acc + nominal Sharpe" pattern is the one I want to highlight, and Chronos-2 lands cleanly at chance directional accuracy. Either run illustrates the article's point.)
 
 ---
 
@@ -72,7 +72,7 @@ So the drift floor on this window is roughly **Sharpe +4 ± 1**. Anything in `[+
 | TFT | 0.5053 | +4.59 | ~+4 | ≈0 (drift-equivalent) |
 | Chronos-2 | 0.5019 | +4.29 | ~+4 | ≈0 (drift-equivalent) |
 
-(All Sep–Nov 2024 window, all numbers from committed `metrics.json` except Chronos-2's +4.29 / 0.5019, which is from the prior 06_pretrained_direct run before backend was switched to TimesFM. The "drift floor" is the rough Monte Carlo estimate from the previous section.)
+(All Sep–Nov 2024 window, all numbers from committed `metrics.json` except Chronos-2's +4.29 / 0.5019, which is from the prior 06_pretrained run before backend was switched to TimesFM. The "drift floor" is the rough Monte Carlo estimate from the previous section.)
 
 Three things this lens does to the prior leaderboard:
 

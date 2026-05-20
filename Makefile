@@ -14,7 +14,7 @@ CONFIG ?= experiments/01_baseline/configs/btc_4h_2024.config.yaml
 	03_gradient_boosting 03_gradient_boosting_sweep \
 	04_lstm 04_lstm_sweep 04_lstm_optuna 04_lstm_optuna_dashboard \
 	05_transformer 05_transformer_sweep 05_transformer_optuna 05_transformer_optuna_dashboard \
-	06_pretrained_direct 06_pretrained_direct_sweep \
+	06_pretrained 06_pretrained_sweep \
 	07_finetuned 07_finetuned_sweep 07_finetuned_clean_checkpoints
 
 help:
@@ -76,11 +76,11 @@ clean:          ## remove cached data and experiment results
 05_transformer_optuna_dashboard: ## launch optuna-dashboard against the 05_transformer study (Ctrl-C to stop)
 	$(MAKE) -C experiments/05_transformer optuna_dashboard
 
-06_pretrained_direct:         ## run experiments/06_pretrained_direct (zero-shot Chronos-2 / TimesFM 2.5)
-	$(MAKE) -C experiments/06_pretrained_direct run
+06_pretrained:         ## run experiments/06_pretrained (zero-shot Chronos-2 / TimesFM 2.5)
+	$(MAKE) -C experiments/06_pretrained run
 
-06_pretrained_direct_sweep:   ## sweep foundation-model backends + context lengths on the same data slice
-	$(MAKE) -C experiments/06_pretrained_direct sweep
+06_pretrained_sweep:   ## sweep foundation-model backends + context lengths on the same data slice
+	$(MAKE) -C experiments/06_pretrained sweep
 
 07_finetuned:        ## run experiments/07_finetuned (fine-tuned Chronos-2 / TimesFM 2.5)
 	$(MAKE) -C experiments/07_finetuned run

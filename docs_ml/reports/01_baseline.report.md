@@ -52,7 +52,7 @@ From [experiments/01_baseline/results/btc_4h_2024/metrics.json](../../experiment
 | [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 
-01_baseline sets the floor on point error: MAE 518.36, RMSE 784.09. Only 02_arima clears it on MAE, and only by $1.20 — within sweep-to-sweep noise on a 402-bar test slice. Every other 4h row — including the two with the highest Sharpe — is *worse* on MAE than this naive predictor. The take-away: on 4h BTC, point-error and directional-skill are nearly orthogonal targets. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained_direct.report.md](06_pretrained_direct.report.md).)
+01_baseline sets the floor on point error: MAE 518.36, RMSE 784.09. Only 02_arima clears it on MAE, and only by $1.20 — within sweep-to-sweep noise on a 402-bar test slice. Every other 4h row — including the two with the highest Sharpe — is *worse* on MAE than this naive predictor. The take-away: on 4h BTC, point-error and directional-skill are nearly orthogonal targets. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
 
 ## Interpretation
 

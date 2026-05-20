@@ -1,11 +1,11 @@
-# Report — `06_pretrained_direct`
+# Report — `06_pretrained`
 
 **Run date:** 2026-04-29
 **Status:** completed (single fit, no sweep yet)
 
 ## What this experiment is
 
-The first **zero-shot foundation model** in the lineup. Where 04 and 05 *trained* a sequence model on this exact slice of BTC, 06 takes a model that has never seen this data — its weights come straight from HuggingFace Hub — and asks whether the prior baked into a 120 M-parameter transformer trained on millions of unrelated time series transfers to 1 h BTC log-returns. The model class is selected by `backend:` in [config.yaml](../../experiments/06_pretrained_direct/config.yaml): either Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (encoder-only T5-style, 120 M params) or Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (decoder-only patch transformer, 200 M params). This run is **chronos-2 only**; timesfm and the multi-config sweep are deferred.
+The first **zero-shot foundation model** in the lineup. Where 04 and 05 *trained* a sequence model on this exact slice of BTC, 06 takes a model that has never seen this data — its weights come straight from HuggingFace Hub — and asks whether the prior baked into a 120 M-parameter transformer trained on millions of unrelated time series transfers to 1 h BTC log-returns. The model class is selected by `backend:` in [config.yaml](../../experiments/06_pretrained/config.yaml): either Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (encoder-only T5-style, 120 M params) or Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (decoder-only patch transformer, 200 M params). This run is **chronos-2 only**; timesfm and the multi-config sweep are deferred.
 
 ```
 target  : r_T = log(close_T / close_{T-1})           # next-step log-return (same as 04 / 05)
@@ -27,7 +27,7 @@ This also means the comparison vs 04 / 05 isn't a strict superset / subset relat
 
 ## Configuration
 
-From [experiments/06_pretrained_direct/config.yaml](../../experiments/06_pretrained_direct/config.yaml):
+From [experiments/06_pretrained/config.yaml](../../experiments/06_pretrained/config.yaml):
 
 | Field | Value |
 |---|---|
@@ -52,7 +52,7 @@ Total bars after dropna: **8 039**. Train: **6 431**. Test: **1 608**. The split
 
 ## Results — single fit
 
-From [experiments/06_pretrained_direct/results/metrics.json](../../experiments/06_pretrained_direct/results/metrics.json):
+From [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretrained/results/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -63,7 +63,7 @@ From [experiments/06_pretrained_direct/results/metrics.json](../../experiments/0
 | Cumulative return | **+34.04 %** |
 | Annualized Sharpe | **+4.29** |
 
-The plot at [experiments/06_pretrained_direct/results/plot.png](../../experiments/06_pretrained_direct/results/plot.png) tells the story before the table does: the median prediction tracks close almost exactly, and the q0.1 – q0.9 band is so tight it's barely visible. The model's distribution over next-step log-returns is *narrow and centered on the last value*. That's the pretrained prior on BTC at 1 h: "near-zero log-return with very low variance" — i.e., predict the last price.
+The plot at [experiments/06_pretrained/results/plot.png](../../experiments/06_pretrained/results/plot.png) tells the story before the table does: the median prediction tracks close almost exactly, and the q0.1 – q0.9 band is so tight it's barely visible. The model's distribution over next-step log-returns is *narrow and centered on the last value*. That's the pretrained prior on BTC at 1 h: "near-zero log-return with very low variance" — i.e., predict the last price.
 
 ## Cross-experiment comparison
 
@@ -76,7 +76,7 @@ Same data slice, ~1607–1608 test bars from 2024-09 to 2024-11, same metrics (0
 | 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | **04_lstm (default)** | 274.02 | 409.66 | 0.360 % | **0.5196** | **+50.34 %** | **+4.95** |
 | 05_transformer (default) | 373.70 | 546.68 | 0.488 % | 0.5053 | +29.57 % | +4.59 |
-| **06_pretrained_direct chronos-2 (icl=256)** | **262.32** | **398.27** | **0.343 %** | 0.5019 | +34.04 % | +4.29 |
+| **06_pretrained chronos-2 (icl=256)** | **262.32** | **398.27** | **0.343 %** | 0.5019 | +34.04 % | +4.29 |
 
 Three things to notice:
 
@@ -100,7 +100,7 @@ This is also the first experiment where every metric line up the way the user pr
 
 Productive next directions:
 
-- **Run TimesFM 2.5.** This report is chronos-only. Running `backend: timesfm` on the same slice would tell us whether the same negative result holds across foundation-model families, or whether it's specific to chronos's training mixture. The harness and config knobs are already wired ([sweep.py](../../experiments/06_pretrained_direct/sweep.py) GRID); just needs the run.
+- **Run TimesFM 2.5.** This report is chronos-only. Running `backend: timesfm` on the same slice would tell us whether the same negative result holds across foundation-model families, or whether it's specific to chronos's training mixture. The harness and config knobs are already wired ([sweep.py](../../experiments/06_pretrained/sweep.py) GRID); just needs the run.
 - **Sweep `input_chunk_length`.** The intuition "more context = better foundation-model forecast" is testable. The GRID has 64 / 256 / 1024 for both backends. If the answer is "all three land at the naive floor," that's an even stronger version of the v1 conclusion.
 - **Add covariates to chronos-2 only (ablation).** Chronos-2 supports `past_covariates` and `future_covariates`. A separate run with the OHLCV + cyclical-time channels from 05 would tell us whether the foundation model can use covariates that LSTM and TFT couldn't extract signal from.
 - **Probabilistic-head fine-tuning.** Both backends support `enable_finetuning=True` for partial / full fine-tuning. Quantile-loss fine-tuning on 6 431 BTC training bars is the obvious next experiment: does any fine-tuning of the prior pull the model away from "predict the last close"? (Likely no, but the asymmetry of the result vs effort is small enough to test.)
@@ -108,7 +108,7 @@ Productive next directions:
 
 ## Caveats
 
-- **Single backend run only.** Just chronos-2 at icl=256. TimesFM 2.5 is wired but not run; `make 06_pretrained_direct_sweep` would produce the full backend × icl table.
+- **Single backend run only.** Just chronos-2 at icl=256. TimesFM 2.5 is wired but not run; `make 06_pretrained_sweep` would produce the full backend × icl table.
 - **Single split.** Same 2024-09 to 2024-11 test window as every other experiment. Hyperparameter rankings (here: backend / icl) could shift on a different window.
 - **Walk-forward without re-estimation.** `retrain=False` keeps weights frozen across the entire test window. For zero-shot foundation models this is the *only* mode of operation that makes sense — there's nothing to retrain.
 - **`num_samples=200`, single sampling seed.** Two runs may produce slightly different quantile bands. The median is stable; the q0.1 / q0.9 endpoints are within ~$5 between sampling seeds at this num_samples, well below the spread of the band itself.
@@ -119,14 +119,14 @@ Productive next directions:
 
 ## Files produced
 
-- [experiments/06_pretrained_direct/results/metrics.json](../../experiments/06_pretrained_direct/results/metrics.json) — single fit
-- [experiments/06_pretrained_direct/results/predictions.parquet](../../experiments/06_pretrained_direct/results/predictions.parquet) — columns: close, pred (median), pred_lo (q0.1), pred_hi (q0.9), ref, strategy_return
-- [experiments/06_pretrained_direct/results/plot.png](../../experiments/06_pretrained_direct/results/plot.png) — close + median + shaded q0.1 – q0.9 band
-- *(no `sweep.csv` yet — `make 06_pretrained_direct_sweep` produces one)*
+- [experiments/06_pretrained/results/metrics.json](../../experiments/06_pretrained/results/metrics.json) — single fit
+- [experiments/06_pretrained/results/predictions.parquet](../../experiments/06_pretrained/results/predictions.parquet) — columns: close, pred (median), pred_lo (q0.1), pred_hi (q0.9), ref, strategy_return
+- [experiments/06_pretrained/results/plot.png](../../experiments/06_pretrained/results/plot.png) — close + median + shaded q0.1 – q0.9 band
+- *(no `sweep.csv` yet — `make 06_pretrained_sweep` produces one)*
 
 ## How to reproduce
 
 ```
-make 06_pretrained_direct         # single fit using params in config.yaml (~3-5 min on MPS, +download on first run)
-make 06_pretrained_direct_sweep   # 7-config sweep across (backend, hub_model_name, input_chunk_length) — 20-40 min on MPS
+make 06_pretrained         # single fit using params in config.yaml (~3-5 min on MPS, +download on first run)
+make 06_pretrained_sweep   # 7-config sweep across (backend, hub_model_name, input_chunk_length) — 20-40 min on MPS
 ```

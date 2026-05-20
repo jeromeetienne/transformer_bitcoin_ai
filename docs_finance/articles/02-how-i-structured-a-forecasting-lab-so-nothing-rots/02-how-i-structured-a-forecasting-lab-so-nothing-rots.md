@@ -189,7 +189,7 @@ make 02_arima
 make 03_gradient_boosting
 make 04_lstm
 make 05_transformer
-make 06_pretrained_direct
+make 06_pretrained
 ```
 
 The deep-learning ones (04 / 05 / 06) take single-digit minutes each on Apple MPS or a recent CUDA GPU; the rest are seconds. Every `metrics.json` you produce should match the ones I quote in this series, modulo seed-level noise on the deep models.

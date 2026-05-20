@@ -1,4 +1,4 @@
-# 06_pretrained_direct
+# 06_pretrained
 
 First **zero-shot foundation model** in the lineup. Runs either Amazon's [Chronos-2](https://huggingface.co/amazon/chronos-2) (encoder-only T5-style, 120M params) or Google's [TimesFM 2.5](https://huggingface.co/google/timesfm-2.5-200m-pytorch) (decoder-only patch-transformer, 200M params) — selected by `backend:` in [`config.yaml`](config.yaml) — with **no training**: weights come straight from HuggingFace Hub, `fit()` is a no-op, and we walk-forward 1-step probabilistic forecasts on the held-out test slice.
 
@@ -48,7 +48,7 @@ Library: **[darts](https://unit8co.github.io/darts/)** (`darts.models.Chronos2Mo
 ## How to run
 
 ```
-make 06_pretrained_direct
+make 06_pretrained
 ```
 
 Pick a backend in [`config.yaml`](config.yaml) — there is **no default**, you must set one:
@@ -109,10 +109,10 @@ What the numbers tell you:
 For comparing backends and context lengths on the same data slice without re-running the full experiment each time:
 
 ```
-make 06_pretrained_direct_sweep
+make 06_pretrained_sweep
 ```
 
-Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which combos are tried. Output: a printed table to stdout (sorted in source order, easy to scan) and a `results/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in [`config.yaml`](config.yaml) set via `make 06_pretrained_direct`.
+Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which combos are tried. Output: a printed table to stdout (sorted in source order, easy to scan) and a `results/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in [`config.yaml`](config.yaml) set via `make 06_pretrained`.
 
 What to look at in the sweep:
 
@@ -124,7 +124,7 @@ What to look at in the sweep:
 ## Files
 
 ```
-experiments/06_pretrained_direct/
+experiments/06_pretrained/
 ├── README.md           # this file
 ├── config.yaml         # data slice + test_fraction + backend + hub_model_name + model knobs
 ├── run.py              # entry point — fits the single config in config.yaml

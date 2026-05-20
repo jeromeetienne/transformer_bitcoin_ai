@@ -119,7 +119,7 @@ Quick decision matrix readers can use.
 - If a year from now the leaderboard still has ARIMA on top, that's still a meaningful result.
 
 ### 10. Closing — open invitation
-- The repo is reproducible: `brew install uv && uv sync && make 06_pretrained_direct`.
+- The repo is reproducible: `brew install uv && uv sync && make 06_pretrained`.
 - Anything in this roadmap that someone wants to add is welcome as a PR.
 - The lab is structured to make extension cheap (Article 2). Use it.
 

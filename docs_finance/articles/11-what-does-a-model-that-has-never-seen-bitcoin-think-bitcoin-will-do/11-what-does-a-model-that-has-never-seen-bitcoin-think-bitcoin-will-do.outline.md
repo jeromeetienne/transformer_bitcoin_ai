@@ -1,7 +1,7 @@
 # Outline — What does a model that has never seen Bitcoin think Bitcoin will do?
 
 ## One-line pitch
-Walkthrough of [06_pretrained_direct](../../experiments/06_pretrained_direct/) using Amazon's Chronos-2 (120 M params), zero-shot, no fine-tuning, on the same 1h BTCUSDT log-returns slice as 04 / 05. Honest framing: if a pretrained prior over millions of unrelated series transfers, that's the result; if MAE sits near the naive floor (~$260) and dir_acc ≈ 0.50, **the data — not the architecture, not the parameter count — is the bottleneck**. Chronos-2 lands at MAE $262 with dir_acc 0.5019 (chance), confidently centred on `close_{T-1}`. The first time the lineup answers "is BTC unusually hard, or are we just bad at it?" *(TimesFM 2.5 is also wired in the harness; the article will discuss the recent TimesFM rerun with dir_acc 0.4677 / Sharpe +2.44 to round out the foundation-model story.)*
+Walkthrough of [06_pretrained](../../experiments/06_pretrained/) using Amazon's Chronos-2 (120 M params), zero-shot, no fine-tuning, on the same 1h BTCUSDT log-returns slice as 04 / 05. Honest framing: if a pretrained prior over millions of unrelated series transfers, that's the result; if MAE sits near the naive floor (~$260) and dir_acc ≈ 0.50, **the data — not the architecture, not the parameter count — is the bottleneck**. Chronos-2 lands at MAE $262 with dir_acc 0.5019 (chance), confidently centred on `close_{T-1}`. The first time the lineup answers "is BTC unusually hard, or are we just bad at it?" *(TimesFM 2.5 is also wired in the harness; the article will discuss the recent TimesFM rerun with dir_acc 0.4677 / Sharpe +2.44 to round out the foundation-model story.)*
 
 ## Audience
 Anyone who's read a "foundation models for time series" announcement (Chronos, TimesFM, Lag-Llama, Moirai) and wondered if the prior generalizes to crypto. Series readers who watched LSTM and TFT lose to ARIMA in articles 8/9 and want to know if a pretrained model finally gets past the floor.
@@ -18,7 +18,7 @@ Chronos-2 was trained on millions of unrelated time series and has a calibrated 
 - The provocation: if the pretrained prior generalizes, that's a striking result. If it lands at the naive floor, *that's also* a striking result — it would mean architecture and parameter count don't break the floor.
 
 ### 2. The original Chronos-2 result (the canonical illustration)
-From the first 06_pretrained_direct run with `backend: chronos, hub_model_name: amazon/chronos-2`:
+From the first 06_pretrained run with `backend: chronos, hub_model_name: amazon/chronos-2`:
 ```json
 {
   "backend": "chronos",
@@ -56,7 +56,7 @@ Within ~$2 of naive's MAE. dir_acc statistically indistinguishable from coin-fli
 - **Walk-forward evaluation.** Same `historical_forecasts(retrain=False)` harness as LSTM/TFT.
 - **Probabilistic head.** `QuantileRegression([0.1, 0.5, 0.9])` with `num_samples=200`. The median feeds the leaderboard metrics; q10 / q90 produce the prediction band — Article 12 is about that.
 
-Code excerpt — the entire foundation-model fit + predict from [06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py):
+Code excerpt — the entire foundation-model fit + predict from [06_pretrained/run.py](../../experiments/06_pretrained/run.py):
 
 ```python
 model = build_model(backend, hub_model_name, merged, quantiles)
@@ -119,8 +119,8 @@ A short list, mostly pulled from the README:
 
 ### 11. Reproducing
 ```
-make 06_pretrained_direct         # uses config.yaml's backend setting
-make 06_pretrained_direct_sweep   # tries multiple (backend, hub_model_name, icl) combos
+make 06_pretrained         # uses config.yaml's backend setting
+make 06_pretrained_sweep   # tries multiple (backend, hub_model_name, icl) combos
 ```
 First run downloads HF weights (one-time). Single-digit minutes on Apple MPS / CUDA per backend.
 
@@ -131,9 +131,9 @@ First run downloads HF weights (one-time). Single-digit minutes on Apple MPS / C
 - Tease Article 12 (probabilistic forecasts) and Article 13 (the roadmap).
 
 ## Key code/file references
-- [experiments/06_pretrained_direct/run.py](../../experiments/06_pretrained_direct/run.py) — the harness
-- [experiments/06_pretrained_direct/config.yaml](../../experiments/06_pretrained_direct/config.yaml) — backend selection
-- [experiments/06_pretrained_direct/README.md](../../experiments/06_pretrained_direct/README.md) — extensive interpretive guide
+- [experiments/06_pretrained/run.py](../../experiments/06_pretrained/run.py) — the harness
+- [experiments/06_pretrained/config.yaml](../../experiments/06_pretrained/config.yaml) — backend selection
+- [experiments/06_pretrained/README.md](../../experiments/06_pretrained/README.md) — extensive interpretive guide
 
 ## Tone notes
 - Genuinely curious tone, not gloating. The result is striking either way.

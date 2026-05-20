@@ -31,7 +31,7 @@ make 02_arima                                      # ARIMA(p, d, q) baseline
 make 03_gradient_boosting                          # XGBoost on engineered features
 make 04_lstm                                       # Darts BlockRNN-LSTM
 make 05_transformer                                # Darts Temporal Fusion Transformer
-make 06_pretrained_direct                                 # zero-shot Chronos-2 / TimesFM 2.5
+make 06_pretrained                                 # zero-shot Chronos-2 / TimesFM 2.5
 make help                                          # list all targets (incl. *_sweep variants)
 ```
 
@@ -72,7 +72,7 @@ transformer_bitcoin_ai/
 │   ├── 03_gradient_boosting/   # XGBoost on engineered features (+ sweep)
 │   ├── 04_lstm/                # Darts BlockRNN-LSTM (+ sweep)
 │   ├── 05_transformer/         # Darts Temporal Fusion Transformer (+ sweep)
-│   └── 06_pretrained_direct/          # zero-shot Chronos-2 / TimesFM 2.5 foundation models (+ sweep)
+│   └── 06_pretrained/          # zero-shot Chronos-2 / TimesFM 2.5 foundation models (+ sweep)
 └── scripts/
     └── fetch_data.py           # CLI that pre-warms data cache from a config.yaml
 ```
