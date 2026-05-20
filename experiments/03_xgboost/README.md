@@ -1,4 +1,4 @@
-# 03_gradient_boosting
+# 03_xgboost
 
 First **non-linear** model in the lineup. Fits an [XGBoost regressor](https://xgboost.readthedocs.io/) on hand-engineered features of past 1h BTC data, with the **bar-T log-return** as target. Walk-forward 1-step-ahead forecasts on the held-out test slice.
 
@@ -41,7 +41,7 @@ Library: **[xgboost](https://xgboost.readthedocs.io/)** (`xgb.XGBRegressor` with
 ## How to run
 
 ```
-make 03_gradient_boosting
+make 03_xgboost
 ```
 
 Try a different model / feature set by editing [`config.yaml`](config.yaml):
@@ -94,10 +94,10 @@ What the numbers tell you:
 For comparing multiple `(n_estimators, max_depth, learning_rate)` combinations on the same data slice without re-running the full experiment each time:
 
 ```
-make 03_gradient_boosting_sweep
+make 03_xgboost_sweep
 ```
 
-Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which configs are tried. Output: a printed table to stdout (sorted in source order, easy to scan) and a `results/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in [`config.yaml`](config.yaml) set via `make 03_gradient_boosting`.
+Edit the `GRID` list at the top of [`sweep.py`](sweep.py) to change which configs are tried. Output: a printed table to stdout (sorted in source order, easy to scan) and a `results/sweep.csv` for downstream analysis. The sweep does not touch `metrics.json` / `predictions.parquet` / `plot.png` — those reflect the single config in [`config.yaml`](config.yaml) set via `make 03_xgboost`.
 
 What to look at in the sweep:
 
@@ -109,7 +109,7 @@ What to look at in the sweep:
 ## Files
 
 ```
-experiments/03_gradient_boosting/
+experiments/03_xgboost/
 ├── README.md           # this file
 ├── config.yaml         # data slice + test_fraction + features + XGBoost model knobs
 ├── features.py         # builds the lag/rolling/OHLCV feature matrix; no leakage

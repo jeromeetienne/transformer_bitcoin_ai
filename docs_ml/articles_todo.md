@@ -8,7 +8,7 @@ Working tracker for the six-article ML series (one project-intro piece plus five
 | --- | --------------------------------------- | -------------------------------------------------------------------- | ----------- |
 | 0   | Presentation of the project             | — (meta-article, no model)                                           | not started |
 | 1   | Baselines you need to beat              | `01_baseline`, `02_arima`                                      | not started |
-| 2   | XGBoost and feature engineering         | `03_gradient_boosting`                                               | not started |
+| 2   | XGBoost and feature engineering         | `03_xgboost`                                               | not started |
 | 3   | LSTM                                    | `04_lstm`                                                            | not started |
 | 4   | Transformer                             | `05_transformer`                                                     | not started |
 | 5   | Zero-shot foundation models             | `06_pretrained`                                                      | not started |

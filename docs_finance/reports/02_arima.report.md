@@ -55,7 +55,7 @@ Same data slice, same split, same metrics:
 |---|---|---|---|---|---|---|
 | 01_baseline | **260.50** | 396.97 | 0.341 % | NaN | — | — |
 | **02_arima (1, 1, 1)** | **260.50** | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
-| 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
+| 03_xgboost (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
 
 ARIMA ties naive **to the cent** on MAE and **leads the leaderboard** on every directional metric over Jan–Nov 2024. This is a sharp inversion of the Q1-only result, where ARIMA was a draw with naive across the board (dir_acc 0.492, Sharpe +0.45). Same model, same order; the difference is the test window covers more regime variation.
@@ -102,7 +102,7 @@ Compare to the Q1-only result (Jan–Mar 2024 only, 437 test bars), where the AR
 The next experiment that should win the leaderboard structurally needs:
 
 - **A test window that includes a real bear leg** (e.g. mid-2022) so we can confirm the directional edge holds out of regime.
-- **Richer features** — funding rate, perp basis, related-asset returns, on-chain. ARIMAX is a near-zero-effort step. (`03_gradient_boosting` adds engineered features and *underperforms* on this window — see [03_gradient_boosting.report.md](03_gradient_boosting.report.md).)
+- **Richer features** — funding rate, perp basis, related-asset returns, on-chain. ARIMAX is a near-zero-effort step. (`03_xgboost` adds engineered features and *underperforms* on this window — see [03_xgboost.report.md](03_xgboost.report.md).)
 - **Sequence models** (LSTM, transformer) — `04_lstm` lands at 0.5196 / +4.95, behind ARIMA on this window. See [04_lstm.report.md](04_lstm.report.md).
 
 ## Caveats

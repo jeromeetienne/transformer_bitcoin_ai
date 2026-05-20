@@ -83,13 +83,13 @@ The same code shape works for [05_transformer/run.py](../../experiments/05_trans
 
 ### XGBoost — implicit walk-forward via `.shift(1)`
 
-XGBoost is a one-shot batch predictor. From [03_gradient_boosting/run.py](../../experiments/03_gradient_boosting/run.py):
+XGBoost is a one-shot batch predictor. From [03_xgboost/run.py](../../experiments/03_xgboost/run.py):
 
 ```python
 y_pred = pd.Series(model.predict(X_test), index=X_test.index, name='r_pred')
 ```
 
-Looks suspiciously like Level 3 at first glance. It isn't — the walk-forward is baked into the *features*. From [features.py](../../experiments/03_gradient_boosting/features.py):
+Looks suspiciously like Level 3 at first glance. It isn't — the walk-forward is baked into the *features*. From [features.py](../../experiments/03_xgboost/features.py):
 
 ```python
 for i in range(lags):
@@ -167,7 +167,7 @@ Most of the leakage you'd worry about in a time-series benchmark comes from acci
 
 Concretely:
 
-- [03_gradient_boosting/features.py](../../experiments/03_gradient_boosting/features.py) — `r.shift(1 + i)` for lag features, `r.shift(1).rolling(w)` for rolling stats, `volume.shift(1)`, OHLC body / range from bar `T-1`.
+- [03_xgboost/features.py](../../experiments/03_xgboost/features.py) — `r.shift(1 + i)` for lag features, `r.shift(1).rolling(w)` for rolling stats, `volume.shift(1)`, OHLC body / range from bar `T-1`.
 - [04_lstm/run.py](../../experiments/04_lstm/run.py) — past covariates are bar-`t` OHLCV, but Darts strictly feeds past covariates only at bars `< t` for the forecast at bar `t`.
 - [05_transformer/run.py](../../experiments/05_transformer/run.py) — same as LSTM, plus future covariates that are deterministic timestamp encodings (legitimately known at any future bar).
 - [06_pretrained/run.py](../../experiments/06_pretrained/run.py) — univariate; the only past data the model sees is the strictly-past target series.

@@ -47,7 +47,7 @@ preds = model.historical_forecasts(
 - `forecast_horizon=1` and `last_points_only=True` give one-step-ahead predictions across the test window.
 - The input window (`input_chunk_length`) slides; the parameters don't change.
 
-**XGBoost** ([03_gradient_boosting/run.py](../../experiments/03_gradient_boosting/run.py)):
+**XGBoost** ([03_xgboost/run.py](../../experiments/03_xgboost/run.py)):
 - Single `model.predict(X_test)` because XGBoost's features are already lagged. The implicit walk-forward is in the feature construction (`.shift(1)` on every column).
 - No retraining mid-window — same compromise, expressed differently for a non-recurrent model.
 
@@ -88,7 +88,7 @@ Quick description (no actual figure required for the article — point at the st
 
 ### 8. The `.shift(1)` discipline
 A short subsection on why every feature in this lab uses `.shift(1)`:
-- [features.py](../../experiments/03_gradient_boosting/features.py) for XGBoost.
+- [features.py](../../experiments/03_xgboost/features.py) for XGBoost.
 - [04_lstm/run.py](../../experiments/04_lstm/run.py) `build_target_and_covariates` — past covariates are the bar's-own OHLCV, but Darts feeds them strictly *before* each forecast step.
 - [05_transformer/run.py](../../experiments/05_transformer/run.py) — same plus *future* covariates (cyclical hour/day-of-week), which are deterministic functions of the timestamp and therefore legitimately known at any future bar.
 - The recurring pattern: any column that uses bar-`t` data is fed to the model only at predict-step `t+1`. No exceptions.
@@ -108,7 +108,7 @@ A short subsection on why every feature in this lab uses `.shift(1)`:
 - [experiments/04_lstm/run.py](../../experiments/04_lstm/run.py) `historical_forecasts(retrain=False)`
 - [experiments/05_transformer/run.py](../../experiments/05_transformer/run.py) — same Darts pattern
 - [experiments/06_pretrained/run.py](../../experiments/06_pretrained/run.py) — zero-shot inherits the same pattern
-- [experiments/03_gradient_boosting/features.py](../../experiments/03_gradient_boosting/features.py) — `.shift(1)` discipline
+- [experiments/03_xgboost/features.py](../../experiments/03_xgboost/features.py) — `.shift(1)` discipline
 
 ## Tone notes
 - Methods post. Engineering-honest, not hype.

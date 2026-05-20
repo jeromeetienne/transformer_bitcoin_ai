@@ -9,14 +9,14 @@ BlockRNN(LSTM)
    └── linear head              (single-step regression on r_T)
 ```
 
-The target is the bar-T log-return `r_T = log(close_T / close_{T-1})` — the same stationary target used by [`03_gradient_boosting`](../03_gradient_boosting/) — and predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_pred)` so MAE/RMSE/MAPE/directional_accuracy/Sharpe are directly comparable to all earlier experiments.
+The target is the bar-T log-return `r_T = log(close_T / close_{T-1})` — the same stationary target used by [`03_xgboost`](../03_xgboost/) — and predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_pred)` so MAE/RMSE/MAPE/directional_accuracy/Sharpe are directly comparable to all earlier experiments.
 
 ## Why this experiment
 
 Three reasons LSTM comes after gradient boosting in the progression:
 
 1. **Sequence model, not a tabular one.** XGBoost sees an unordered bag of features per row; LSTM sees an *ordered* window of bars and carries hidden state across them. If the next-bar log-return depends on a *trajectory* (e.g. "three up-bars then a down-bar") rather than a snapshot, LSTM has the right inductive bias and trees do not.
-2. **Past covariates as time series, not engineered scalars.** Where `03_gradient_boosting` summarised volume / OHLC into a single shifted scalar per row, the BlockRNN model ingests `log_volume`, `hl_range`, `oc_body` as *parallel time series* aligned with the target. The model decides what to do with the temporal pattern — no rolling-window choice required.
+2. **Past covariates as time series, not engineered scalars.** Where `03_xgboost` summarised volume / OHLC into a single shifted scalar per row, the BlockRNN model ingests `log_volume`, `hl_range`, `oc_body` as *parallel time series* aligned with the target. The model decides what to do with the temporal pattern — no rolling-window choice required.
 3. **Bridge to the transformer.** [`05_transformer`](../05_transformer/) is a step up in capacity *and* mechanism (attention, future covariates, variable selection). Running the same darts harness with a vanilla LSTM first isolates the contribution of attention itself: any gap between LSTM and TFT on the same data slice is attributable to the architecture, not the framework.
 
 If LSTM can't beat the ARIMA(1,1,1) Sharpe leader from [`02_arima`](../02_arima/), the conclusion is the same as for the linear baselines: the hourly BTC log-return signal is too weak for added model capacity to find anything an AR(1) on differences couldn't.

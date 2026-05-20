@@ -28,7 +28,7 @@ The Makefile is the canonical command surface — every target wraps `uv run`.
 make fetch                                         # pre-warm data cache
 make 01_baseline                             # naive last-value baseline
 make 02_arima                                      # ARIMA(p, d, q) baseline
-make 03_gradient_boosting                          # XGBoost on engineered features
+make 03_xgboost                          # XGBoost on engineered features
 make 04_lstm                                       # Darts BlockRNN-LSTM
 make 05_transformer                                # Darts Temporal Fusion Transformer
 make 06_pretrained                                 # zero-shot Chronos-2 / TimesFM 2.5
@@ -69,7 +69,7 @@ transformer_bitcoin_ai/
 │   │   ├── config.yaml
 │   │   └── results/            # metrics.json, predictions.parquet, plot.png
 │   ├── 02_arima/               # ARIMA(p, d, q) + sweep over orders
-│   ├── 03_gradient_boosting/   # XGBoost on engineered features (+ sweep)
+│   ├── 03_xgboost/   # XGBoost on engineered features (+ sweep)
 │   ├── 04_lstm/                # Darts BlockRNN-LSTM (+ sweep)
 │   ├── 05_transformer/         # Darts Temporal Fusion Transformer (+ sweep)
 │   └── 06_pretrained/          # zero-shot Chronos-2 / TimesFM 2.5 foundation models (+ sweep)

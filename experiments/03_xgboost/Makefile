@@ -1,5 +1,5 @@
-# All paths in this file are relative to experiments/03_gradient_boosting/.
-# Invoked from the root via `$(MAKE) -C experiments/03_gradient_boosting <target>`.
+# All paths in this file are relative to experiments/03_xgboost/.
+# Invoked from the root via `$(MAKE) -C experiments/03_xgboost <target>`.
 
 CONFIG ?= configs/btc_4h_2024.config.yaml
 

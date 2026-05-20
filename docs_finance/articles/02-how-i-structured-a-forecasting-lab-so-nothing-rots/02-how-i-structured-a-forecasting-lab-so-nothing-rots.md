@@ -123,7 +123,7 @@ This is the discipline. Each experiment ends with:
 - `results/predictions.parquet` — the per-bar test-set predictions.
 - `results/plot.png` — close vs. prediction on the test window.
 
-For the wins, this is obvious. For the losses, it's structurally necessary. [03_gradient_boosting](../../experiments/03_gradient_boosting/) — XGBoost with 31 engineered features — clocks `directional_accuracy = 0.4872`. That's worse than chance. The folder ships the same artifacts as [02_arima](../../experiments/02_arima/): README, metrics, predictions, plot. The next post in the series (Article 4) is *only* able to make the claim "ARIMA(1,1,0) beat XGBoost" because the XGBoost loss is captured in a tidy folder, not lost in a notebook.
+For the wins, this is obvious. For the losses, it's structurally necessary. [03_xgboost](../../experiments/03_xgboost/) — XGBoost with 31 engineered features — clocks `directional_accuracy = 0.4872`. That's worse than chance. The folder ships the same artifacts as [02_arima](../../experiments/02_arima/): README, metrics, predictions, plot. The next post in the series (Article 4) is *only* able to make the claim "ARIMA(1,1,0) beat XGBoost" because the XGBoost loss is captured in a tidy folder, not lost in a notebook.
 
 The lab does not delete failed experiments. They're the most informative folders in the tree. A bad result in `results/metrics.json` is more useful than a good result in `notebooks/scratch_v8.ipynb`, because the bad result can still be compared to next week's model. The good result that lives in a notebook can't.
 
@@ -186,7 +186,7 @@ uv sync
 make fetch
 make 01_baseline
 make 02_arima
-make 03_gradient_boosting
+make 03_xgboost
 make 04_lstm
 make 05_transformer
 make 06_pretrained
@@ -198,7 +198,7 @@ If they don't match, that's a bug in the lab — file an issue. The whole point 
 
 ---
 
-The next post is Article 4 — *ARIMA(1,1,0) beat my XGBoost. One parameter beat thirty-one features.* — and it's where the leaderboard gets a soul. A single AR coefficient on differenced returns from [02_arima](../../experiments/02_arima/) produces a non-trivial directional edge, while XGBoost with 24 lagged returns + rolling stats + volume + OHLC from [03_gradient_boosting](../../experiments/03_gradient_boosting/) lands below chance. The contrast is what makes the lab notebook useful: every later model has something concrete to beat.
+The next post is Article 4 — *ARIMA(1,1,0) beat my XGBoost. One parameter beat thirty-one features.* — and it's where the leaderboard gets a soul. A single AR coefficient on differenced returns from [02_arima](../../experiments/02_arima/) produces a non-trivial directional edge, while XGBoost with 24 lagged returns + rolling stats + volume + OHLC from [03_xgboost](../../experiments/03_xgboost/) lands below chance. The contrast is what makes the lab notebook useful: every later model has something concrete to beat.
 
 ---
 

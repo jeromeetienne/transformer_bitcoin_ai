@@ -72,7 +72,7 @@ Same data slice, (very nearly) same split, same metrics:
 |---|---|---|---|---|---|---|
 | 01_baseline | **260.50** | 396.97 | 0.341 % | NaN | — | — |
 | **02_arima (1, 1, 1)** | **260.50** | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
-| 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
+| 03_xgboost (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | **04_lstm (default)** | 274.02 | 409.66 | 0.360 % | 0.5196 | **+50.34 %** | **+4.95** |
 
 LSTM is the **second-place directional model** behind ARIMA(1, 1, 1) and well clear of XGBoost. It pays for that with ~$14 of MAE vs naive — same pattern as 03 — but extracts a meaningful trading edge that XGBoost on the same data does not.

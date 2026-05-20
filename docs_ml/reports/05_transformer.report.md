@@ -71,12 +71,12 @@ From [experiments/05_transformer/results/btc_4h_2024/metrics.json](../../experim
 |---|---|---|---|---|---|---|
 | [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | 782.42 | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
-| [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
+| [03_xgboost (n_feat=31)](03_xgboost.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 | **05_transformer** | 813.10 | 1 090.78 | 1.0786 % | 0.4913 | 0.4468 | 5.8675 |
 | [06_pretrained (chronos-2)](06_pretrained.report.md) | 519.78 | **780.99** | 0.6721 % | 0.5323 | **0.6975** | **7.5915** |
 
-05_transformer has **the worst MAE in the 4h leaderboard** at 813.10 — **57 % worse than naive's 518.36** and **51 % worse than the next-worst trained model** (03_gradient_boosting at 539.39). dir_acc 0.4913 is below coin-flip and essentially tied with LSTM's 0.4938. Sharpe 5.8675 is decent but trails 06_pretrained's 7.5915 and the ARIMA / XGBoost cluster around 6.0–6.4. **The TFT's extra architectural capacity does not pay off on the 4h training set of 1 448 rows.**
+05_transformer has **the worst MAE in the 4h leaderboard** at 813.10 — **57 % worse than naive's 518.36** and **51 % worse than the next-worst trained model** (03_xgboost at 539.39). dir_acc 0.4913 is below coin-flip and essentially tied with LSTM's 0.4938. Sharpe 5.8675 is decent but trails 06_pretrained's 7.5915 and the ARIMA / XGBoost cluster around 6.0–6.4. **The TFT's extra architectural capacity does not pay off on the 4h training set of 1 448 rows.**
 
 ## Sweep — stale 1h artifact
 

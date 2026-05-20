@@ -92,7 +92,7 @@ Be uncomfortable. A short, sharp paragraph:
 
 ## Key code/file references
 - [experiments/04_lstm/results/metrics.json](../../experiments/04_lstm/results/metrics.json) — Jan–Nov LSTM
-- [experiments/03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json) — Jan–Nov XGBoost
+- [experiments/03_xgboost/results/metrics.json](../../experiments/03_xgboost/results/metrics.json) — Jan–Nov XGBoost
 - [experiments/02_arima/results/metrics.json](../../experiments/02_arima/results/metrics.json) — Jan–Nov ARIMA
 - All the `config.yaml` files — the `start:` / `end:` fields parameterize the window
 

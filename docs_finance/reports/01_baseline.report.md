@@ -50,10 +50,10 @@ Same data slice, same split, same metrics. The four price-aware models all sit w
 |---|---|---|---|---|---|---|
 | **01_baseline** | **260.50** | 396.97 | 0.341 % | NaN | — | — |
 | **02_arima (1, 1, 1)** | 260.50 | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
-| 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
+| 03_xgboost (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
 
-Naive is still **the floor on MAE**, tied with ARIMA(1,1,1). Two models — ARIMA and the LSTM — have built non-trivial directional edges. XGBoost dropped below 50% directional accuracy on this wider window after looking like the leader on a Q1-only test slice; see [03_gradient_boosting.report.md](03_gradient_boosting.report.md) for the regime-fit analysis.
+Naive is still **the floor on MAE**, tied with ARIMA(1,1,1). Two models — ARIMA and the LSTM — have built non-trivial directional edges. XGBoost dropped below 50% directional accuracy on this wider window after looking like the leader on a Q1-only test slice; see [03_xgboost.report.md](03_xgboost.report.md) for the regime-fit analysis.
 
 ## Interpretation
 

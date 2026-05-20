@@ -11,7 +11,7 @@ CONFIG ?= experiments/01_baseline/configs/btc_4h_2024.config.yaml
 
 .PHONY: help fetch lint test clean \
 	01_baseline 02_arima 02_arima_sweep \
-	03_gradient_boosting 03_gradient_boosting_sweep \
+	03_xgboost 03_xgboost_sweep \
 	04_lstm 04_lstm_sweep 04_lstm_optuna 04_lstm_optuna_dashboard \
 	05_transformer 05_transformer_sweep 05_transformer_optuna 05_transformer_optuna_dashboard \
 	06_pretrained 06_pretrained_sweep \
@@ -46,11 +46,11 @@ clean:          ## remove cached data and experiment results
 02_arima_sweep:    ## sweep ARIMA (p, d, q) orders on the same data slice
 	$(MAKE) -C experiments/02_arima sweep
 
-03_gradient_boosting:       ## run experiments/03_gradient_boosting (XGBoost)
-	$(MAKE) -C experiments/03_gradient_boosting run
+03_xgboost:       ## run experiments/03_xgboost (XGBoost)
+	$(MAKE) -C experiments/03_xgboost run
 
-03_gradient_boosting_sweep: ## sweep XGBoost hyperparams on the same data slice
-	$(MAKE) -C experiments/03_gradient_boosting sweep
+03_xgboost_sweep: ## sweep XGBoost hyperparams on the same data slice
+	$(MAKE) -C experiments/03_xgboost sweep
 
 04_lstm:           ## run experiments/04_lstm (Darts BlockRNN-LSTM)
 	$(MAKE) -C experiments/04_lstm run

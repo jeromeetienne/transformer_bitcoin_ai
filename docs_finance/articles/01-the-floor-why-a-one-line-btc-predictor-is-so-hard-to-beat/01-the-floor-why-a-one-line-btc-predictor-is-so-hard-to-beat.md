@@ -121,7 +121,7 @@ So the `NaN` is the line in the sand. **Any model that wants to claim it has lea
 Every other experiment in [transformer_bitcoin_ai](../../) inherits this baseline as the floor:
 
 - [02_arima](../../experiments/02_arima/) — `ARIMA(1,1,0)` lifts dir_acc to 0.5373 with Sharpe +7.52, while barely shaving naive's MAE. Article 4 will dig into this.
-- [03_gradient_boosting](../../experiments/03_gradient_boosting/) — XGBoost with 31 engineered features lands at dir_acc 0.4872 (worse than chance) on the same window. Same article.
+- [03_xgboost](../../experiments/03_xgboost/) — XGBoost with 31 engineered features lands at dir_acc 0.4872 (worse than chance) on the same window. Same article.
 - [04_lstm](../../experiments/04_lstm/), [05_transformer](../../experiments/05_transformer/), [06_pretrained](../../experiments/06_pretrained/) — same story, judged on direction and Sharpe, with MAE kept on the report card so we can also see who is a better denoiser.
 
 The leaderboard column is **directional accuracy**, with Sharpe as the trading-weighted refinement. MAE stays visible — it's still a useful diagnostic for "did this model at least learn the level?" — but it is not the headline. That decision falls out of this article. If MAE_naive is mostly volatility, ranking models by MAE on top of that floor is ranking them by how well they tracked the noise, which is not what we hired them for.

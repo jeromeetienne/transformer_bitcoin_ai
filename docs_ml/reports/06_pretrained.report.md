@@ -57,7 +57,7 @@ From [experiments/06_pretrained/results/btc_4h_2024/metrics.json](../../experime
 |---|---|---|---|---|---|---|
 | [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | 782.42 | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
-| [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
+| [03_xgboost (n_feat=31)](03_xgboost.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 | [05_transformer](05_transformer.report.md) | 813.10 | 1 090.78 | 1.0786 % | 0.4913 | 0.4468 | 5.8675 |
 | **06_pretrained (chronos-2)** | 519.78 | **780.99** | 0.6721 % | 0.5323 | **0.6975** | **7.5915** |

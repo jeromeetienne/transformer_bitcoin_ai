@@ -12,7 +12,7 @@ The headline is the title. A model from 1970 with a single autoregressive coeffi
 | **ARIMA(1,1,0)** | **0.5373** | **+7.52** | **+53.5 %** | $260.49 |
 | **XGBoost (default)** | **0.4872** | **+1.45** | **+8.1 %** | $270.73 |
 
-(Numbers from [02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) row `(1,1,0)` and [03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json).)
+(Numbers from [02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) row `(1,1,0)` and [03_xgboost/results/metrics.json](../../experiments/03_xgboost/results/metrics.json).)
 
 ARIMA wins on every column. XGBoost lands at dir_acc 0.4872 — worse than coin-flip on the bars where it expressed an opinion — while ARIMA(1,1,0) clears 0.53.
 
@@ -49,7 +49,7 @@ The `apply(refit=False)` is the walk-forward harness — it reuses the train-fit
 
 ### `XGBoost` — 31 features, 400 trees, 5 deep
 
-Same data, same split, but a tabular setup. From [03_gradient_boosting/features.py](../../experiments/03_gradient_boosting/features.py):
+Same data, same split, but a tabular setup. From [03_xgboost/features.py](../../experiments/03_xgboost/features.py):
 
 - **24 lagged log-returns** — `r_{T-1}, r_{T-2}, …, r_{T-24}`.
 - **Rolling stats** — rolling mean and rolling std of past returns at windows 6 and 24. (4 features.)
@@ -58,7 +58,7 @@ Same data, same split, but a tabular setup. From [03_gradient_boosting/features.
 
 Total: **31 features**. All shifts are strict `.shift(1)` so a row at bar `T` only sees data from bars strictly before `T`. Same target as ARIMA implicitly models — `r_T = log(close_T / close_{T-1})`. Predictions are reconstructed to price as `close_{T-1} * exp(r_pred)`, so MAE / RMSE / dir_acc / Sharpe stay on the same scale as 01 / 02.
 
-The default model config in [03_gradient_boosting/config.yaml](../../experiments/03_gradient_boosting/config.yaml):
+The default model config in [03_xgboost/config.yaml](../../experiments/03_xgboost/config.yaml):
 
 ```yaml
 model:
@@ -70,7 +70,7 @@ model:
   reg_lambda: 1.0
 ```
 
-400 trees, depth 5, mild regularization. By 2026 standards this is a polite, well-regularized tabular configuration — not a deliberately handicapped one. The XGBoost sweep (`make 03_gradient_boosting_sweep`) explored eight variations; the default is among the best of them.
+400 trees, depth 5, mild regularization. By 2026 standards this is a polite, well-regularized tabular configuration — not a deliberately handicapped one. The XGBoost sweep (`make 03_xgboost_sweep`) explored eight variations; the default is among the best of them.
 
 ---
 
@@ -96,7 +96,7 @@ That sounds reasonable, but it's the wrong inductive bias for the directional me
 
 If the underlying signal is roughly `r_T ≈ 0.03 * r_{T-1} + noise`, then features `r_{T-2}` through `r_{T-24}` are *not signal*. They have, on a long enough training window, near-zero correlation with `r_T`. But on the *training* portion they will, by chance, correlate weakly enough for trees to make money on them.
 
-That's overfitting in slow motion. The XGBoost sweep ([03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv)) confirms it: shallower configurations do less badly. The single best configuration in the sweep is `n_estimators=800, max_depth=5, learning_rate=0.03` at dir_acc 0.5078 / Sharpe +3.93 — better than the default but still well below ARIMA(1,1,0)'s 0.5373 / +7.52. And a depth-3 / 200-tree config sits at 0.5041 / +3.26, again well behind. **Every reasonable XGBoost configuration in the sweep loses to a one-parameter linear model on directional accuracy.**
+That's overfitting in slow motion. The XGBoost sweep ([03_xgboost/results/sweep.csv](../../experiments/03_xgboost/results/sweep.csv)) confirms it: shallower configurations do less badly. The single best configuration in the sweep is `n_estimators=800, max_depth=5, learning_rate=0.03` at dir_acc 0.5078 / Sharpe +3.93 — better than the default but still well below ARIMA(1,1,0)'s 0.5373 / +7.52. And a depth-3 / 200-tree config sits at 0.5041 / +3.26, again well behind. **Every reasonable XGBoost configuration in the sweep loses to a one-parameter linear model on directional accuracy.**
 
 ### Reason 4 — ARIMA's loss is calibrated to the data structure
 
@@ -146,8 +146,8 @@ The whole thing runs in under two minutes:
 ```
 make 02_arima              # default order (1,1,1)
 make 02_arima_sweep        # sweeps (0,1,0) ... (2,1,2) -> results/sweep.csv
-make 03_gradient_boosting  # default XGBoost config
-make 03_gradient_boosting_sweep  # 8 alternative XGBoost configs
+make 03_xgboost  # default XGBoost config
+make 03_xgboost_sweep  # 8 alternative XGBoost configs
 ```
 
 The headline `ARIMA(1,1,0)` result lives in the sweep, not in `metrics.json`. The default config in [02_arima/config.yaml](../../experiments/02_arima/config.yaml) is `order: [1, 1, 1]`, which lands at Sharpe +7.28 / dir_acc 0.5336 — also clearly above XGBoost. We don't ship `(1,1,0)` as the default, even though it's narrowly Sharpe-best in the sweep, because Article 5 (the next post) is the article *about* why picking the order is fraught: AIC says `(0,1,0)` (literally naive), Sharpe says `(1,1,0)`, and that disagreement is the whole post. `(1,1,1)` is the Box-Jenkins default and it's where I stop.
@@ -174,4 +174,4 @@ Article 6 — *Same model, different window, opposite verdict* — will rerun th
 
 ---
 
-*Code: [experiments/02_arima/](../../experiments/02_arima/) · [experiments/03_gradient_boosting/](../../experiments/03_gradient_boosting/) · Repo: [transformer_bitcoin_ai](../../../README.md)*
+*Code: [experiments/02_arima/](../../experiments/02_arima/) · [experiments/03_xgboost/](../../experiments/03_xgboost/) · Repo: [transformer_bitcoin_ai](../../../README.md)*

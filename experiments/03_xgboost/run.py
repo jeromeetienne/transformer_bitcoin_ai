@@ -72,7 +72,7 @@ def main() -> None:
         payload = write_aggregated_metrics_json(
                 results,
                 results_dir / 'metrics.json',
-                experiment='03_gradient_boosting',
+                experiment='03_xgboost',
                 dataset=cfg['dataset'],
                 interval=splits.interval,
         )

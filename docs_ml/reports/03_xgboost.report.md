@@ -1,4 +1,4 @@
-# Report — `03_gradient_boosting`
+# Report — `03_xgboost`
 
 **Run date:** 2026-05-19
 **Status:** completed (single fit on fresh 4h slice; sweep present but stale on 1h — see Sweep section)
@@ -15,11 +15,11 @@ XGBoost(reg:squarederror)
    └── hl_range_{T-1}, oc_body_{T-1}   per-bar OHLC summaries
 ```
 
-Library: **xgboost** (`xgb.XGBRegressor` with `tree_method='hist'`). Walk-forward shape: every feature is `.shift(1)` over its source, so a single `model.predict(X_test)` call *is* a walk-forward of 1-step-ahead forecasts — no per-step refit needed. See [experiments/03_gradient_boosting/README.md](../../experiments/03_gradient_boosting/README.md) for the full narrative.
+Library: **xgboost** (`xgb.XGBRegressor` with `tree_method='hist'`). Walk-forward shape: every feature is `.shift(1)` over its source, so a single `model.predict(X_test)` call *is* a walk-forward of 1-step-ahead forecasts — no per-step refit needed. See [experiments/03_xgboost/README.md](../../experiments/03_xgboost/README.md) for the full narrative.
 
 ## Configuration
 
-From [experiments/03_gradient_boosting/configs/btc_4h_2024.config.yaml](../../experiments/03_gradient_boosting/configs/btc_4h_2024.config.yaml):
+From [experiments/03_xgboost/configs/btc_4h_2024.config.yaml](../../experiments/03_xgboost/configs/btc_4h_2024.config.yaml):
 
 | Field | Value |
 |---|---|
@@ -45,7 +45,7 @@ Total bars: **1 985** (25 rows dropped by lag / rolling-window construction). Tr
 
 ## Results — single fit
 
-From [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json):
+From [experiments/03_xgboost/results/btc_4h_2024/metrics.json](../../experiments/03_xgboost/results/btc_4h_2024/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -64,14 +64,14 @@ From [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../e
 |---|---|---|---|---|---|---|
 | [01_baseline](01_baseline.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | **782.42** | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
-| **03_gradient_boosting (n_feat=31)** | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
+| **03_xgboost (n_feat=31)** | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
 
-03_gradient_boosting is the **cum_ret / Sharpe leader** on the 4h slice but is *third* on MAE — **31 engineered features lose to a 3-parameter ARIMA on point error**, and lose to a *zero*-parameter naive predictor too. The Sharpe lead over ARIMA(1, 1, 1) is narrow (6.42 vs. 6.06); the cum_ret lead is wider (50 % vs. 33 %) because XGBoost's directional confidence translates into more bars long during the rally. The honest reading: extra capacity buys directional aggression at the cost of point-error fit. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
+03_xgboost is the **cum_ret / Sharpe leader** on the 4h slice but is *third* on MAE — **31 engineered features lose to a 3-parameter ARIMA on point error**, and lose to a *zero*-parameter naive predictor too. The Sharpe lead over ARIMA(1, 1, 1) is narrow (6.42 vs. 6.06); the cum_ret lead is wider (50 % vs. 33 %) because XGBoost's directional confidence translates into more bars long during the rally. The honest reading: extra capacity buys directional aggression at the cost of point-error fit. (Experiments 05 and 06 currently report on a stale 1h slice — see [05_transformer.report.md](05_transformer.report.md) and [06_pretrained.report.md](06_pretrained.report.md).)
 
 ## Sweep — 8 (n_estimators, max_depth, learning_rate) configs
 
-> **Stale-slice warning.** The contents of [experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv](../../experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv) date from the previous 1h-data run and have **not** been regenerated since commit 81d4fcb (kline interval switch). The single-fit `metrics.json` above is fresh on 4h (MAE 539). The sweep MAEs (range 269–276) are on the 1h scale and **not directly comparable** to the headline numbers. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 03_gradient_boosting_sweep`.
+> **Stale-slice warning.** The contents of [experiments/03_xgboost/results/btc_4h_2024/sweep.csv](../../experiments/03_xgboost/results/btc_4h_2024/sweep.csv) date from the previous 1h-data run and have **not** been regenerated since commit 81d4fcb (kline interval switch). The single-fit `metrics.json` above is fresh on 4h (MAE 539). The sweep MAEs (range 269–276) are on the 1h scale and **not directly comparable** to the headline numbers. Treat the sweep as a historical hyperparameter-ranking reference until re-run on 4h with `make 03_xgboost_sweep`.
 
 From the stale sweep, sorted in source order, leaders bolded per column:
 
@@ -111,14 +111,14 @@ XGBoost on 31 engineered features takes the 4h Sharpe to **6.4233** and cum_ret 
 
 ## Files produced
 
-- [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json) (fresh 4h)
-- [experiments/03_gradient_boosting/results/btc_4h_2024/predictions.parquet](../../experiments/03_gradient_boosting/results/btc_4h_2024/predictions.parquet)
-- [experiments/03_gradient_boosting/results/btc_4h_2024/plot.png](../../experiments/03_gradient_boosting/results/btc_4h_2024/plot.png)
-- [experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv](../../experiments/03_gradient_boosting/results/btc_4h_2024/sweep.csv) (**stale 1h**)
+- [experiments/03_xgboost/results/btc_4h_2024/metrics.json](../../experiments/03_xgboost/results/btc_4h_2024/metrics.json) (fresh 4h)
+- [experiments/03_xgboost/results/btc_4h_2024/predictions.parquet](../../experiments/03_xgboost/results/btc_4h_2024/predictions.parquet)
+- [experiments/03_xgboost/results/btc_4h_2024/plot.png](../../experiments/03_xgboost/results/btc_4h_2024/plot.png)
+- [experiments/03_xgboost/results/btc_4h_2024/sweep.csv](../../experiments/03_xgboost/results/btc_4h_2024/sweep.csv) (**stale 1h**)
 
 ## How to reproduce
 
 ```
-make 03_gradient_boosting
-make 03_gradient_boosting_sweep
+make 03_xgboost
+make 03_xgboost_sweep
 ```

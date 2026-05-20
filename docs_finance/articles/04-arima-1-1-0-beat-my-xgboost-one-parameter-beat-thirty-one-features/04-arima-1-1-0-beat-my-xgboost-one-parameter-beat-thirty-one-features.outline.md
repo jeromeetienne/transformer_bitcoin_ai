@@ -1,7 +1,7 @@
 # Outline — ARIMA(1,1,0) beat my XGBoost. One parameter beat thirty-one features.
 
 ## One-line pitch
-A single AR(1) coefficient on differenced returns produces `dir_acc 0.5373 / Sharpe +7.52` ([02_arima sweep](../../experiments/02_arima/results/sweep.csv) row `(1,1,0)`), while XGBoost with 24 lagged returns + rolling stats + volume + OHLC lands at `0.4872 / +1.45` (default config from [03_gradient_boosting](../../experiments/03_gradient_boosting/results/metrics.json)). One parameter beat thirty-one features.
+A single AR(1) coefficient on differenced returns produces `dir_acc 0.5373 / Sharpe +7.52` ([02_arima sweep](../../experiments/02_arima/results/sweep.csv) row `(1,1,0)`), while XGBoost with 24 lagged returns + rolling stats + volume + OHLC lands at `0.4872 / +1.45` (default config from [03_xgboost](../../experiments/03_xgboost/results/metrics.json)). One parameter beat thirty-one features.
 
 ## Audience
 Quant-curious ML engineers who default to "throw a gradient booster at it" on any tabular-feeling forecasting problem, plus anyone who has ever heard "ARIMA is dead, use deep learning". Series readers who saw Article 3 set up the dir_acc / Sharpe leaderboard and want to see it used.
@@ -24,7 +24,7 @@ On a near-random-walk like 1h BTC, the dominant signal is a *very* mild autoregr
 | **ARIMA(1,1,0)** | **0.5373** | **+7.52** | $260.49 | 1608 |
 | **XGBoost** | **0.4872** | **+1.45** | $270.73 | 1603 |
 
-(Numbers from [02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) and [03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json).)
+(Numbers from [02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) and [03_xgboost/results/metrics.json](../../experiments/03_xgboost/results/metrics.json).)
 
 ARIMA wins on every leaderboard column. XGBoost is *below 0.50* on dir_acc — worse than chance on the bars where it expresses an opinion.
 
@@ -38,7 +38,7 @@ ARIMA wins on every leaderboard column. XGBoost is *below 0.50* on dir_acc — w
 
 ### 4. What XGBoost is being asked to do
 - Target: the same log-return as ARIMA models implicitly.
-- Features ([features.py](../../experiments/03_gradient_boosting/features.py)):
+- Features ([features.py](../../experiments/03_xgboost/features.py)):
   - 24 lagged log-returns: r_{T-1}, ..., r_{T-24}
   - Rolling mean + rolling std of returns at windows 6 and 24
   - log1p(volume) of bar T-1
@@ -67,13 +67,13 @@ This is the meat of the article.
 ### 7. What "feature engineering didn't help" actually means
 Be careful — this is the line every reader will quote. Three honest qualifiers:
 1. **At this signal-to-noise ratio.** On daily oil prices or monthly retail sales, feature engineering on rolling stats and exogenous variables routinely helps. The claim is specific to 1h BTC log-returns.
-2. **At this capacity.** A *constrained* gradient booster (max_depth 1, n_estimators 50, lr 0.01) — basically, hand-built linear regression — would land closer to ARIMA. The XGBoost sweep ([sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv)) confirms shallower trees do less badly. Capacity is the issue.
+2. **At this capacity.** A *constrained* gradient booster (max_depth 1, n_estimators 50, lr 0.01) — basically, hand-built linear regression — would land closer to ARIMA. The XGBoost sweep ([sweep.csv](../../experiments/03_xgboost/results/sweep.csv)) confirms shallower trees do less badly. Capacity is the issue.
 3. **At this loss.** Squared error on r_T means the model is rewarded for matching magnitude. On a near-zero-mean target, that's a recipe for a model that's right on the L2 metric but wrong on the directional one. A directional / quantile loss would partly fix this.
 
 ### 8. Reproducing it
 ```
 make 02_arima_sweep   # populates results/sweep.csv with (0,1,0)..(2,1,2)
-make 03_gradient_boosting
+make 03_xgboost
 ```
 - For ARIMA, the default config is `order: [1, 1, 1]` (Sharpe +7.28 / dir_acc 0.5336). The (1,1,0) result quoted above lives in the sweep — Article 5 will explore why we don't ship (1,1,0) as the default.
 - For XGBoost, default config is `n_estimators: 400, max_depth: 5, learning_rate: 0.05`.
@@ -90,9 +90,9 @@ make 03_gradient_boosting
 ## Key code/file references
 - [experiments/02_arima/run.py](../../experiments/02_arima/run.py) — the 100-line ARIMA pipeline
 - [experiments/02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) — `(1,1,0)` row is the headline
-- [experiments/03_gradient_boosting/features.py](../../experiments/03_gradient_boosting/features.py) — 31 features
-- [experiments/03_gradient_boosting/run.py](../../experiments/03_gradient_boosting/run.py) — XGBoost wrapper
-- [experiments/03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json) — the headline 0.4872 / +1.45
+- [experiments/03_xgboost/features.py](../../experiments/03_xgboost/features.py) — 31 features
+- [experiments/03_xgboost/run.py](../../experiments/03_xgboost/run.py) — XGBoost wrapper
+- [experiments/03_xgboost/results/metrics.json](../../experiments/03_xgboost/results/metrics.json) — the headline 0.4872 / +1.45
 
 ## Tone notes
 - Lab-notebook honest. Don't gloat — XGBoost is a fine tool, this domain is just hostile.

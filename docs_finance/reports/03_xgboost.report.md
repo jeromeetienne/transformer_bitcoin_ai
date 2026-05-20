@@ -1,4 +1,4 @@
-# Report — `03_gradient_boosting`
+# Report — `03_xgboost`
 
 **Run date:** 2026-04-29
 **Status:** completed (single fit + 8-config sweep)
@@ -18,7 +18,7 @@ Library: `xgboost.XGBRegressor` (tree_method='hist'). Why predict the **return**
 
 ## Configuration
 
-From [experiments/03_gradient_boosting/config.yaml](../../experiments/03_gradient_boosting/config.yaml):
+From [experiments/03_xgboost/config.yaml](../../experiments/03_xgboost/config.yaml):
 
 | Field | Value |
 |---|---|
@@ -46,7 +46,7 @@ Total bars: **8 040**. After feature warmup (24-bar rolling window + 1-bar diff 
 
 ## Results — single fit
 
-From [experiments/03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json):
+From [experiments/03_xgboost/results/metrics.json](../../experiments/03_xgboost/results/metrics.json):
 
 | Metric | Value |
 |---|---|
@@ -65,7 +65,7 @@ Same data slice, (very nearly) same split, same metrics:
 |---|---|---|---|---|---|---|
 | 01_baseline | **260.50** | 396.97 | 0.341 % | NaN | — | — |
 | **02_arima (1, 1, 1)** | **260.50** | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
-| **03_gradient_boosting (default)** | 270.73 | 414.07 | 0.354 % | **0.4872** | +8.09 % | +1.45 |
+| **03_xgboost (default)** | 270.73 | 414.07 | 0.354 % | **0.4872** | +8.09 % | +1.45 |
 | 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
 
 03 falls **below coin-flip on directional accuracy** in this widened window (0.4872) — a sharp reversal of the Q1-only result, where 03 led the leaderboard at 0.5185 / Sharpe +4.69. This is the regime-fit story:
@@ -77,7 +77,7 @@ Same model, same hyperparameters, same code. What changed is the test window. Q1
 
 ## Hyperparameter sweep
 
-From [experiments/03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv) — same data slice, 8 configs, all using fixed `subsample=0.8`, `colsample_bytree=0.8`, `reg_lambda=1.0`, `random_state=42`:
+From [experiments/03_xgboost/results/sweep.csv](../../experiments/03_xgboost/results/sweep.csv) — same data slice, 8 configs, all using fixed `subsample=0.8`, `colsample_bytree=0.8`, `reg_lambda=1.0`, `random_state=42`:
 
 | n_estimators | max_depth | learning_rate | MAE | RMSE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|---|
@@ -123,14 +123,14 @@ The productive next directions for this branch of the lineup:
 
 ## Files produced
 
-- [experiments/03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json) — single fit
-- [experiments/03_gradient_boosting/results/predictions.parquet](../../experiments/03_gradient_boosting/results/predictions.parquet)
-- [experiments/03_gradient_boosting/results/plot.png](../../experiments/03_gradient_boosting/results/plot.png)
-- [experiments/03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv) — 8-config sweep
+- [experiments/03_xgboost/results/metrics.json](../../experiments/03_xgboost/results/metrics.json) — single fit
+- [experiments/03_xgboost/results/predictions.parquet](../../experiments/03_xgboost/results/predictions.parquet)
+- [experiments/03_xgboost/results/plot.png](../../experiments/03_xgboost/results/plot.png)
+- [experiments/03_xgboost/results/sweep.csv](../../experiments/03_xgboost/results/sweep.csv) — 8-config sweep
 
 ## How to reproduce
 
 ```
-make 03_gradient_boosting        # single fit using params in config.yaml
-make 03_gradient_boosting_sweep  # 8-config (n_estimators × depth × lr) sweep
+make 03_xgboost        # single fit using params in config.yaml
+make 03_xgboost_sweep  # 8-config (n_estimators × depth × lr) sweep
 ```

@@ -48,13 +48,13 @@ uv sync
 make fetch
 make 01_baseline
 make 02_arima
-make 03_gradient_boosting
+make 03_xgboost
 …
 ```
 The point: the article 1 numbers, on a fresh clone, on a different machine. That's the bar.
 
 ### 7. Negative results as first-class artifacts
-- 03_gradient_boosting (XGBoost dir_acc 0.4872 — worse than chance) ships exactly the same files as 02_arima (sharpe +7.28). Both have a README, both have a metrics.json, both are linked from the leaderboard.
+- 03_xgboost (XGBoost dir_acc 0.4872 — worse than chance) ships exactly the same files as 02_arima (sharpe +7.28). Both have a README, both have a metrics.json, both are linked from the leaderboard.
 - The repo does not delete failed experiments. They're the most informative folders in the tree.
 - The series posts (especially Articles 4 and 9) are essentially "let me explain why this folder underperformed" — those posts only exist because the underperformance is *captured*, not lost.
 
