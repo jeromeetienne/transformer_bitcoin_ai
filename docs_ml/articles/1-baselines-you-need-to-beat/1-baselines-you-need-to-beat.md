@@ -1,4 +1,4 @@
-# Baselines You Need to Beat
+# The Dumbest Model That Beats Most Others: Why Baselines Are Everything
 
 Before any model runs, there is a number to beat. Not a number from the literature, not a number from a Kaggle leaderboard, but the number produced by the dumbest possible forecaster applied to this exact dataset on this exact test slice. That number is the floor. Every subsequent model in this series is measured against it, not against the void.
 

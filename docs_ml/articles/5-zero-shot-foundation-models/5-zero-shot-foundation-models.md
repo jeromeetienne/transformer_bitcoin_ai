@@ -1,4 +1,4 @@
-# Zero-Shot Foundation Models
+# A Model That Has Never Seen Bitcoin Has Opinions About It
 
 Every model in the previous four articles learned from Bitcoin. The naive predictor needed no data at all, but it also expressed no opinion about what BTC specifically does. ARIMA fit its three parameters to BTC's training slice. XGBoost fit thousands of tree splits to BTC features. The LSTM and TFT fit tens of thousands of neural network weights to BTC log-returns.
 

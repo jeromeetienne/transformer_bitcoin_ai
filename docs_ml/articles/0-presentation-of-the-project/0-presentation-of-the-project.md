@@ -1,4 +1,4 @@
-# Predicting Bitcoin Price with Machine Learning: A Project Overview
+# Can Machine Learning Predict Bitcoin? Here Is What Actually Happened
 
 You can buy Bitcoin at 3 a.m. on a Sunday. You can sell it during a holiday, a war, a bank run. No market maker goes home for the weekend; no circuit breaker pauses the tape. The result is a dataset that is simultaneously one of the richest and noisiest in all of quantitative finance — twenty-four hours a day, seven days a week, with tick-level liquidity and volatility that would make an equity trader nervous.
 

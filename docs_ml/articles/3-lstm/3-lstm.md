@@ -1,4 +1,4 @@
-# LSTM: Learning Sequences
+# I Gave a Neural Network a Memory. It Still Could Not Predict Bitcoin.
 
 XGBoost saw 31 features per bar and made an unordered prediction: a row of numbers goes in, a number comes out. The order in which those lag features were computed was implicit in their names — `r_lag_1` is more recent than `r_lag_24` — but nothing in the model architecture enforced that. A tree doesn't care which column comes first; it treats every feature as an independent axis in feature space.
 

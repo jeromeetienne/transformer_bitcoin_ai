@@ -1,4 +1,4 @@
-# Fine-tuned Foundation Models
+# When You Teach the Giant: Fine-tuning Foundation Models on Bitcoin
 
 Article 6 established that zero-shot foundation models — applied to Bitcoin without any BTC-specific training — produce results near the naive floor. The pretrained prior over "what time series look like" does not transfer cleanly to an asset whose hourly returns are close to white noise. That was the honest result, and it was informative.
 

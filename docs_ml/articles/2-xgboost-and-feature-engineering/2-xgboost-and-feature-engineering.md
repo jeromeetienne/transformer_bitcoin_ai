@@ -1,4 +1,4 @@
-# XGBoost and Feature Engineering
+# XGBoost Walks In, Humans Do the Thinking: Feature Engineering for Bitcoin
 
 The first two experiments told us what a model that knows nothing can do. Article 1 (naive last-value) told us the zero-parameter floor; article 2 (ARIMA) told us the three-parameter linear floor. Both came in near $338 MAE on hourly BTC, which is the efficient-market hypothesis doing its job: if a linear function of recent prices could predict the next bar, arbitrageurs would have closed that gap long ago.
 

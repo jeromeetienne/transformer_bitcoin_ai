@@ -1,4 +1,4 @@
-# Transformer: Attention on Time Series
+# The Architecture That Took Over AI, Now Trying to Read Bitcoin's Mind
 
 The LSTM solved one problem elegantly — sequential processing with gated memory — and created another: to make a prediction, it must compress the entire input window into a single fixed-size vector. For a 48-bar input and a 32-dimensional hidden state, the entire history of the last two days of Bitcoin trading has to fit in 32 numbers. If a bar 40 steps back contains a relevant signal — say, the start of a volatility cluster that is still playing out — the LSTM must have held that information alive through 39 forget-gate applications.
 
