@@ -143,7 +143,9 @@ def _run_one_symbol(
                         'mae': mae(close_test, pred_close),
                         'rmse': rmse(close_test, pred_close),
                         'mape': mape(close_test, pred_close),
-                        'directional_accuracy': directional_accuracy(close_test, pred_close, ref_test),
+                        'directional_accuracy': directional_accuracy(
+                                close_test, pred_close, ref_test,
+                        ),
                         'cumulative_return': cumulative_return(strat),
                         'annualized_sharpe': annualized_sharpe(strat, ppy),
                 },
@@ -155,7 +157,7 @@ def _run_one_symbol(
 def _plot(results: list[PerSymbolResult], interval: str, out_path: Path) -> None:
         n = len(results)
         fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
-        for ax, r in zip(axes[:, 0], results):
+        for ax, r in zip(axes[:, 0], results, strict=True):
                 close_test = r.predictions['close']
                 pred_close = r.predictions['pred']
                 ax.plot(close_test.index, close_test.values, label='close', linewidth=1)

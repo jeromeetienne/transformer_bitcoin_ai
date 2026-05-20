@@ -13,9 +13,12 @@ from btc_ai.data.dataset import (
 class PerSymbolFrame:
         market: str
         symbol: str
-        df: pd.DataFrame                       # concat of train+validation+test for this symbol
-        val_start_ts: pd.Timestamp | None      # tz-naive; None if this symbol has no validation selector
-        test_start_ts: pd.Timestamp            # tz-naive; never None (every test symbol has >=1 test selector)
+        # concat of train+validation+test for this symbol
+        df: pd.DataFrame
+        # tz-naive; None if this symbol has no validation selector
+        val_start_ts: pd.Timestamp | None
+        # tz-naive; never None (every test symbol has >=1 test selector)
+        test_start_ts: pd.Timestamp
 
 
 def build_per_symbol_frames(splits: DatasetSplits) -> list[PerSymbolFrame]:

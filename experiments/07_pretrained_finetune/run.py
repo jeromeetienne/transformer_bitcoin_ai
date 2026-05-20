@@ -528,7 +528,7 @@ def _plot_test(out: TrainOutput, path: Path) -> None:
 	weights_source = 'best-val_loss' if out.restored_best_checkpoint else 'last-epoch'
 	n = len(out.results)
 	fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
-	for ax, r in zip(axes[:, 0], out.results):
+	for ax, r in zip(axes[:, 0], out.results, strict=True):
 		preds = r.predictions
 		ax.plot(preds.index, preds['close'].values, label='close', linewidth=1)
 		ax.plot(

@@ -321,7 +321,7 @@ def main() -> None:
 def _plot(results: list[PerSymbolResult], interval: str, out_path: Path) -> None:
 	n = len(results)
 	fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
-	for ax, r in zip(axes[:, 0], results):
+	for ax, r in zip(axes[:, 0], results, strict=True):
 		close_test = r.predictions['close']
 		pred_close = r.predictions['pred']
 		ax.plot(close_test.index, close_test.values, label='close', linewidth=1)

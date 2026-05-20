@@ -311,7 +311,7 @@ def _plot(
 	q_lo, _, q_hi = quantiles
 	n = len(results)
 	fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
-	for ax, r in zip(axes[:, 0], results):
+	for ax, r in zip(axes[:, 0], results, strict=True):
 		preds = r.predictions
 		ax.plot(preds.index, preds['close'].values, label='close', linewidth=1)
 		ax.plot(

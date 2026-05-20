@@ -151,7 +151,7 @@ def _plot(
 ) -> None:
         n = len(results)
         fig, axes = plt.subplots(n, 1, figsize=(10, 4 * n), squeeze=False)
-        for ax, r in zip(axes[:, 0], results):
+        for ax, r in zip(axes[:, 0], results, strict=True):
                 test = r.predictions['close']
                 pred = r.predictions['pred']
                 ax.plot(test.index, test.values, label='close', linewidth=1)
