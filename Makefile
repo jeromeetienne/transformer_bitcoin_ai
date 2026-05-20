@@ -10,7 +10,7 @@
 CONFIG ?= experiments/01_baseline_naive/configs/btc_4h_2024.config.yaml
 
 .PHONY: help fetch lint test clean \
-	01_baseline_naive 01b_moving_average 02_arima 02_arima_sweep \
+	01_baseline_naive 02_arima 02_arima_sweep \
 	03_gradient_boosting 03_gradient_boosting_sweep \
 	04_lstm 04_lstm_sweep 04_lstm_optuna 04_lstm_optuna_dashboard \
 	05_transformer 05_transformer_sweep 05_transformer_optuna 05_transformer_optuna_dashboard \
@@ -39,9 +39,6 @@ clean:          ## remove cached data and experiment results
 
 01_baseline_naive:  ## run experiments/01_baseline_naive
 	$(MAKE) -C experiments/01_baseline_naive run
-
-01b_moving_average: ## run experiments/01b_moving_average
-	$(MAKE) -C experiments/01b_moving_average run
 
 02_arima:          ## run experiments/02_arima
 	$(MAKE) -C experiments/02_arima run

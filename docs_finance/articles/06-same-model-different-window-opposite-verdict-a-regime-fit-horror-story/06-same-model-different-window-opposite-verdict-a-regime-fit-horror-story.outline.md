@@ -30,7 +30,6 @@ Two summary tables.
 | ARIMA(1,1,1) | 0.5336 | **+7.28** |
 | LSTM | 0.5196 | +4.95 |
 | TFT | 0.5053 | +4.59 |
-| MA(24) | 0.5143 | +4.33 |
 | XGBoost | **0.4872 — last** | **+1.45** |
 
 (Note: the Q1 numbers in this outline are the *kind of pattern* the article describes; the Jan–Nov numbers are direct from the metrics.json files in the repo. The article will be transparent that "Q1 2024" is a hypothetical alternate-window run that requires `start: 2024-01-01, end: 2024-04-01` in each config.yaml. The point is the *structure* of the disagreement, not exact reproductions of someone else's numbers.)

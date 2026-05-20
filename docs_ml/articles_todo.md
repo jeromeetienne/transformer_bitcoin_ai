@@ -7,7 +7,7 @@ Working tracker for the six-article ML series (one project-intro piece plus five
 | #   | Article                                 | Source experiments                                                   | Status      |
 | --- | --------------------------------------- | -------------------------------------------------------------------- | ----------- |
 | 0   | Presentation of the project             | — (meta-article, no model)                                           | not started |
-| 1   | Baselines you need to beat              | `01_baseline_naive`, `01b_moving_average`, `02_arima`                | not started |
+| 1   | Baselines you need to beat              | `01_baseline_naive`, `02_arima`                                      | not started |
 | 2   | XGBoost and feature engineering         | `03_gradient_boosting`                                               | not started |
 | 3   | LSTM                                    | `04_lstm`                                                            | not started |
 | 4   | Transformer                             | `05_transformer`                                                     | not started |
@@ -55,7 +55,7 @@ The curtain-raiser. Frames the question (forecasting BTC log-returns as an ML pr
 
 Working title: *"Forecasting Bitcoin with ML, Part 1: the baselines you need to beat."*
 
-The first model article. Defines target and evaluation specifics, and runs naive / moving-average / ARIMA as the floor every later model must clear.
+The first model article. Defines target and evaluation specifics, and runs naive / ARIMA as the floor every later model must clear.
 
 ## Article 2 — XGBoost and feature engineering
 

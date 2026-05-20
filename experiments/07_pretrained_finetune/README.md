@@ -171,7 +171,6 @@ The headline table compares 07 fine-tuned (encoder-only, chronos-2-small, extend
 | family | trained on slice | probabilistic | mae (4h test) | directional_accuracy | annualized_sharpe |
 |---|---|---|---|---|---|
 | 01 naive last-value | — | — | (see 01) | — | — |
-| 01b moving average | — | — | (see 01b) | — | — |
 | 02 ARIMA(3,1,3) | yes | — | (see 02) | — | (see 02) |
 | 03 XGBoost | yes | — | (see 03) | — | (see 03) |
 | 04 LSTM | yes | — | (see 04) | — | (see 04) |

@@ -42,7 +42,7 @@ From [experiments/03_gradient_boosting/config.yaml](../../experiments/03_gradien
 
 Total bars: **8 040**. After feature warmup (24-bar rolling window + 1-bar diff → 25 rows dropped): **8 015**. Train: **6 412**. Test: **1 603**. Feature columns: **31** (24 lagged returns + 2 windows × 2 stats + log_volume + hl_range + oc_body).
 
-> **Slice note.** 01/01b/02/04 use 1 608 test bars; 03 uses 1 603 (warmup cost). Headline metrics are still directly comparable; the gap is well within sample noise.
+> **Slice note.** 01/02/04 use 1 608 test bars; 03 uses 1 603 (warmup cost). Headline metrics are still directly comparable; the gap is well within sample noise.
 
 ## Results — single fit
 
@@ -64,7 +64,6 @@ Same data slice, (very nearly) same split, same metrics:
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
 | 01_baseline_naive | **260.50** | 396.97 | 0.341 % | NaN | — | — |
-| 01b_moving_average (window=24) | 756.19 | 1 100.93 | 0.990 % | 0.5143 | +25.67 % | +4.33 |
 | **02_arima (1, 1, 1)** | **260.50** | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
 | **03_gradient_boosting (default)** | 270.73 | 414.07 | 0.354 % | **0.4872** | +8.09 % | +1.45 |
 | 04_lstm (Darts BlockRNN-LSTM) | 274.02 | 409.66 | 0.360 % | 0.5196 | +50.34 % | +4.95 |
@@ -115,7 +114,7 @@ The productive next directions for this branch of the lineup:
 
 ## Caveats
 
-- **5-bar slice mismatch with 01/01b/02/04** — feature warmup costs 25 rows. Test set is 1 603 bars vs. the others' 1 608. Within sample noise.
+- **5-bar slice mismatch with 01/02/04** — feature warmup costs 25 rows. Test set is 1 603 bars vs. the others' 1 608. Within sample noise.
 - **Single train/test split, no rolling-origin CV.** The sweep already shows hyperparameter rankings can shift on a different test window — same shape applies to model rankings.
 - **No early stopping or validation set.** `n_estimators` is fixed; the sweep tries a few values directly.
 - **Each prediction is independent — no multi-step rollout.** Equivalent to ARIMA's `dynamic=False` walk-forward.

@@ -71,7 +71,6 @@ Same data slice, same split, same metrics:
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
 | 01_baseline_naive | … | … | … | NaN | — | — |
-| 01b_moving_average (window=N) | … | … | … | … | … | … |
 | 02_arima (1, 1, 1) | … | … | … | … | … | … |
 | **${experiment_id}** | **…** | **…** | … | **…** | **…** | **…** |
 | …other siblings… | … | … | … | … | … | … |

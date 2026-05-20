@@ -5,7 +5,7 @@
 # encodings of hour-of-day and day-of-week, which are deterministic and known at any
 # future timestamp. Predictions are reconstructed to price as
 # close_pred = close_{T-1} * exp(r_pred) so MAE/RMSE/MAPE/dir_acc/Sharpe are directly
-# comparable to 01/01b/02/03/04.
+# comparable to 01/02/03/04.
 
 dataset: btc_4h_2024  # → configs/datasets/btc_4h_2024.dataset.yaml
 

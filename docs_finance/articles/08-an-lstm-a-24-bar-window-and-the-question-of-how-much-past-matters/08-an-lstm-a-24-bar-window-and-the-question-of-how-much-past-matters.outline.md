@@ -30,7 +30,6 @@ On hourly BTC log-returns, the LSTM lands at `dir_acc 0.5196 / Sharpe +4.95` ([0
 |---|---:|---:|---:|---:|
 | ARIMA(1,1,1) | 0.5336 | +7.28 | +53.0 % | $260.50 |
 | **LSTM** | **0.5196** | **+4.95** | **+50.3 %** | **$274.02** |
-| MA(24) | 0.5143 | +4.33 | +25.7 % | $756.19 |
 | XGBoost | 0.4872 | +1.45 | +8.1 % | $270.73 |
 | Naive | NaN | — | — | $260.50 |
 
@@ -77,9 +76,9 @@ Two clean observations:
 - The MAE numbers tell the same story: ARIMA's $260.50 is essentially the volatility floor; LSTM's $274.02 is slightly above it, meaning LSTM's predictions are wrong by *more* than the per-bar volatility. That's a sign the model is producing predictions whose magnitude is overstated.
 - Same picture as Article 4's XGBoost: capacity hurts when SNR is low.
 
-### 8. Why the LSTM still beat MA(24) and XGBoost
-- The two structural improvements over MA(24): the LSTM's predicted move can be small (closer to ARIMA's signed-but-tiny output) and signed in the right direction more often than mean-reversion suggests. dir_acc 0.5196 vs MA(24)'s 0.5143 is small but real.
-- vs XGBoost: the LSTM models the *order* of past bars; XGBoost saw an unordered bag of 31 features. On a near-random-walk, "order" is a weak prior — but it's the right one.
+### 8. Why the LSTM still beat XGBoost
+- The LSTM models the *order* of past bars; XGBoost saw an unordered bag of 31 features. On a near-random-walk, "order" is a weak prior — but it's the right one.
+- The LSTM's predicted move can be small (closer to ARIMA's signed-but-tiny output), which lines the strategy gate up more conservatively than a tree-leaf average.
 
 ### 9. The optuna run that didn't change the verdict
 - [optuna_sweep.py](../../experiments/04_lstm/optuna_sweep.py) is wired in. The TPE sampler explores the same 4-D space (`icl`, `hidden_dim`, `n_rnn_layers`, `dropout`).

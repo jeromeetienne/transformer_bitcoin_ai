@@ -185,7 +185,6 @@ cd transformer_bitcoin_ai
 uv sync
 make fetch
 make 01_baseline_naive
-make 01b_moving_average
 make 02_arima
 make 03_gradient_boosting
 make 04_lstm
@@ -199,7 +198,7 @@ If they don't match, that's a bug in the lab — file an issue. The whole point 
 
 ---
 
-The next post is Article 3 — *The mean-reverter that fixed my metrics* — and it's where the leaderboard gets a soul. The naive baseline from Article 1 returns `NaN` for directional accuracy. The 24-bar moving-average baseline from [01b_moving_average](../../experiments/01b_moving_average/) is *worse* than naive on MAE — and yet it's structurally necessary, because it's the first model in the lineup that's willing to commit to a direction. Without it, there's no leaderboard column to populate. With it, every later model has something to beat.
+The next post is Article 4 — *ARIMA(1,1,0) beat my XGBoost. One parameter beat thirty-one features.* — and it's where the leaderboard gets a soul. A single AR coefficient on differenced returns from [02_arima](../../experiments/02_arima/) produces a non-trivial directional edge, while XGBoost with 24 lagged returns + rolling stats + volume + OHLC from [03_gradient_boosting](../../experiments/03_gradient_boosting/) lands below chance. The contrast is what makes the lab notebook useful: every later model has something concrete to beat.
 
 ---
 

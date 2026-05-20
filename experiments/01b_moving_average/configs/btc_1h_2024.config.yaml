@@ -1,6 +1,0 @@
-# Simple moving-average baseline — predicts close[t] = mean(close[t-window : t]).
-# Sibling of 01_baseline_naive. Uses the same data slice; only the predictor differs.
-# A window of 1 degenerates to naive last-value (sanity check).
-
-dataset: btc_1h_2024     # → configs/datasets/btc_1h_2024.dataset.yaml
-window: 24               # MA window size, in bars. 24 = one day for 1h data (shorter wins at 1h; matched 96 underperformed).

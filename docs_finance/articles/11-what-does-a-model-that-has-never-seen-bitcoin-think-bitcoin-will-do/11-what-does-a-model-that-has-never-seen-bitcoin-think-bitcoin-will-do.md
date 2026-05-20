@@ -59,7 +59,6 @@ Both backends are univariate (no covariates), zero-shot (no fine-tuning), runnin
 |---|---:|---:|---:|---|
 | ARIMA(1,1,1) | 0.5336 | +7.28 | $260.50 | 3 |
 | LSTM | 0.5196 | +4.95 | $274.02 | ~22k |
-| MA(24) | 0.5143 | +4.33 | $756.19 | 0 |
 | TFT | 0.5053 | +4.59 | $373.70 | ~50k |
 | **Chronos-2** | **0.5019** | **+4.29** | **$262.27** | **120 M** |
 | XGBoost | 0.4872 | +1.45 | $270.73 | 31 feats × 400 trees |
@@ -177,7 +176,7 @@ Combining Article 4 (XGBoost lost), Article 8 (LSTM lost less), Article 9 (TFT l
 1. **The directional signal in hourly BTC log-returns is small.** ARIMA's AR(1) coefficient on differenced returns produces dir_acc 0.5336 — three percentage points above chance. That's the size of the signal.
 2. **Models with the right inductive bias for the signal extract some of it.** ARIMA bakes "tiny linear thing on differences" into its parameterization. LSTM does too (less directly).
 3. **Models without the right inductive bias don't extract more.** Trees that look at unordered features, transformers that look for cyclicality, foundation models that have a generic prior — none of them did better on directional accuracy than ARIMA.
-4. **More capacity on the wrong inductive bias produces no improvement and sometimes regression.** Chronos-2 (120 M) ties chance. TimesFM 2.5 (200 M) lands below chance. XGBoost (the deepest config, 800 trees × 7 deep) lands below MA(24).
+4. **More capacity on the wrong inductive bias produces no improvement and sometimes regression.** Chronos-2 (120 M) ties chance. TimesFM 2.5 (200 M) lands below chance. XGBoost (the deepest config, 800 trees × 7 deep) still sits below ARIMA's dir_acc and Sharpe.
 
 That's the data-is-the-bottleneck claim, made with the cleanest possible evidence. The next models worth trying are not bigger; they're *differently informed*. ARIMAX with a real exogenous covariate (funding rate, perp basis), or a model on a different time scale where the signal-to-noise might be more favorable. Article 13's roadmap will lay this out.
 

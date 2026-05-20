@@ -135,7 +135,7 @@ This is also why it's structurally important to *report* uncertainty rather than
 
 Looking back across the lineup:
 
-- **Naive, MA(24), XGBoost** — point predictors by construction. No quantile head.
+- **Naive, XGBoost** — point predictors by construction. No quantile head.
 - **ARIMA** — `statsmodels`'s `ARIMAResults` carries predictive variance. The lab's [02_arima/run.py](../../experiments/02_arima/run.py) doesn't currently extract it; pulling `extended.get_prediction(...)`'s `conf_int(alpha=0.2)` would give a Gaussian 80 % band for free. Article 13's roadmap commits to adding it.
 - **LSTM, TFT** — Darts supports `QuantileRegression` likelihood for both `BlockRNNModel` and `TFTModel`. The current configs use MSE loss; switching to a quantile head is a one-line `likelihood=QuantileRegression([0.1, 0.5, 0.9])` change. The model would have to be retrained, but the harness is already there.
 - **Foundation models (this article)** — probabilistic by default. That's why we have a probabilistic article *now* and not earlier.

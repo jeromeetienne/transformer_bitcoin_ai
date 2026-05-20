@@ -13,9 +13,6 @@ The naive last-value baseline ([01_baseline_naive](../experiments/01_baseline_na
 **2. "How I structured a forecasting lab so nothing rots"**
 Engineering post about the repo, not the models: numbered self-contained experiments, YAML as single source of truth, shared `src/btc_ai/eval/` so every leaderboard row is comparable, Makefile-as-API, uv for envs. Includes the "every experiment ships a report, even the negative ones" discipline — the lab notebook is the product, not the leaderboard. Aimed at ML practitioners who keep meaning to clean up their notebook graveyard.
 
-**3. "The mean-reverter that fixed my metrics"**
-[01b_moving_average](../experiments/01b_moving_average/) is 3× worse than naive on MAE but unlocks directional accuracy (naive returns NaN — it never expresses a direction). Use it to introduce dir_acc, cumulative return, Sharpe, and why having a *bad* baseline is structurally necessary.
-
 **4. "ARIMA(1,1,0) beat my XGBoost. One parameter beat thirty-one features."**
 The headline result from [02_arima](../experiments/02_arima/) and [03_gradient_boosting](../experiments/03_gradient_boosting/): a single AR coefficient on differenced returns produces dir_acc 0.5373 / Sharpe +7.52, while XGBoost with 24 lagged returns + rolling stats + volume + OHLC lands at 0.4872 / +1.45. Discuss signal-to-noise, what trees can and can't do (no extrapolation → predict returns, reconstruct price), and what "feature engineering didn't help" actually means.
 

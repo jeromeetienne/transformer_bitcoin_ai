@@ -1,7 +1,7 @@
 # Outline — Your Sharpe is mostly drift: separating skill from beta in a rising market
 
 ## One-line pitch
-The cleanest cross-cutting insight, made unmissable by [06_pretrained](../../experiments/06_pretrained/): a `dir_acc 0.5019` zero-shot model posts `Sharpe +4.29` on this window. **A chance-level directional signal produced a number that looks like skill.** Any long/flat strategy that *occasionally* says "long" — even at random — captures part of BTC's $58k → $96k rally. Apply the same lens retroactively to LSTM (+4.95), TFT (+4.59), MA(24) (+4.33). Only ARIMA's +7.28 has a directional signal strong enough to be doing real work on top of the drift.
+The cleanest cross-cutting insight, made unmissable by [06_pretrained](../../experiments/06_pretrained/): a `dir_acc 0.5019` zero-shot model posts `Sharpe +4.29` on this window. **A chance-level directional signal produced a number that looks like skill.** Any long/flat strategy that *occasionally* says "long" — even at random — captures part of BTC's $58k → $96k rally. Apply the same lens retroactively to LSTM (+4.95) and TFT (+4.59). Only ARIMA's +7.28 has a directional signal strong enough to be doing real work on top of the drift.
 
 ## Audience
 Anyone who has ever read a "AI predicts BTC, +X % Sharpe" headline and not paused. Series readers who've watched the Sharpe column accumulate across articles 3, 4, 8, 9 and want to know how much of any of it is real.
@@ -36,16 +36,14 @@ Sharpe in a rising market is **noisy times signal plus a drift baseline**. The d
 |---|---:|---:|---:|---:|
 | ARIMA(1,1,1) | 0.5336 | +7.28 | ~+4 | **substantial** |
 | LSTM | 0.5196 | +4.95 | ~+4 | small |
-| MA(24) | 0.5143 | +4.33 | ~+4 | tiny |
 | TFT | 0.5053 | +4.59 | ~+4 | indistinguishable from drift |
 | Chronos-2 | 0.5019 | +4.29 | ~+4 | indistinguishable from drift |
 
 (The "drift floor" column is illustrative; the real estimate would come from a Monte Carlo simulation of random-direction strategies on the same test slice. The article will be transparent about that.)
 
 ### 5. The retrospective humbling
-- LSTM's +4.95 — the deep-learning headline from Article 8 — is mostly drift. The skill component is small (~+1 in Sharpe units) and the directional accuracy edge over MA(24) is half a percentage point.
+- LSTM's +4.95 — the deep-learning headline from Article 8 — is mostly drift. The skill component is small (~+1 in Sharpe units).
 - TFT's +4.59 (Article 9) is *indistinguishable from drift*. The transformer's contribution to the Sharpe headline is approximately zero; the +4.59 is what a chance-level directional model gets on a rallying window.
-- MA(24)'s +4.33 (Article 3) is also indistinguishable from drift.
 - The number that survives this lens is **ARIMA(1,1,1) +7.28**. A dir_acc of 0.5336 — three percentage points above chance — produces a Sharpe well above the drift floor. *That* is real signal.
 
 ### 6. Why this matters for paper-reading

@@ -21,13 +21,12 @@ Run `make 04_lstm`. From [04_lstm/results/metrics.json](../../experiments/04_lst
 }
 ```
 
-Behind ARIMA(1,1,1) on every column except the third decimal of MAE, comfortably ahead of XGBoost and MA(24).
+Behind ARIMA(1,1,1) on every column except the third decimal of MAE, comfortably ahead of XGBoost.
 
 | Model | dir_acc | Sharpe | cum_ret | MAE |
 |---|---:|---:|---:|---:|
 | ARIMA(1,1,1) | 0.5336 | +7.28 | +53.0 % | $260.50 |
 | **LSTM** | **0.5196** | **+4.95** | **+50.3 %** | **$274.02** |
-| MA(24) | 0.5143 | +4.33 | +25.7 % | $756.19 |
 | XGBoost | 0.4872 | +1.45 | +8.1 % | $270.73 |
 | Naive | NaN | — | — | $260.50 |
 
@@ -116,7 +115,7 @@ That's a guess, not a proof — the cleanest validation would be a regime-contro
 
 ## An ablation worth running: the covariate channel
 
-The committed config has `use_volume: true, use_ohlc: true`. It's tempting to ask: how much of the LSTM's edge over MA(24) comes from past covariates rather than from the recurrent target alone?
+The committed config has `use_volume: true, use_ohlc: true`. It's tempting to ask: how much of the LSTM's edge over XGBoost comes from past covariates rather than from the recurrent target alone?
 
 The setup is a one-line edit in [04_lstm/config.yaml](../../experiments/04_lstm/config.yaml):
 
@@ -132,14 +131,9 @@ The point of mentioning it: the lab is structured to make this kind of ablation 
 
 ---
 
-## Why the LSTM still beat MA(24) and XGBoost
+## Why the LSTM still beat XGBoost
 
-Two structural improvements over the moving average:
-
-- **The LSTM's predicted move can be small.** MA(24) always predicts the rolling mean — a moderate distance from the last bar, in whichever direction the rolling mean is pulled by the trend. The LSTM can predict "near zero" when its hidden state is uncertain, which lines up the strategy gate more conservatively.
-- **The LSTM's directional opinions track recent dynamics better than rolling-mean inversion.** MA(24)'s direction is hardcoded "go long when price is below rolling mean". The LSTM can learn "go long when recent returns have been small but positive" or other slightly more nuanced rules. dir_acc 0.5196 vs 0.5143 is small but real.
-
-vs XGBoost: the LSTM models the *order* of past bars; XGBoost saw an unordered bag of 31 features. On a near-random-walk, "order" is a weak prior — but it's the right one. Trees see the same numbers shuffled and split on whichever feature is most useful in-sample; the LSTM sees them as a sequence and learns recurrent dynamics that respect lag structure.
+The LSTM models the *order* of past bars; XGBoost saw an unordered bag of 31 features. On a near-random-walk, "order" is a weak prior — but it's the right one. Trees see the same numbers shuffled and split on whichever feature is most useful in-sample; the LSTM sees them as a sequence and learns recurrent dynamics that respect lag structure. The LSTM's predicted move can also be small — predicting "near zero" when its hidden state is uncertain lines the strategy gate up more conservatively than a tree-leaf average.
 
 The remaining gap to ARIMA is a different story, told above: capacity hurts at low SNR, and the AR(1)-on-differences inductive bias is the right one for hourly BTC.
 

@@ -9,13 +9,12 @@ The headline is the title. A model from 1970 with a single autoregressive coeffi
 | Model | dir_acc | Sharpe | cum_ret | MAE |
 |---|---|---|---|---|
 | Naive (Article 1) | NaN | NaN | — | $260.50 |
-| MA(24) (Article 3) | 0.5143 | +4.33 | +25.7 % | $756.19 |
 | **ARIMA(1,1,0)** | **0.5373** | **+7.52** | **+53.5 %** | $260.49 |
 | **XGBoost (default)** | **0.4872** | **+1.45** | **+8.1 %** | $270.73 |
 
 (Numbers from [02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) row `(1,1,0)` and [03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json).)
 
-ARIMA wins on every column. XGBoost is *below the moving-average baseline* on directional accuracy — Article 3 set MA(24) at 0.5143, and a 31-feature gradient booster sat down at 0.4872 (worse than coin-flip on the bars where it expressed an opinion).
+ARIMA wins on every column. XGBoost lands at dir_acc 0.4872 — worse than coin-flip on the bars where it expressed an opinion — while ARIMA(1,1,0) clears 0.53.
 
 This article is about how that happens, and what it actually means by "feature engineering didn't help".
 
@@ -57,7 +56,7 @@ Same data, same split, but a tabular setup. From [03_gradient_boosting/features.
 - **Volume** — `log1p(volume_{T-1})`. (1 feature.)
 - **OHLC** — high-low range and close-open body of bar T-1. (2 features.)
 
-Total: **31 features**. All shifts are strict `.shift(1)` so a row at bar `T` only sees data from bars strictly before `T`. Same target as ARIMA implicitly models — `r_T = log(close_T / close_{T-1})`. Predictions are reconstructed to price as `close_{T-1} * exp(r_pred)`, so MAE / RMSE / dir_acc / Sharpe stay on the same scale as 01 / 01b / 02.
+Total: **31 features**. All shifts are strict `.shift(1)` so a row at bar `T` only sees data from bars strictly before `T`. Same target as ARIMA implicitly models — `r_T = log(close_T / close_{T-1})`. Predictions are reconstructed to price as `close_{T-1} * exp(r_pred)`, so MAE / RMSE / dir_acc / Sharpe stay on the same scale as 01 / 02.
 
 The default model config in [03_gradient_boosting/config.yaml](../../experiments/03_gradient_boosting/config.yaml):
 
@@ -97,7 +96,7 @@ That sounds reasonable, but it's the wrong inductive bias for the directional me
 
 If the underlying signal is roughly `r_T ≈ 0.03 * r_{T-1} + noise`, then features `r_{T-2}` through `r_{T-24}` are *not signal*. They have, on a long enough training window, near-zero correlation with `r_T`. But on the *training* portion they will, by chance, correlate weakly enough for trees to make money on them.
 
-That's overfitting in slow motion. The XGBoost sweep ([03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv)) confirms it: shallower configurations do less badly. The single best configuration in the sweep is `n_estimators=800, max_depth=5, learning_rate=0.03` at dir_acc 0.5078 / Sharpe +3.93 — better than the default but still below MA(24). And a depth-3 / 200-tree config sits at 0.5041 / +3.26, again below MA(24). **Every reasonable XGBoost configuration in the sweep loses to a 24-bar moving average on directional accuracy.**
+That's overfitting in slow motion. The XGBoost sweep ([03_gradient_boosting/results/sweep.csv](../../experiments/03_gradient_boosting/results/sweep.csv)) confirms it: shallower configurations do less badly. The single best configuration in the sweep is `n_estimators=800, max_depth=5, learning_rate=0.03` at dir_acc 0.5078 / Sharpe +3.93 — better than the default but still well below ARIMA(1,1,0)'s 0.5373 / +7.52. And a depth-3 / 200-tree config sits at 0.5041 / +3.26, again well behind. **Every reasonable XGBoost configuration in the sweep loses to a one-parameter linear model on directional accuracy.**
 
 ### Reason 4 — ARIMA's loss is calibrated to the data structure
 

@@ -79,12 +79,12 @@ The runner raises early if both are off — TFT cannot run without future covari
 
 Compare against earlier experiments **on the same data slice**:
 
-| | Naive | MA(24) | ARIMA(1,1,1) | XGBoost | LSTM | **TFT** |
-|---|---|---|---|---|---|---|
-| Family | last-value | rolling mean | linear, stationary | tabular GBT | recurrent NN | **attention NN** |
-| Past covariates | — | — | — | engineered lags | OHLCV | OHLCV |
-| Future covariates | — | — | — | — | — | **hour/dow cyclical** |
-| Headline number | MAE floor | MAE ceiling | best Sharpe so far | — | beat naive on MAE | *this experiment* |
+| | Naive | ARIMA(1,1,1) | XGBoost | LSTM | **TFT** |
+|---|---|---|---|---|---|
+| Family | last-value | linear, stationary | tabular GBT | recurrent NN | **attention NN** |
+| Past covariates | — | — | engineered lags | OHLCV | OHLCV |
+| Future covariates | — | — | — | — | **hour/dow cyclical** |
+| Headline number | MAE floor | best Sharpe so far | — | beat naive on MAE | *this experiment* |
 
 What the numbers tell you:
 

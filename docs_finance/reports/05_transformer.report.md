@@ -80,14 +80,13 @@ Same data slice, same split (1 607 test bars from 2024-09 to 2024-11), same metr
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
 | 01_baseline_naive | **260.50** | **396.97** | **0.341 %** | NaN | — | — |
-| 01b_moving_average (window=24) | 756.19 | 1 100.93 | 0.990 % | 0.5143 | +25.67 % | +4.33 |
 | **02_arima (1, 1, 1)** | **260.50** | **396.97** | **0.341 %** | **0.5336** | **+53.02 %** | **+7.28** |
 | 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | **04_lstm (default)** | 274.02 | 409.66 | 0.360 % | **0.5196** | **+50.34 %** | **+4.95** |
 | **05_transformer (default)** | 373.70 | 546.68 | 0.488 % | 0.5053 | +29.57 % | +4.59 |
 | 05_transformer (best, 48/64/8/1/0.1) | 392.46 | 574.22 | 0.513 % | **0.5109** | +30.76 % | +4.83 |
 
-TFT is the **worst-MAE model in the lineup other than MA(24)** and the **third-place directional model**, behind ARIMA(1, 1, 1) and LSTM. It does have a positive trading Sharpe, but the gap to LSTM (~0.4 Sharpe, ~$100 MAE) is real, not noise.
+TFT is the **worst-MAE model in the lineup** and the **third-place directional model**, behind ARIMA(1, 1, 1) and LSTM. It does have a positive trading Sharpe, but the gap to LSTM (~0.4 Sharpe, ~$100 MAE) is real, not noise.
 
 This is genuinely surprising. The expectation going in was that TFT — more capacity, attention over arbitrary lags, per-step variable selection, *and* a future-covariate channel that LSTM didn't have — would at minimum match LSTM. It doesn't. The most likely explanations, in order of plausibility:
 
@@ -113,7 +112,7 @@ From [experiments/05_transformer/results/sweep.csv](../../experiments/05_transfo
 
 ## Interpretation
 
-1. **No TFT config beats naive on MAE.** The smallest MAE in the sweep ($373.70, the default) is **$113 worse than naive's $260.50**. No other model in the lineup — not even MA(24) — leaves this much MAE on the table after MA. The transformer is paying a substantial volatility-penalty for its capacity without an offsetting directional gain.
+1. **No TFT config beats naive on MAE.** The smallest MAE in the sweep ($373.70, the default) is **$113 worse than naive's $260.50**. No other model in the lineup leaves this much MAE on the table. The transformer is paying a substantial volatility-penalty for its capacity without an offsetting directional gain.
 
 2. **The Sharpe leader is the *wider* config, not the *deeper* config.** `(48, 64, 8, 1, 0.1)` — single LSTM layer, doubled `hidden_size`, doubled attention heads — is the clear Sharpe and dir_acc winner at +4.83 / 0.5109. The deepest configs `(48, 32, 4, **2**, 0.2)` and `(96, 64, 8, **2**, 0.2)` are both worse on Sharpe than the default. **More LSTM depth in the TFT encoder hurts on this dataset.** The pattern is consistent with point 1 above: capacity helps as long as it goes into width; depth on a 5 789-bar training set just learns noise.
 

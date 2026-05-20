@@ -47,11 +47,11 @@ order: [2, 1, 2]   # richer; risks overfitting on short samples
 
 Compare `mae` against the previous experiments **on the same data slice**:
 
-| | Naive | MA(24) | ARIMA(p,d,q) |
-|---|---|---|---|
-| What | `pred = close[t-1]` | `pred = mean(prev 24)` | learned from data |
-| MAE on default slice | 337.89 (the floor) | 1012.86 | *this experiment* |
-| Directional accuracy | NaN (no opinion) | ~0.48 (slight anti-trend) | *this experiment* |
+| | Naive | ARIMA(p,d,q) |
+|---|---|---|
+| What | `pred = close[t-1]` | learned from data |
+| MAE on default slice | 337.89 (the floor) | *this experiment* |
+| Directional accuracy | NaN (no opinion) | *this experiment* |
 
 What the numbers tell you:
 

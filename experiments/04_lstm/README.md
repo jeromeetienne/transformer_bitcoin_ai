@@ -75,12 +75,12 @@ covariates:
 
 Compare against earlier experiments **on the same data slice**:
 
-| | Naive | MA(24) | ARIMA(1,1,1) | XGBoost | **LSTM** |
-|---|---|---|---|---|---|
-| Family | last-value | rolling mean | linear, stationary | tabular GBT | **recurrent NN** |
-| Sees ordered history | — | window mean only | yes (linear) | engineered lags | **yes (learned)** |
-| Past covariates | — | — | — | engineered scalars | **OHLCV time series** |
-| Headline number | MAE floor | MAE ceiling | best Sharpe so far | first non-linear | *this experiment* |
+| | Naive | ARIMA(1,1,1) | XGBoost | **LSTM** |
+|---|---|---|---|---|
+| Family | last-value | linear, stationary | tabular GBT | **recurrent NN** |
+| Sees ordered history | — | yes (linear) | engineered lags | **yes (learned)** |
+| Past covariates | — | — | engineered scalars | **OHLCV time series** |
+| Headline number | MAE floor | best Sharpe so far | first non-linear | *this experiment* |
 
 What the numbers tell you:
 

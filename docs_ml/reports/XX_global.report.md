@@ -1,22 +1,21 @@
 # Report — `XX_global` — cross-experiment comparison
 
 **Run date:** 2026-05-19
-**Status:** synthesis of seven per-experiment reports under [docs_ml/reports/](.)
+**Status:** synthesis of six per-experiment reports under [docs_ml/reports/](.)
 
 ## What this report is
 
-A single-file leaderboard and analytical comparison of every experiment in the repo: [01_baseline_naive](01_baseline_naive.report.md), [01b_moving_average](01b_moving_average.report.md), [02_arima](02_arima.report.md), [03_gradient_boosting](03_gradient_boosting.report.md), [04_lstm](04_lstm.report.md), [05_transformer](05_transformer.report.md), [06_pretrained](06_pretrained.report.md). Every number cited here is verbatim from the corresponding `experiments/${id}/results/btc_4h_2024/metrics.json`; the per-experiment reports are the audit trail.
+A single-file leaderboard and analytical comparison of every experiment in the repo: [01_baseline_naive](01_baseline_naive.report.md), [02_arima](02_arima.report.md), [03_gradient_boosting](03_gradient_boosting.report.md), [04_lstm](04_lstm.report.md), [05_transformer](05_transformer.report.md), [06_pretrained](06_pretrained.report.md). Every number cited here is verbatim from the corresponding `experiments/${id}/results/btc_4h_2024/metrics.json`; the per-experiment reports are the audit trail.
 
 Sections progress from raw numbers to analytical observations. The intent is not to repeat what the per-experiment reports already say but to put the rows side-by-side and read the *gradient* across the ladder of model classes.
 
 ## Data-slice picture
 
-All seven experiments report on the same 4h slice now. The recent re-run of 05_transformer and 06_pretrained closed the 1h/4h divergence that earlier versions of this report flagged.
+All six experiments report on the same 4h slice now. The recent re-run of 05_transformer and 06_pretrained closed the 1h/4h divergence that earlier versions of this report flagged.
 
 | # | `interval` (config) | `rows_total` (artefact) | `rows_test` | `metrics.json` mtime | Slice |
 |---|---|---|---|---|---|
 | 01_baseline_naive | 4h | 2 010 | 402 | 2026-05-19 | fresh 4h |
-| 01b_moving_average | 4h | 2 010 | 402 | 2026-05-19 | fresh 4h |
 | 02_arima | 4h | 2 010 | 402 | 2026-05-19 | fresh 4h |
 | 03_gradient_boosting | 4h | 1 985 | 397 | 2026-05-19 | fresh 4h (but `sweep.csv` still stale 1h) |
 | 04_lstm | 4h | 2 009 | 401 | 2026-05-19 | fresh 4h |
@@ -25,12 +24,11 @@ All seven experiments report on the same 4h slice now. The recent re-run of 05_t
 
 The 4h test slice covers approximately **Sep 25 → Dec 1 2024** (last 20 % of the 11-month range) — the strong post-election BTC rally. **The sweep artifacts for 03 and 05 are still stale on 1h**, so their hyperparameter-ranking tables remain non-comparable to the headline 4h numbers; 06 has no sweep at all yet.
 
-## Leaderboard — 4h slice (all 7 experiments)
+## Leaderboard — 4h slice (all 6 experiments)
 
 | Experiment | MAE (USD) | RMSE (USD) | MAPE | dir_acc | cum_ret | annualized_sharpe |
 |---|---|---|---|---|---|---|
 | [01_baseline_naive](01_baseline_naive.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
-| [01b_moving_average (window=24)](01b_moving_average.report.md) | 1 905.27 | 2 580.61 | 2.4782 % | 0.4801 | 0.0511 | 1.3003 |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | 782.42 | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
 | [03_gradient_boosting (n_feat=31)](03_gradient_boosting.report.md) | 539.39 | 795.07 | 0.7008 % | 0.5365 | 0.5042 | 6.4233 |
 | [04_lstm (default)](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |
@@ -39,7 +37,7 @@ The 4h test slice covers approximately **Sep 25 → Dec 1 2024** (last 20 % of t
 
 **Who leads what:** the leaderboard splits cleanly into two halves. **02_arima(1, 1, 1) leads MAE, MAPE, and dir_acc** with three estimated parameters. **06_pretrained (Chronos-2) leads RMSE, cum_ret, and Sharpe** with 120 M zero-shot parameters and no training on Bitcoin. No model leads all six columns; the split corresponds to "best at average point error and direction" (02) vs. "best at tail behaviour and trading-aware metrics" (06).
 
-**Three observations the table makes load-bearing.** First, the **MAE band 517 → 540** contains five of the seven rows; on a ~400-bar test slice these gaps are nearly within sweep noise. Second, **05_transformer's MAE 813.10 is the outlier** — 57 % above naive, in a leaderboard otherwise within $25 of naive. Third, **06_pretrained's RMSE is lower than ARIMA's** even though its MAE is higher: the foundation model has fewer big-error bars than every trained model.
+**Three observations the table makes load-bearing.** First, the **MAE band 517 → 540** contains five of the six rows; on a ~400-bar test slice these gaps are nearly within sweep noise. Second, **05_transformer's MAE 813.10 is the outlier** — 57 % above naive, in a leaderboard otherwise within $25 of naive. Third, **06_pretrained's RMSE is lower than ARIMA's** even though its MAE is higher: the foundation model has fewer big-error bars than every trained model.
 
 ## The complexity-doesn't-pay arc (with one big asterisk)
 
@@ -48,7 +46,6 @@ Ordering by approximate trainable-parameter count:
 | Row | Approx. trainable params | Sharpe | dir_acc | MAE (USD) |
 |---|---|---|---|---|
 | 01_baseline_naive | 0 | — | NaN | 518.36 |
-| 01b_moving_average (24) | 0 (window only) | 1.3003 | 0.4801 | 1 905.27 |
 | 02_arima (1, 1, 1) | 3 | 6.0569 | **0.5547** | **517.16** |
 | 02_arima (3, 1, 3)* | 7 | 6.4015 | 0.5274 | 514.07 |
 | 03_gradient_boosting | ~31 feat × 400 trees × depth 5 | 6.4233 | 0.5365 | 539.39 |
@@ -82,8 +79,7 @@ Pair-by-pair walk of the ladder, one transition at a time (each row adds **one**
 
 | Pair | What's added | Δ MAE | Δ dir_acc | Δ Sharpe | Verdict |
 |---|---|---|---|---|---|
-| 01 → 01b | a 24-bar rolling mean | +1 386.91 | from NaN to 0.4801 | from — to 1.3003 | mostly hurt (MAE blows up on trending regime) |
-| 01b → 02(1,1,1) | linear AR + MA, differencing | −1 388.11 | +0.0746 | +4.7566 | huge help |
+| 01 → 02(1,1,1) | linear AR + MA, differencing | −1.20 | from NaN to 0.5547 | from — to 6.0569 | huge help |
 | 02(1,1,1) → 03 | non-linear trees + 31 engineered features | +22.23 | −0.0182 | +0.3664 | mixed (trade MAE for Sharpe) |
 | 03 → 04 | recurrent state, raw past covariates instead of engineered features | −17.10 | −0.0427 | −2.1573 | hurt |
 | 04 → 05 | attention + future covariates + variable selection | +290.81 | −0.0025 | +1.6015 | mixed (Sharpe up but MAE explodes) |
@@ -92,7 +88,7 @@ Pair-by-pair walk of the ladder, one transition at a time (each row adds **one**
 
 \* From [02's sweep](02_arima.report.md#sweep--12-p-d-q-orders).
 
-Two transitions help every metric (`01b → 02`, `05 → 06`). One hurts every metric (`03 → 04`). The rest are mixed. Notably, **`04 → 05` adds Sharpe at the cost of an enormous MAE penalty** — the TFT trades point precision for directional aggressiveness, an asymmetric exchange that lands well on the trading metric.
+Two transitions help every metric (`01 → 02`, `05 → 06`). One hurts every metric (`03 → 04`). The rest are mixed. Notably, **`04 → 05` adds Sharpe at the cost of an enormous MAE penalty** — the TFT trades point precision for directional aggressiveness, an asymmetric exchange that lands well on the trading metric.
 
 ## AIC vs. out-of-sample
 
@@ -124,7 +120,6 @@ Two checks land cleanly in the artefacts:
 
 Two checks that *don't* exist yet but would be useful:
 
-- 01b at `window=1` should equal 01 (naive) MAE. Not tested in either run.
 - A `walk-forward with retraining` shadow of any 4h experiment, to verify that `retrain=False` doesn't materially change the Sharpe on this slice. Not done.
 
 ## Per-bar Sharpe significance
@@ -133,15 +128,14 @@ The per-experiment reports compute `per-bar Sharpe = annualized / √ppy` and co
 
 | Experiment | Sharpe (annualized) | √ppy | per-bar Sharpe | √N_test | SE | ratio (σ) |
 |---|---|---|---|---|---|---|
-| 01b_moving_average | 1.3003 | √2190 ≈ 46.79 | 0.0278 | √402 ≈ 20.05 | 0.0499 | 0.56 |
-| 02_arima (1, 1, 1) | 6.0569 | 46.79 | 0.1295 | 20.05 | 0.0499 | **2.59** |
+| 02_arima (1, 1, 1) | 6.0569 | √2190 ≈ 46.79 | 0.1295 | √402 ≈ 20.05 | 0.0499 | **2.59** |
 | 02_arima (3, 1, 3) | 6.4015 | 46.79 | 0.1369 | 20.05 | 0.0499 | **2.74** |
 | 03_gradient_boosting | 6.4233 | 46.79 | 0.1373 | √397 ≈ 19.92 | 0.0502 | **2.74** |
 | 04_lstm | 4.2660 | 46.79 | 0.0912 | √401 ≈ 20.02 | 0.0499 | 1.83 |
 | 05_transformer | 5.8675 | 46.79 | 0.1254 | 20.02 | 0.0499 | **2.51** |
 | 06_pretrained (chronos-2) | 7.5915 | 46.79 | 0.1622 | 20.05 | 0.0499 | **3.25** |
 
-**Five rows clear the 2.5 σ threshold**: ARIMA(1, 1, 1), ARIMA(3, 1, 3), XGBoost, TFT, and Chronos-2. **06_pretrained at 3.25 σ is the strongest signal in the series**, followed by ARIMA(3, 1, 3) / XGBoost (tied at 2.74) and ARIMA(1, 1, 1) (2.59). LSTM (1.83) and MA(24) (0.56) are weak.
+**Five rows clear the 2.5 σ threshold**: ARIMA(1, 1, 1), ARIMA(3, 1, 3), XGBoost, TFT, and Chronos-2. **06_pretrained at 3.25 σ is the strongest signal in the series**, followed by ARIMA(3, 1, 3) / XGBoost (tied at 2.74) and ARIMA(1, 1, 1) (2.59). LSTM (1.83) is weak.
 
 This is a coarse approximation — it assumes per-bar strategy returns are i.i.d., which they almost certainly aren't on hourly-to-4h crypto. Volatility clustering inflates the true SE. The σ ratios above are upper bounds on the real significance.
 
@@ -169,7 +163,6 @@ Operational follow-ups surfaced by the per-experiment reports:
 - **Re-run `make 05_transformer_sweep`** on 4h so the TFT's hyperparameter rankings catch up to its single fit.
 - **Re-run `make 03_gradient_boosting_sweep`** on 4h. The current sweep.csv is stale on 1h; default-config Sharpe on 4h (6.42) is wildly different from default-config Sharpe on 1h (1.45), and the sweep cannot rank 4h hyperparameter choices in its current form.
 - **Run `make 06_pretrained_sweep`** to surface the Chronos ↔ TimesFM head-to-head the experiment was designed to expose. The single 06 run here is Chronos-2 only; the design intent is a side-by-side with TimesFM 2.5 on the same slice.
-- **A `window=1` row in 01b** would close the trivial sanity check (MA(1) should equal naive). Not on disk.
 - **Out-of-regime test.** Run a sibling experiment family on, e.g., 2022-Q2 (sideways) or 2022-Q4 (down-trending) and re-rank. Every positive Sharpe in this report — especially 06's 3.25 σ lead — needs that test before "skill" replaces "skill in this regime."
 - **Probabilistic-interval analysis.** Only 06 produces q10 / q50 / q90 bands. Calibration is not summarised in `metrics.json`. A future global report could add an interval-coverage column (fraction of bars where `close ∈ [pred_lo, pred_hi]`).
 - **Article series**, per [docs_ml/articles_todo.md](../articles_todo.md). The reports above are the raw material for those articles; this synthesis is the closing summary the series will eventually mirror.
@@ -188,7 +181,6 @@ Operational follow-ups surfaced by the per-experiment reports:
 Per-experiment reports (audit trail):
 
 - [01_baseline_naive.report.md](01_baseline_naive.report.md)
-- [01b_moving_average.report.md](01b_moving_average.report.md)
 - [02_arima.report.md](02_arima.report.md)
 - [03_gradient_boosting.report.md](03_gradient_boosting.report.md)
 - [04_lstm.report.md](04_lstm.report.md)
@@ -201,8 +193,8 @@ Raw `metrics.json` / `sweep.csv` for each experiment under `experiments/${id}/re
 
 ```
 # 1. Make sure every per-experiment artefact is fresh.
-make 01_baseline_naive && make 01b_moving_average && make 02_arima
-make 03_gradient_boosting && make 04_lstm && make 05_transformer && make 06_pretrained
+make 01_baseline_naive && make 02_arima && make 03_gradient_boosting
+make 04_lstm && make 05_transformer && make 06_pretrained
 # (re-run sweeps too if they are stale)
 
 # 2. Regenerate per-experiment reports per Prompt 1 in docs_ml/report_generation.md.

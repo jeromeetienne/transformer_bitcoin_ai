@@ -17,17 +17,16 @@ On a near-random-walk like 1h BTC, the dominant signal is a *very* mild autoregr
 - XGBoost: 31 features, 400 trees, depth 5, regularization, the works. ~1 minute fit.
 - The headline numbers, side-by-side. The reader should be a little uncomfortable.
 
-### 2. The leaderboard, post-Article 3
+### 2. The leaderboard
 | Model | dir_acc | Sharpe | MAE | rows |
 |---|---|---|---|---|
 | Naive | NaN | NaN | $260.50 | 1608 |
-| MA(24) | 0.5143 | +4.33 | $756.19 | 1608 |
 | **ARIMA(1,1,0)** | **0.5373** | **+7.52** | $260.49 | 1608 |
 | **XGBoost** | **0.4872** | **+1.45** | $270.73 | 1603 |
 
 (Numbers from [02_arima/results/sweep.csv](../../experiments/02_arima/results/sweep.csv) and [03_gradient_boosting/results/metrics.json](../../experiments/03_gradient_boosting/results/metrics.json).)
 
-ARIMA wins on every leaderboard column. XGBoost is *below MA(24)* on dir_acc — which Article 3 set up as the bar a serious model has to clear.
+ARIMA wins on every leaderboard column. XGBoost is *below 0.50* on dir_acc — worse than chance on the bars where it expresses an opinion.
 
 ### 3. What ARIMA(1,1,0) actually is
 - `(p, d, q) = (1, 1, 0)`. Translation:

@@ -28,14 +28,13 @@ That number lands in this leaderboard position:
 |---|---:|---:|---:|---:|
 | ARIMA(1,1,1) | 0.5336 | +7.28 | +53.0 % | $260.50 |
 | LSTM | 0.5196 | +4.95 | +50.3 % | $274.02 |
-| MA(24) | 0.5143 | +4.33 | +25.7 % | $756.19 |
 | **TFT** | **0.5053** | **+4.59** | **+29.6 %** | **$373.70** |
 | XGBoost | 0.4872 | +1.45 | +8.1 % | $270.73 |
 | Naive | NaN | — | — | $260.50 |
 
 (Sep–Nov 2024 window, same as every other article in this series.)
 
-The transformer the repo was nominally built around finishes fourth out of five trained models, behind the LSTM, behind the moving-average baseline on directional accuracy, and well behind a linear model from 1970. That is the most honest thing this lab could possibly publish, so this is the post that publishes it.
+The transformer the repo was nominally built around finishes third out of four trained models, behind the LSTM and well behind a linear model from 1970. That is the most honest thing this lab could possibly publish, so this is the post that publishes it.
 
 ---
 

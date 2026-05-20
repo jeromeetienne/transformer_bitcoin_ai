@@ -2,7 +2,7 @@
 # Target is the bar-T log-return r_T = log(close_T / close_{T-1}); every feature
 # uses only information observed strictly before T (no current-bar leakage).
 # Predictions are reconstructed to price as close_pred = close_{T-1} * exp(r_pred)
-# so MAE/RMSE/MAPE/dir_acc are directly comparable to 01/01b/02.
+# so MAE/RMSE/MAPE/dir_acc are directly comparable to 01/02.
 
 dataset: btc_4h_2024     # → configs/datasets/btc_4h_2024.dataset.yaml
 

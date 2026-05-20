@@ -69,7 +69,6 @@ So the drift floor on this window is roughly **Sharpe +4 ± 1**. Anything in `[+
 |---|---:|---:|---:|---:|
 | **ARIMA(1,1,1)** | **0.5336** | **+7.28** | ~+4 | **+3 (substantial)** |
 | LSTM | 0.5196 | +4.95 | ~+4 | +1 (small) |
-| MA(24) | 0.5143 | +4.33 | ~+4 | ≈0 (tiny) |
 | TFT | 0.5053 | +4.59 | ~+4 | ≈0 (drift-equivalent) |
 | Chronos-2 | 0.5019 | +4.29 | ~+4 | ≈0 (drift-equivalent) |
 
@@ -77,7 +76,7 @@ So the drift floor on this window is roughly **Sharpe +4 ± 1**. Anything in `[+
 
 Three things this lens does to the prior leaderboard:
 
-1. **The LSTM's +4.95 — the deep-learning headline from Article 8 — is mostly drift.** The skill component above the floor is roughly +1 in Sharpe units. The directional-accuracy edge over MA(24) is half a percentage point. Both are real but small.
+1. **The LSTM's +4.95 — the deep-learning headline from Article 8 — is mostly drift.** The skill component above the floor is roughly +1 in Sharpe units. Real but small.
 2. **The TFT's +4.59 (Article 9) is indistinguishable from drift.** The transformer's contribution to the Sharpe number is approximately zero on this window; the +4.59 is what a chance-level directional model gets in a rallying market. That doesn't change Article 9's verdict (TFT lost to LSTM on directional accuracy), but it makes the absolute number even less meaningful than the relative ranking suggested.
 3. **The number that survives this lens is ARIMA(1,1,1)'s +7.28.** A directional accuracy of 0.5336 — three percentage points above chance — produces a Sharpe well above the drift floor. The skill component is the largest in the lineup; ARIMA is the only model in the trained set whose Sharpe is *detectably* doing something on top of the rally.
 
@@ -147,7 +146,7 @@ For the lab artifacts: a small follow-up I'll commit before Article 13 is a `dri
 After this lens:
 - **ARIMA(1,1,1)** is the only model in the trained lineup whose Sharpe is detectably above the drift floor. Three numbers, one positive AR(1) coefficient, and a handful of percentage points of directional skill above chance. That's real.
 - **The LSTM** has a small skill component on top of the drift. It's positive but not large.
-- **MA(24), TFT, Chronos-2 (and TimesFM 2.5)** are all sitting at or near the drift floor on this window. None of them have evidence of skill on top of the rally.
+- **TFT, Chronos-2 (and TimesFM 2.5)** are all sitting at or near the drift floor on this window. None of them have evidence of skill on top of the rally.
 - **Naive** is at zero return because it never expresses a direction. The drift floor doesn't apply to it, because the strategy is permanently flat.
 
 That doesn't mean the deep models are bad. It means we don't have evidence — on this window — that they're doing something the rally isn't already doing for free. Article 6's regime test would be the next discriminator. The committed multi-window leaderboard is on the roadmap.

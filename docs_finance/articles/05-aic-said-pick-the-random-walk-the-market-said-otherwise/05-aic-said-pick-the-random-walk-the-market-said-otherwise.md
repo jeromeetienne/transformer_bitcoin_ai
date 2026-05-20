@@ -99,7 +99,7 @@ The fact that they tie is the *opposite* of suspicious — it's a sanity check t
 
 For any serial-data model selection problem with a low signal-to-noise ratio:
 
-1. **Use information criteria for what they're good for.** AIC/BIC tell you when you're paying parameters that don't earn their keep on training data. They are *useful* for ruling out over-rich models — note how `(5,1,5)` has AIC 93379.1 (nearly equal to `(0,1,0)`) and dir_acc 0.4826 (below MA(24)). AIC correctly flagged that the extra ten parameters did nothing for in-sample fit. The fact that it also flagged the random walk is a feature when you're picking *between* over-rich models.
+1. **Use information criteria for what they're good for.** AIC/BIC tell you when you're paying parameters that don't earn their keep on training data. They are *useful* for ruling out over-rich models — note how `(5,1,5)` has AIC 93379.1 (nearly equal to `(0,1,0)`) and dir_acc 0.4826 (below chance). AIC correctly flagged that the extra ten parameters did nothing for in-sample fit. The fact that it also flagged the random walk is a feature when you're picking *between* over-rich models.
 
 2. **Use OOS metrics for what they're good for.** Sharpe / dir_acc tell you whether a chosen model does the thing you actually care about, on data it hasn't seen.
 

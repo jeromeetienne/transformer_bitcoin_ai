@@ -66,7 +66,6 @@ Apply the lens to the rest of the leaderboard. Per-bar Sharpe = `Sharpe_annual /
 | **ARIMA(1,1,1)** | **+7.28** | **0.078** | 0.025 | **~3.1** |
 | LSTM | +4.95 | 0.053 | 0.025 | ~2.1 |
 | TFT | +4.59 | 0.049 | 0.025 | ~2.0 |
-| MA(24) | +4.33 | 0.046 | 0.025 | ~1.8 |
 | Chronos-2 | +4.29 | 0.046 | 0.025 | ~1.8 |
 | TimesFM 2.5 | +2.44 | 0.026 | 0.025 | ~1.0 |
 | XGBoost | +1.45 | 0.015 | 0.025 | ~0.6 |
@@ -74,7 +73,7 @@ Apply the lens to the rest of the leaderboard. Per-bar Sharpe = `Sharpe_annual /
 What the z-column actually says:
 
 - **ARIMA at z ≈ 3.1** — a real, ~99.9 %-confidence finding that per-bar Sharpe is positive, on this window.
-- **LSTM, TFT, MA(24), Chronos-2 at z ≈ 1.8–2.1** — at the edge of one-tailed 95 %. *Real but marginal*. A second test window would either confirm or wash these out (Article 6's regime test would do exactly that).
+- **LSTM, TFT, Chronos-2 at z ≈ 1.8–2.1** — at the edge of one-tailed 95 %. *Real but marginal*. A second test window would either confirm or wash these out (Article 6's regime test would do exactly that).
 - **TimesFM 2.5 at z ≈ 1.0** — about one standard error above zero. Could easily be noise.
 - **XGBoost at z ≈ 0.6** — indistinguishable from zero. The +1.45 annualized number is *literally consistent with a no-skill model getting unlucky in one direction or another*.
 

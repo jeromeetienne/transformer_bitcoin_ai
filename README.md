@@ -27,7 +27,6 @@ The Makefile is the canonical command surface — every target wraps `uv run`.
 ```
 make fetch                                         # pre-warm data cache
 make 01_baseline_naive                             # naive last-value baseline
-make 01b_moving_average                            # rolling-mean baseline
 make 02_arima                                      # ARIMA(p, d, q) baseline
 make 03_gradient_boosting                          # XGBoost on engineered features
 make 04_lstm                                       # Darts BlockRNN-LSTM
@@ -69,7 +68,6 @@ transformer_bitcoin_ai/
 │   │   ├── run.py
 │   │   ├── config.yaml
 │   │   └── results/            # metrics.json, predictions.parquet, plot.png
-│   ├── 01b_moving_average/     # rolling-mean baseline
 │   ├── 02_arima/               # ARIMA(p, d, q) + sweep over orders
 │   ├── 03_gradient_boosting/   # XGBoost on engineered features (+ sweep)
 │   ├── 04_lstm/                # Darts BlockRNN-LSTM (+ sweep)

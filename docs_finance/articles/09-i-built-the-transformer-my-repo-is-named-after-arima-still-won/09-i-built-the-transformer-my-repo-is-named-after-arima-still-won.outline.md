@@ -23,14 +23,13 @@ A serious modern transformer — TFT, with future covariates, multivariate past 
     "mae":  373.70
   }
   ```
-- Below LSTM. Below MA(24). Behind ARIMA by every column.
+- Below LSTM. Behind ARIMA by every column.
 
 ### 2. The leaderboard
 | Model | dir_acc | Sharpe | cum_ret | MAE |
 |---|---:|---:|---:|---:|
 | ARIMA(1,1,1) | 0.5336 | +7.28 | +53.0 % | $260.50 |
 | LSTM | 0.5196 | +4.95 | +50.3 % | $274.02 |
-| MA(24) | 0.5143 | +4.33 | +25.7 % | $756.19 |
 | **TFT** | **0.5053** | **+4.59** | **+29.6 %** | **$373.70** |
 | XGBoost | 0.4872 | +1.45 | +8.1 % | $270.73 |
 

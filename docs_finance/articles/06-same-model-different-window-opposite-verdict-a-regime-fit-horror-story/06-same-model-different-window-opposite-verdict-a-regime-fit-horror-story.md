@@ -38,11 +38,10 @@ Sorted by Sharpe, all from committed `metrics.json` files:
 | ARIMA(1,1,1) | 0.5336 | **+7.28** | +53.0 % | $260.50 |
 | LSTM | 0.5196 | +4.95 | +50.3 % | $274.02 |
 | TFT | 0.5053 | +4.59 | +29.6 % | $373.70 |
-| MA(24) | 0.5143 | +4.33 | +25.7 % | $756.19 |
 | XGBoost | **0.4872** | **+1.45** | +8.1 % | $270.73 |
 | Naive | NaN | — | — | $260.50 |
 
-This is the leaderboard the rest of the series is built on. ARIMA wins, the deep models trail, XGBoost is below the moving-average baseline. Article 4 spent two thousand words on that.
+This is the leaderboard the rest of the series is built on. ARIMA wins, the deep models trail, XGBoost is below chance on direction. Article 4 spent two thousand words on that.
 
 ## Slice A: Q1 2024 only (~480 test bars)
 
@@ -53,7 +52,6 @@ Take each experiment's `config.yaml`, set `end: 2024-04-01`, rerun. The pattern 
 | **XGBoost** | **0.5185** | **leader on dir_acc** |
 | ARIMA(1,1,1) | mid-pack | mid-pack |
 | TFT | mid-pack | mid-pack |
-| MA(24) | mid-pack | mid-pack |
 | **LSTM** | mid-pack | **−0.54 — broken** |
 
 (I'm declining to put precise numbers in cells where the run isn't a committed artifact. The pattern is what matters: XGBoost moves from last on dir_acc to leader, the LSTM moves from competitive on Sharpe to *negative*. ARIMA stays roughly in the middle on both windows, with a smaller absolute Sharpe than on Slice B because the rally is missing.)

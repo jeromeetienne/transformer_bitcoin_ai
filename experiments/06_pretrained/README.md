@@ -77,13 +77,13 @@ First run downloads the HF weights (one-time, then cached). Walk-forward over ~1
 
 Compare against earlier experiments **on the same data slice**:
 
-| | Naive | MA(24) | ARIMA(1,1,1) | XGBoost | LSTM | TFT | **Chronos-2 / TimesFM 2.5** |
-|---|---|---|---|---|---|---|---|
-| Family | last-value | rolling mean | linear, stationary | tabular GBT | recurrent NN | attention NN | **pretrained foundation model** |
-| Trained on this slice | — | — | yes | yes | yes | yes | **no (zero-shot)** |
-| Probabilistic | — | — | — | — | — | — | **yes (q10 / q50 / q90)** |
-| Past covariates | — | — | — | engineered lags | OHLCV | OHLCV | — |
-| Future covariates | — | — | — | — | — | hour/dow cyclical | — |
+| | Naive | ARIMA(1,1,1) | XGBoost | LSTM | TFT | **Chronos-2 / TimesFM 2.5** |
+|---|---|---|---|---|---|---|
+| Family | last-value | linear, stationary | tabular GBT | recurrent NN | attention NN | **pretrained foundation model** |
+| Trained on this slice | — | yes | yes | yes | yes | **no (zero-shot)** |
+| Probabilistic | — | — | — | — | — | **yes (q10 / q50 / q90)** |
+| Past covariates | — | — | engineered lags | OHLCV | OHLCV | — |
+| Future covariates | — | — | — | — | hour/dow cyclical | — |
 
 What the numbers tell you:
 

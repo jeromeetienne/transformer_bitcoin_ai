@@ -47,7 +47,7 @@ From [experiments/04_lstm/config.yaml](../../experiments/04_lstm/config.yaml):
 
 Total bars after dropna: **8 039**. Train: **5 789**. Validation: **643**. Test: **1 607**.
 
-> **Slice note.** Test count differs by 1 from 01/01b/02 (1 608) due to the 1-bar diff to compute log-returns; differs by 4 from 03 (1 603) because 03 also drops 24 bars of rolling-window warmup. Headline metrics are still directly comparable.
+> **Slice note.** Test count differs by 1 from 01/02 (1 608) due to the 1-bar diff to compute log-returns; differs by 4 from 03 (1 603) because 03 also drops 24 bars of rolling-window warmup. Headline metrics are still directly comparable.
 
 > **MPS note.** Inputs are cast to `float32` before `TimeSeries` construction — Apple's MPS backend doesn't support `float64` tensors and darts auto-detects float64 inputs. Price reconstruction stays in float64 for accuracy. See the comment at [experiments/04_lstm/run.py](../../experiments/04_lstm/run.py).
 
@@ -71,7 +71,6 @@ Same data slice, (very nearly) same split, same metrics:
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
 | 01_baseline_naive | **260.50** | 396.97 | 0.341 % | NaN | — | — |
-| 01b_moving_average (window=24) | 756.19 | 1 100.93 | 0.990 % | 0.5143 | +25.67 % | +4.33 |
 | **02_arima (1, 1, 1)** | **260.50** | **396.97** | 0.341 % | **0.5336** | **+53.02 %** | **+7.28** |
 | 03_gradient_boosting (default) | 270.73 | 414.07 | 0.354 % | 0.4872 | +8.09 % | +1.45 |
 | **04_lstm (default)** | 274.02 | 409.66 | 0.360 % | 0.5196 | **+50.34 %** | **+4.95** |

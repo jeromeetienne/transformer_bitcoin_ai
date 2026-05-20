@@ -10,8 +10,8 @@
 # single-source shape; adding a selector (e.g. an extra symbol) makes the
 # training set larger for the sequence experiments (04 LSTM, 05 Transformer,
 # 06 Pretrained, 07 Pretrained-Finetune), which consume train selectors as
-# `list[TimeSeries]`. The per-series experiments (01 Naive, 01b MovingAverage,
-# 02 ARIMA, 03 GradientBoosting) fit one model per test symbol and aggregate
+# `list[TimeSeries]`. The per-series experiments (01 Naive, 02 ARIMA,
+# 03 GradientBoosting) fit one model per test symbol and aggregate
 # test metrics (macro mean) across symbols.
 
 training:

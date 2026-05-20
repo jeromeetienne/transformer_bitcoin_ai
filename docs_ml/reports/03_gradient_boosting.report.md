@@ -5,7 +5,7 @@
 
 ## What this experiment is
 
-First non-linear model in the lineup, and the first one that ingests engineered covariates. Fits an XGBoost regressor on a flat feature vector — lagged log-returns, rolling means and standard deviations of past log-returns, and (optionally) a per-bar OHLCV summary — with the bar-T log-return as target. Predictions are reconstructed to price as `close_pred = close[t-1] * exp(r_pred)` so MAE / RMSE / MAPE / dir_acc / Sharpe are directly comparable to 01 / 01b / 02. The differentiator vs. 02_arima: a non-linear estimator, and features beyond past closes alone.
+First non-linear model in the lineup, and the first one that ingests engineered covariates. Fits an XGBoost regressor on a flat feature vector — lagged log-returns, rolling means and standard deviations of past log-returns, and (optionally) a per-bar OHLCV summary — with the bar-T log-return as target. Predictions are reconstructed to price as `close_pred = close[t-1] * exp(r_pred)` so MAE / RMSE / MAPE / dir_acc / Sharpe are directly comparable to 01 / 02. The differentiator vs. 02_arima: a non-linear estimator, and features beyond past closes alone.
 
 ```
 XGBoost(reg:squarederror)
@@ -63,7 +63,6 @@ From [experiments/03_gradient_boosting/results/btc_4h_2024/metrics.json](../../e
 | Experiment | MAE | RMSE | MAPE | dir_acc | cum_ret | sharpe |
 |---|---|---|---|---|---|---|
 | [01_baseline_naive](01_baseline_naive.report.md) | 518.36 | 784.09 | 0.6701 % | NaN | — | — |
-| [01b_moving_average (window=24)](01b_moving_average.report.md) | 1 905.27 | 2 580.61 | 2.4782 % | 0.4801 | 0.0511 | 1.3003 |
 | [02_arima (1, 1, 1)](02_arima.report.md) | **517.16** | **782.42** | **0.6686 %** | **0.5547** | 0.3314 | 6.0569 |
 | **03_gradient_boosting (n_feat=31)** | 539.39 | 795.07 | 0.7008 % | 0.5365 | **0.5042** | **6.4233** |
 | [04_lstm](04_lstm.report.md) | 522.29 | 785.45 | 0.6761 % | 0.4938 | 0.2596 | 4.2660 |

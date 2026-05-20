@@ -9,7 +9,7 @@ XGBoost(reg:squarederror)
    └── (optional) OHLCV summaries  log_volume_{T-1}, hl_range_{T-1}, oc_body_{T-1}
 ```
 
-The target is the bar-T log-return `r_T = log(close_T / close_{T-1})` — a stationary quantity, unlike the price level itself — and predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_pred)` so MAE/RMSE/MAPE/directional_accuracy are directly comparable to [`01_baseline_naive`](../01_baseline_naive/) / [`01b_moving_average`](../01b_moving_average/) / [`02_arima`](../02_arima/). A simple long/flat strategy on the predicted direction also yields cumulative return + annualized Sharpe.
+The target is the bar-T log-return `r_T = log(close_T / close_{T-1})` — a stationary quantity, unlike the price level itself — and predictions are reconstructed to price as `close_pred = close_{T-1} * exp(r_pred)` so MAE/RMSE/MAPE/directional_accuracy are directly comparable to [`01_baseline_naive`](../01_baseline_naive/) / [`02_arima`](../02_arima/). A simple long/flat strategy on the predicted direction also yields cumulative return + annualized Sharpe.
 
 ## Why this experiment
 
@@ -66,12 +66,12 @@ model:
 
 Compare against earlier experiments **on the same data slice**:
 
-| | Naive | MA(24) | ARIMA(1,1,1) | **XGBoost** |
-|---|---|---|---|---|
-| Family | last-value | rolling mean | linear, stationary | **tabular GBT** |
-| What it sees | `close_{T-1}` | `mean(close_{T-w:T})` | past closes only | **engineered lags + rolling moments + OHLCV** |
-| Non-linear | — | — | — | **yes** |
-| Headline number | MAE floor | MAE ceiling | best Sharpe so far | *this experiment* |
+| | Naive | ARIMA(1,1,1) | **XGBoost** |
+|---|---|---|---|
+| Family | last-value | linear, stationary | **tabular GBT** |
+| What it sees | `close_{T-1}` | past closes only | **engineered lags + rolling moments + OHLCV** |
+| Non-linear | — | — | **yes** |
+| Headline number | MAE floor | best Sharpe so far | *this experiment* |
 
 What the numbers tell you:
 
