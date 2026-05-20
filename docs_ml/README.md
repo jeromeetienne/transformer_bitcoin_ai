@@ -12,11 +12,7 @@ The intended reader is a technical hiring manager or machine learning practition
 
 ## Style
 
-Each article is written as a self-contained piece, not a notebook dump. The structure is consistent: what problem this model class solves, how it was set up here, what the numbers say, and what that means for the broader picture. Results are never cherry-picked — the baseline exists precisely so every subsequent model can be judged against a floor.
-
-The tone is direct and precise. Mathematical notation is used when it adds clarity, not to perform rigor. Jargon is earned: a term like "temporal fusion" is introduced when it describes something specific, then used without apology. The series treats the reader as an intelligent adult who does not need hand-holding but does deserve an honest explanation.
-
-The writing is also entertaining and didactic. A reader who does not work in machine learning should still be able to follow along, enjoy the ride, and come away having learned something real. Analogies, concrete intuitions, and a bit of wit make the material accessible without making it shallow. The goal is that someone curious about how machine learning actually works — not just that it exists — finds each article worth reading for its own sake, not just as a portfolio artifact.
+See [STYLE.md](STYLE.md) for writing conventions, tone, and title guidelines.
 
 ## Linking requirement
 
