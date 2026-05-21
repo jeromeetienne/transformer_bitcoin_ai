@@ -23,7 +23,7 @@ See [STYLE.md](STYLE.md) for writing conventions, tone, and title guidelines.
 - [generation_social.md](generation_social.md) - process for generating social media posts from an article.
 - [generation_image.md](generation_image.md) - process for generating cover-image prompts (one per article) to paste into claude.ai.
 - [reports/](reports/) - one Markdown report per experiment (`NN_<name>.report.md`), plus `XX_global.report.md` for the cross-experiment synthesis. These are the source material the articles draw from.
-- [articles/](articles/) - one folder per article, named `N-<slug>/`, plus [articles/generate_poster_images.md](articles/generate_poster_images.md) holding the per-article cover-image prompts. Each article folder contains:
+- [articles/](articles/) - one folder per article, named `N-<slug>/`. Each article folder contains:
   - `<slug>.outline.md` - the article outline.
   - `<slug>.article.md` - the article draft.
   - `<slug>.socialmedia.md` - the matching social media posts.
