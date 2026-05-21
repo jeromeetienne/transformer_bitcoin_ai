@@ -17,27 +17,16 @@ See [STYLE.md](STYLE.md) for writing conventions, tone, and title guidelines.
 ## Folder hierarchy
 
 - [README.md](README.md) - this file: series principles, goals, requirements.
-- [STYLE.md](STYLE.md) - writing conventions, tone, and title guidelines.
-- [article_generation.md](article_generation.md) - process for generating an article from its experiment report.
-- [report_generation.md](report_generation.md) - process for generating an experiment report from its results.
-- [socialmedia_generation.md](socialmedia_generation.md) - process for generating social media posts from an article.
+- [STYLE.md](STYLE.md) - writing conventions, tone, title guidelines, and hard linking/formatting requirements.
+- [generation_article.md](generation_article.md) - process for generating an article from its experiment report.
+- [generation_report.md](generation_report.md) - process for generating an experiment report from its results.
+- [generation_social.md](generation_social.md) - process for generating social media posts from an article.
+- [generation_image.md](generation_image.md) - process for generating cover-image prompts (one per article) to paste into claude.ai.
 - [reports/](reports/) - one Markdown report per experiment (`NN_<name>.report.md`), plus `XX_global.report.md` for the cross-experiment synthesis. These are the source material the articles draw from.
-- [articles/](articles/) - one folder per article, named `N-<slug>/`, each containing:
+- [articles/](articles/) - one folder per article, named `N-<slug>/`, plus [articles/generate_poster_images.md](articles/generate_poster_images.md) holding the per-article cover-image prompts. Each article folder contains:
   - `<slug>.outline.md` - the article outline.
   - `<slug>.md` - the article draft.
   - `<slug>.socialmedia.md` - the matching social media posts.
-
-## Requirements
-
-### Linking Requirements
-In articles, all links to the code must point to GitHub at the head of the default branch — never to local file paths. Use the 
-full `https://github.com/…/blob/HEAD/…` form for files and `https://github.com/…/tree/HEAD/…` for directories. A reader arriving from 
-anywhere (Medium, a PDF, a forwarded email) must be able to follow every link without cloning the repository.
-
-### Formatting Requirements
-- Do not use markdown table, linkedin doesnt support them. Use a list instead.
-- Never use backquote inside a link. e.g. [`foobar`](https://example.com)
-- Never use `—` character, prefer `-` instead, as the former is not supported in LinkedIn.
 
 ## The eight articles
 

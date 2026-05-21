@@ -11,3 +11,13 @@ Each article is written as a self-contained piece, not a notebook dump. The stru
 The tone is direct and precise. Mathematical notation is used when it adds clarity, not to perform rigor. Jargon is earned: a term like "temporal fusion" is introduced when it describes something specific, then used without apology. The series treats the reader as an intelligent adult who does not need hand-holding but does deserve an honest explanation.
 
 The writing is also entertaining and didactic. A reader who does not work in machine learning should still be able to follow along, enjoy the ride, and come away having learned something real. Analogies, concrete intuitions, and a bit of wit make the material accessible without making it shallow. The goal is that someone curious about how machine learning actually works — not just that it exists — finds each article worth reading for its own sake, not just as a portfolio artifact.
+
+## Hard requirements
+
+### Linking
+All links to code must point to GitHub at the head of the default branch — never to local file paths. Use the full `https://github.com/…/blob/HEAD/…` form for files and `https://github.com/…/tree/HEAD/…` for directories. A reader arriving from anywhere (Medium, a PDF, a forwarded email) must be able to follow every link without cloning the repository.
+
+### Formatting
+- Do not use markdown tables, LinkedIn doesn't support them. Use a list instead.
+- Never use backquote inside a link, e.g. [`foobar`](https://example.com).
+- Never use the `—` character, prefer `-` instead, as the former is not supported in LinkedIn.
