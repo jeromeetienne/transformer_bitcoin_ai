@@ -2,82 +2,77 @@
 
 ## Twitter
 
-**Thread: The humbling truth about Bitcoin price forecasting**
+**Thread: I built the dumbest Bitcoin predictor possible. Most ML models can't beat it. 🧵**
 
-1/ I built the dumbest possible Bitcoin price predictor.
+1/ The naive last-value predictor: predict that tomorrow's price = today's price.
 
-It predicts that tomorrow's price = today's price.
+Zero parameters. Zero learning. MAE: $337.89 on 437 hours of BTCUSDT.
 
-Zero parameters. Zero learning.
+Every model in this series has to clear that bar. Here's why it's harder than it sounds.
 
-MAE: $337.89.
+2/ Hourly Bitcoin is close to a random walk.
 
-Most ML models can't beat it. Here's why that matters. 🧵
+In a true random walk, the best forecast of the next value is the current value — because the increments are independent noise. No historical pattern helps.
 
-2/ This is the naive last-value predictor — and it works because hourly Bitcoin price is close to a random walk.
+That's the efficient market hypothesis, in practice.
 
-In a random walk, the best forecast of tomorrow is today. No historical pattern helps.
+3/ ARIMA(3,1,3): the first model that actually *learns* from the series.
 
-Efficient market hypothesis, in practice.
+Seven parameters estimated from training data. Walk-forward evaluation. No leakage.
 
-3/ Next up: ARIMA(3,1,3). Three parameters, estimated from training data.
+Result: MAE nearly identical to $337.89.
 
-The first model that actually *learns* from the series.
+4/ That's not a failure. It's an honest signal.
 
-Result: MAE close to $337.89. Nearly indistinguishable from naive.
+At hourly resolution, there is very little exploitable autocorrelation in BTC price changes. A linear model with 7 parameters finds almost nothing that a zero-parameter predictor doesn't already give you.
 
-4/ That's not a failure of ARIMA. It's an honest signal about hourly BTC.
+5/ The metric to watch later: directional accuracy.
 
-At this timescale, there is very little autocorrelation to exploit. Linear price history doesn't predict price changes.
+Naive has none — it always predicts "no change."
+ARIMA gets ~0.49–0.52. Close enough to a coin flip that you shouldn't trust it on 437 bars.
 
-5/ The metric that *will* matter: directional accuracy.
-
-Naive has none (it always predicts "no change").
-
-ARIMA gets a number — around 0.49–0.52. Close enough to a coin flip that you shouldn't trust it on 437 bars.
-
-But the infrastructure is in place. Later models will show real skill. Or won't.
+But the infrastructure is in place. Later models will have to earn it.
 
 Full article → [link]
+
+#MachineLearning #Bitcoin
 
 ---
 
 ## Bluesky
 
-**The dumbest Bitcoin predictor: MAE of $337.
+**The dumbest Bitcoin predictor has a $337 MAE. Most ML models can't beat it.**
 
-Most ML models can't beat it.**
+The naive last-value predictor — "next price = current price" — is the floor every model in this series must clear. It works because hourly BTC is close to a random walk: the best single-step forecast is just the current value.
 
-The naive last-value predictor — "next price = current price" — is the floor every model in this series must clear.
+ARIMA(3,1,3), the first model that actually learns from data, comes in nearly identical. That's not a broken experiment. That's the honest signal-to-noise ratio at hourly resolution.
 
-It works because hourly BTC is close to a random walk.
-
-ARIMA(3,1,3), the first model that actually learns from data, comes in nearly identical.
-
-That's not a bug. That's the honest signal-to-noise ratio at hourly resolution.
-
-Article 1 also establishes the full experiment architecture — the same data loader, metrics, and results layout that every subsequent model inherits.
+If a linear model with 7 parameters can't move the needle, the question for every subsequent model becomes much sharper.
 
 Full article → [link]
+
+#MachineLearning #TimeSeries
 
 ---
 
 ## LinkedIn
 
-**Before you train any ML model, you need a floor. Most people skip this step.**
+**Before you train any ML model on financial data, you need a floor. Most people skip this step — and it costs them.**
 
-In this series on machine learning for Bitcoin forecasting, Article 1 establishes two baselines:
+Article 1 of this Bitcoin forecasting series establishes two baselines:
 
-**The naive predictor**: predict that the next price equals the current price. Zero parameters. MAE of $337.89 on the 2024 BTCUSDT hourly test set.
+**The naive predictor**: predict that the next price equals the current price. Zero parameters. MAE of $337.89 on the 2024 BTCUSDT hourly test set. This is the floor every subsequent model must beat.
 
-**ARIMA(3,1,3)**: the classical statistical model. Three parameters, fitted on training data, evaluated in strict walk-forward mode. MAE: close to the naive floor.
+**ARIMA(3,1,3)**: the first model that actually learns from the series. Seven parameters, fitted on training data, evaluated in strict walk-forward mode — each prediction uses the *actual* previous close, not the model's own forecast. MAE: close to $337.89.
 
-The uncomfortable lesson: hourly Bitcoin price behaves like a near-random walk. ARIMA can't exploit it. That's not a failure of ARIMA — it's an accurate description of the signal available at this timescale.
+The uncomfortable result: hourly Bitcoin behaves like a near-random walk. A linear model with access to the full price history finds almost no exploitable autocorrelation. That is not a flaw in the experiment — it is an accurate description of the signal available at this timescale.
 
-Why does this matter for practitioners?
+**Why this matters for practitioners:**
 
-Because if you train an LSTM or a Transformer and it beats $337 MAE by $50, you now know that's real signal — not a benchmark artifact. And if it doesn't beat $337, you know to look harder before trusting it with anything that costs money.
+If you later train an LSTM or a Transformer and it beats $337 MAE by $50, you now know that improvement is real — not a benchmark artifact. And if a deep model can't beat $337, you know to look harder before trusting it with anything that costs money.
 
-The baselines aren't a preamble to the "real" results. They are the first real result.
+The baselines are not a preamble to the "real" results. They are the first real result: that predicting hourly Bitcoin is hard, and the rest of the series will be honest about exactly how hard.
 
 Article 1 is live → [link]
+
+#MachineLearning #TimeSeries #QuantitativeFinance

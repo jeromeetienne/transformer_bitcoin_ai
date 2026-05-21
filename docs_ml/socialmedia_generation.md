@@ -10,7 +10,8 @@
 
 ## Style guidelines
 - Concise and engaging: get to the point fast, no filler phrases
-- Use emojis where appropriate: sprinkle them to add tone, not to replace words
+- Use emojis: sprinkle them to add tone, not to replace words.
+  - It makes the post more visually appealing and can help convey emotion or emphasis.
 - Lead with a hook: the first sentence should make the reader want to keep reading
 - Write in first person when possible: "I trained a model…" reads warmer than "A model was trained…"
 - Prefer concrete over vague: share a specific metric, result, or observation rather than a general claim

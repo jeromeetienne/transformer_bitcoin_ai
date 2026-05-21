@@ -2,70 +2,74 @@
 
 ## Twitter
 
-**Thread: The honest truth about predicting Bitcoin with ML**
+**Thread: I ran 7 ML models on Bitcoin. Here's the honest version. 🧵**
 
-1/ I ran 7 machine learning models on Bitcoin price data — from zero-parameter baselines to fine-tuned foundation models.
+1/ I spent months running ML models on Bitcoin price data — from a zero-parameter naive predictor to fine-tuned foundation models trained on hundreds of millions of time series.
 
-Here's what I found (and what most articles won't tell you): 🧵
+One question. Seven models. Every result published.
 
-2/ The target: predict the next closing price, one step ahead, no lookahead, no shuffling.
+2/ The target: given OHLCV data up to bar *t*, predict the closing price of bar *t+1*.
 
-OHLCV only. No order book. No sentiment. If the signal isn't in price and volume, we need to know that first.
+No order book. No sentiment. If a model can't extract signal from raw price and volume, we need to know that first.
 
-3/ The models, in order of complexity:
-- Naive last-value predictor
+3/ The rules:
+- Strict chronological train/test split — no shuffling
+- Every model evaluated on the same 437 test bars
+- Every model measured against the same naive floor
+- When a model underperforms, the article says so
+
+4/ The lineup:
+- Naive last-value predictor (0 params)
 - ARIMA
 - XGBoost + feature engineering
 - LSTM
-- Transformer (Temporal Fusion Transformer)
-- Zero-shot foundation models (Chronos-2, TimesFM 2.5)
+- Temporal Fusion Transformer
+- Zero-shot foundation models
 - Fine-tuned foundation models
 
-4/ Every model is benchmarked against the same naive floor on the same test slice.
+5/ This isn't a leaderboard chase. It's a reproducible ML study.
 
-No cherry-picking. No 500-run grid searches. If a model underperforms, the article says so.
-
-5/ This is a reproducible ML study — not a trading system, not a leaderboard chase.
-
-The GitHub repo has every config, every run script, every result.
+Every experiment is a self-contained directory with a config, a run script, and a results folder. `make baseline` gives you the same number you'll read in the article.
 
 Full series → [link]
+
+#MachineLearning #Bitcoin
 
 ---
 
 ## Bluesky
 
-**Can machine learning predict Bitcoin prices?**
+**I ran 7 ML models on Bitcoin and published every result — including the ones that failed.**
 
-I ran 7 models — from a zero-parameter naive predictor to fine-tuned foundation models — on the same dataset, with the same honest evaluation.
+One question: given OHLCV up to bar *t*, predict the closing price of bar *t+1*. No order book, no sentiment, no shuffled splits, no cherry-picked runs.
 
-No lookahead. No shuffled splits. No cherry-picked results.
+The models go from a zero-parameter naive predictor to fine-tuned foundation models. Each one is measured against the same naive floor on the same 437 held-out test bars.
 
-Each model is measured against the dumbest possible floor: predict that tomorrow's price equals today's.
+The naive floor is harder to beat than it has any right to be. That's where the series begins.
 
-Spoiler: that floor is harder to beat than you'd expect.
+Full series → [link]
 
-Full reproducible study across 7 articles → [link]
+#MachineLearning #TimeSeries
 
 ---
 
 ## LinkedIn
 
-**I spent months running machine learning models on Bitcoin price data. Here's what I actually found.**
+**Most ML-on-crypto articles show you the best run from 500 hyperparameter searches. This series does the opposite.**
 
-Most ML-on-crypto articles show you the best result from 500 hyperparameter runs and call it science.
+I spent months running machine learning models on Bitcoin price data — seven models, from a zero-parameter naive predictor to fine-tuned foundation models trained on hundreds of millions of time series. Every result is published, including the ones that aren't flattering.
 
-This series does the opposite.
-
-The setup:
+**The setup:**
 - One question: given OHLCV data up to bar *t*, predict the closing price of bar *t+1*
-- One dataset: BTCUSDT from Binance, 2024, same train/test split for every experiment
-- One rule: every model is measured against the naive last-value predictor on the same held-out test slice
+- One dataset: BTCUSDT from Binance, full 2024 calendar year, strict chronological split
+- One rule: every model is measured against the naive last-value predictor on the same held-out test slice — and when a model fails to beat it, the article says so
 
-Seven models, from zero parameters to fine-tuned foundation models. When a model fails to beat the naive baseline, the article says so — and explains why.
+**The model progression isn't just about complexity.** Each step changes one specific thing about the inductive bias: linear to nonlinear, hand-crafted features to learned representations, task-specific training to general pretraining. Understanding *what changed* at each step is the real purpose of the series — not the final leaderboard number.
 
-The first result is already uncomfortable: the naive predictor is hard to beat on hourly Bitcoin. That's not a bug in the methodology. It's a fact about the signal-to-noise ratio.
+This is a reproducible ML study, not a trading system. Every experiment is a self-contained directory: config file, run script, results folder. The same `make` command that produced the numbers in the article will produce the same numbers on your machine.
 
-If you work in quantitative finance, applied ML, or time-series forecasting — or if you're just curious about what "honest benchmarking" looks like in practice — this series is for you.
+If you work in applied ML, quantitative finance, or time-series forecasting — this is built for you.
 
-Article 0 (the setup) is live: [link]
+Article 0 (the setup) is live → [link]
+
+#MachineLearning #TimeSeries #Bitcoin
