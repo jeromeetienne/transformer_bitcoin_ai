@@ -25,7 +25,7 @@ See [STYLE.md](STYLE.md) for writing conventions, tone, and title guidelines.
 - [reports/](reports/) - one Markdown report per experiment (`NN_<name>.report.md`), plus `XX_global.report.md` for the cross-experiment synthesis. These are the source material the articles draw from.
 - [articles/](articles/) - one folder per article, named `N-<slug>/`, plus [articles/generate_poster_images.md](articles/generate_poster_images.md) holding the per-article cover-image prompts. Each article folder contains:
   - `<slug>.outline.md` - the article outline.
-  - `<slug>.md` - the article draft.
+  - `<slug>.article.md` - the article draft.
   - `<slug>.socialmedia.md` - the matching social media posts.
 
 ## The eight articles
