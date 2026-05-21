@@ -2,7 +2,7 @@
 
 For each article in the series, directly generate a cover-image SVG and save it inside that article's folder. Discover the article folders by reading [README.md](README.md) — it documents the article numbering, the slug for each article, and where the per-article folders live under [articles/](articles/).
 
-The image filename is derived from the article markdown filename: replace the `.md` extension with `.poster.svg`. For example, `0-presentation-of-the-project/0-presentation-of-the-project.md` produces `0-presentation-of-the-project/0-presentation-of-the-project.poster.svg`.
+The image filename is derived from the article markdown filename: replace the `.article.md` extension with `.poster.svg`. For example, `0-presentation-of-the-project/0-presentation-of-the-project.article.md` produces `0-presentation-of-the-project/0-presentation-of-the-project.poster.svg`.
 
 Once the SVG is written, generate the corresponding `.poster.png` from it automatically (same folder, same basename), so each article folder ends up with both `<article-slug>.poster.svg` and `<article-slug>.poster.png`.
 

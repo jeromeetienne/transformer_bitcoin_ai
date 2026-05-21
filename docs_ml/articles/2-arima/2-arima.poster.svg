@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 627" width="1200" height="627">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#101b30"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="627" fill="url(#bg)"/>
+  <g stroke="#1c2a44" stroke-width="1">
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="220" x2="1200" y2="220"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+  </g>
+  <!-- motif: ARIMA differenced returns - bar chart of small deltas -->
+  <g opacity="0.20" fill="#f7931a">
+    <rect x="60" y="420" width="6" height="20"/>
+    <rect x="100" y="425" width="6" height="-12"/>
+    <rect x="140" y="420" width="6" height="-25"/>
+    <rect x="180" y="420" width="6" height="18"/>
+    <rect x="220" y="420" width="6" height="-30"/>
+    <rect x="260" y="420" width="6" height="10"/>
+    <rect x="300" y="420" width="6" height="-15"/>
+    <rect x="340" y="420" width="6" height="-22"/>
+    <rect x="380" y="420" width="6" height="35"/>
+    <rect x="420" y="420" width="6" height="-8"/>
+    <rect x="460" y="420" width="6" height="-28"/>
+    <rect x="500" y="420" width="6" height="14"/>
+    <rect x="540" y="420" width="6" height="-18"/>
+    <rect x="580" y="420" width="6" height="22"/>
+    <rect x="620" y="420" width="6" height="-12"/>
+    <rect x="660" y="420" width="6" height="-25"/>
+    <rect x="700" y="420" width="6" height="30"/>
+    <rect x="740" y="420" width="6" height="-20"/>
+    <rect x="780" y="420" width="6" height="16"/>
+    <rect x="820" y="420" width="6" height="-32"/>
+    <rect x="860" y="420" width="6" height="24"/>
+    <rect x="900" y="420" width="6" height="-15"/>
+    <rect x="940" y="420" width="6" height="-22"/>
+    <rect x="980" y="420" width="6" height="28"/>
+    <rect x="1020" y="420" width="6" height="-18"/>
+    <rect x="1060" y="420" width="6" height="34"/>
+    <rect x="1100" y="420" width="6" height="-25"/>
+    <rect x="1140" y="420" width="6" height="20"/>
+    <line x1="60" y1="420" x2="1146" y2="420" stroke="#f7931a" stroke-width="1"/>
+  </g>
+  <text x="72" y="100" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" letter-spacing="3" fill="#f7931a">BITCOIN ML SERIES &#8226; ARTICLE 2 OF 7</text>
+  <text x="72" y="220" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">Three Parameters,</text>
+  <text x="72" y="305" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">Half a Century of Lead.</text>
+  <text x="72" y="385" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">ARIMA(1,1,1) on Bitcoin: $1.20 better than naive,</text>
+  <text x="72" y="430" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Sharpe 6.06, and a directional edge that pays.</text>
+  <g font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif">
+    <text x="72" y="500" font-size="18" fill="#94a3b8">MAE</text>
+    <text x="72" y="535" font-size="36" font-weight="700" fill="#f5f7fb">$517</text>
+    <text x="220" y="500" font-size="18" fill="#94a3b8">DIR_ACC</text>
+    <text x="220" y="535" font-size="36" font-weight="700" fill="#f5f7fb">0.5547</text>
+    <text x="430" y="500" font-size="18" fill="#94a3b8">SHARPE</text>
+    <text x="430" y="535" font-size="36" font-weight="700" fill="#f5f7fb">6.06</text>
+  </g>
+  <text x="72" y="595" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="500" fill="#64748b">jerome etienne &#8226; github.com/jeromeetienne/transformer_bitcoin_ai</text>
+</svg>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 627" width="1200" height="627">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#101b30"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="627" fill="url(#bg)"/>
+  <g stroke="#1c2a44" stroke-width="1">
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="220" x2="1200" y2="220"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+  </g>
+  <!-- motif: training curves - train loss + val loss converging, with best checkpoint marker -->
+  <g opacity="0.20" fill="none">
+    <!-- train loss curve -->
+    <path d="M120,460 Q200,440 280,420 T440,380 T600,360 T760,350 T920,345 T1080,343" stroke="#94a3b8" stroke-width="2"/>
+    <!-- val loss curve -->
+    <path d="M120,470 Q200,455 280,440 T440,400 T600,385 T760,395 T920,420 T1080,445" stroke="#f7931a" stroke-width="2.5"/>
+    <!-- best checkpoint marker -->
+    <circle cx="640" cy="383" r="8" stroke="#f7931a" stroke-width="2" fill="#0b1220"/>
+    <line x1="640" y1="383" x2="640" y2="500" stroke="#f7931a" stroke-width="1" stroke-dasharray="3,3"/>
+  </g>
+  <g opacity="0.6" font-family="'Inter Tight',sans-serif" font-size="16" fill="#94a3b8">
+    <text x="700" y="383">best val_loss</text>
+  </g>
+  <text x="72" y="100" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" letter-spacing="3" fill="#f7931a">BITCOIN ML SERIES &#8226; ARTICLE 7 OF 7</text>
+  <text x="72" y="220" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">When Fine-Tuning</text>
+  <text x="72" y="305" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">Finally Beats ARIMA.</text>
+  <text x="72" y="385" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Encoder-only Chronos-2 on 4.7 years of BTC.</text>
+  <text x="72" y="430" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Single seed 8.20. 5-seed mean 5.52. Headline lesson.</text>
+  <g font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif">
+    <text x="72" y="500" font-size="18" fill="#94a3b8">SHARPE (SEED 42)</text>
+    <text x="72" y="535" font-size="36" font-weight="700" fill="#f7931a">8.20</text>
+    <text x="320" y="500" font-size="18" fill="#94a3b8">5-SEED MEAN</text>
+    <text x="320" y="535" font-size="36" font-weight="700" fill="#f5f7fb">5.52</text>
+    <text x="540" y="500" font-size="18" fill="#94a3b8">DIR_ACC</text>
+    <text x="540" y="535" font-size="36" font-weight="700" fill="#f5f7fb">0.5683</text>
+    <text x="780" y="500" font-size="18" fill="#94a3b8">CUM_RET</text>
+    <text x="780" y="535" font-size="36" font-weight="700" fill="#f5f7fb">73.29%</text>
+  </g>
+  <text x="72" y="595" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="500" fill="#64748b">jerome etienne &#8226; github.com/jeromeetienne/transformer_bitcoin_ai</text>
+</svg>

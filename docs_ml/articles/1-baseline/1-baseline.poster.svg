@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 627" width="1200" height="627">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#101b30"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="627" fill="url(#bg)"/>
+  <g stroke="#1c2a44" stroke-width="1">
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="220" x2="1200" y2="220"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+  </g>
+  <!-- motif: flat-line / step function representing naive predictor -->
+  <g opacity="0.20" stroke="#f7931a" stroke-width="3" fill="none">
+    <path d="M60,440 L130,440 L130,420 L200,420 L200,460 L270,460 L270,430 L340,430 L340,470 L410,470 L410,400 L480,400 L480,440 L550,440 L550,390 L620,390 L620,420 L690,420 L690,380 L760,380 L760,410 L830,410 L830,350 L900,350 L900,390 L970,390 L970,330 L1040,330 L1040,360 L1110,360 L1110,310 L1140,310"/>
+  </g>
+  <text x="72" y="100" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" letter-spacing="3" fill="#f7931a">BITCOIN ML SERIES &#8226; ARTICLE 1 OF 7</text>
+  <text x="72" y="220" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">The Dumbest Bitcoin</text>
+  <text x="72" y="305" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">Predictor That Works</text>
+  <text x="72" y="385" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Naive last-value: zero parameters, MAE $518.</text>
+  <text x="72" y="430" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">The floor every later model must clear.</text>
+  <!-- metric strip -->
+  <g font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif">
+    <text x="72" y="500" font-size="18" fill="#94a3b8">MAE</text>
+    <text x="72" y="535" font-size="36" font-weight="700" fill="#f5f7fb">$518</text>
+    <text x="220" y="500" font-size="18" fill="#94a3b8">PARAMETERS</text>
+    <text x="220" y="535" font-size="36" font-weight="700" fill="#f5f7fb">0</text>
+    <text x="360" y="500" font-size="18" fill="#94a3b8">DIR_ACC</text>
+    <text x="360" y="535" font-size="36" font-weight="700" fill="#f5f7fb">NaN</text>
+  </g>
+  <text x="72" y="595" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="500" fill="#64748b">jerome etienne &#8226; github.com/jeromeetienne/transformer_bitcoin_ai</text>
+</svg>

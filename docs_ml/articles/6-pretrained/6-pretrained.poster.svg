@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 627" width="1200" height="627">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#101b30"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="627" fill="url(#bg)"/>
+  <g stroke="#1c2a44" stroke-width="1">
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="220" x2="1200" y2="220"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+  </g>
+  <!-- motif: probabilistic forecast with quantile band -->
+  <g opacity="0.18" stroke="#f7931a" fill="none">
+    <!-- q90 upper band -->
+    <path d="M60,460 Q200,420 400,410 T800,380 T1140,360" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <!-- q50 median -->
+    <path d="M60,480 Q200,460 400,455 T800,440 T1140,425" stroke-width="3"/>
+    <!-- q10 lower band -->
+    <path d="M60,500 Q200,500 400,500 T800,500 T1140,500" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <!-- shaded interval -->
+    <path d="M60,460 Q200,420 400,410 T800,380 T1140,360 L1140,500 Q1000,500 800,500 T400,500 T60,500 Z" fill="#f7931a" fill-opacity="0.08" stroke="none"/>
+  </g>
+  <text x="72" y="100" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" letter-spacing="3" fill="#f7931a">BITCOIN ML SERIES &#8226; ARTICLE 6 OF 7</text>
+  <text x="72" y="220" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">200 Million Parameters,</text>
+  <text x="72" y="305" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">Zero Bitcoin Training.</text>
+  <text x="72" y="385" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Chronos-2 and TimesFM 2.5, zero-shot on Bitcoin.</text>
+  <text x="72" y="430" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Every variant loses to a 7-parameter ARIMA.</text>
+  <g font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif">
+    <text x="72" y="500" font-size="18" fill="#94a3b8">CHRONOS-SMALL</text>
+    <text x="72" y="535" font-size="36" font-weight="700" fill="#f5f7fb">2.97</text>
+    <text x="290" y="500" font-size="18" fill="#94a3b8">CHRONOS-LARGE</text>
+    <text x="290" y="535" font-size="36" font-weight="700" fill="#f5f7fb">1.90</text>
+    <text x="540" y="500" font-size="18" fill="#94a3b8">TIMESFM</text>
+    <text x="540" y="535" font-size="36" font-weight="700" fill="#f5f7fb">4.11</text>
+    <text x="720" y="500" font-size="18" fill="#94a3b8">ARIMA</text>
+    <text x="720" y="535" font-size="36" font-weight="700" fill="#f7931a">6.86</text>
+  </g>
+  <text x="72" y="595" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="500" fill="#64748b">jerome etienne &#8226; github.com/jeromeetienne/transformer_bitcoin_ai</text>
+</svg>

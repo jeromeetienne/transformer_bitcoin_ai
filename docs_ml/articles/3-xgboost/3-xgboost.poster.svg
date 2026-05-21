@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 627" width="1200" height="627">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#101b30"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="627" fill="url(#bg)"/>
+  <g stroke="#1c2a44" stroke-width="1">
+    <line x1="0" y1="120" x2="1200" y2="120"/>
+    <line x1="0" y1="220" x2="1200" y2="220"/>
+    <line x1="0" y1="320" x2="1200" y2="320"/>
+    <line x1="0" y1="420" x2="1200" y2="420"/>
+    <line x1="0" y1="520" x2="1200" y2="520"/>
+  </g>
+  <!-- motif: decision tree silhouette -->
+  <g opacity="0.18" stroke="#f7931a" stroke-width="2" fill="none">
+    <line x1="600" y1="380" x2="500" y2="440"/>
+    <line x1="600" y1="380" x2="700" y2="440"/>
+    <line x1="500" y1="440" x2="440" y2="490"/>
+    <line x1="500" y1="440" x2="560" y2="490"/>
+    <line x1="700" y1="440" x2="640" y2="490"/>
+    <line x1="700" y1="440" x2="760" y2="490"/>
+    <circle cx="600" cy="380" r="6" fill="#f7931a"/>
+    <circle cx="500" cy="440" r="5" fill="#f7931a"/>
+    <circle cx="700" cy="440" r="5" fill="#f7931a"/>
+    <circle cx="440" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="560" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="640" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="760" cy="490" r="4" fill="#f7931a"/>
+    <!-- second tree -->
+    <line x1="900" y1="380" x2="830" y2="440"/>
+    <line x1="900" y1="380" x2="970" y2="440"/>
+    <line x1="830" y1="440" x2="790" y2="490"/>
+    <line x1="830" y1="440" x2="870" y2="490"/>
+    <line x1="970" y1="440" x2="930" y2="490"/>
+    <line x1="970" y1="440" x2="1010" y2="490"/>
+    <circle cx="900" cy="380" r="6" fill="#f7931a"/>
+    <circle cx="830" cy="440" r="5" fill="#f7931a"/>
+    <circle cx="970" cy="440" r="5" fill="#f7931a"/>
+    <circle cx="790" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="870" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="930" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="1010" cy="490" r="4" fill="#f7931a"/>
+    <!-- ellipsis tree -->
+    <line x1="300" y1="380" x2="240" y2="440"/>
+    <line x1="300" y1="380" x2="360" y2="440"/>
+    <line x1="240" y1="440" x2="200" y2="490"/>
+    <line x1="240" y1="440" x2="280" y2="490"/>
+    <line x1="360" y1="440" x2="320" y2="490"/>
+    <line x1="360" y1="440" x2="400" y2="490"/>
+    <circle cx="300" cy="380" r="6" fill="#f7931a"/>
+    <circle cx="240" cy="440" r="5" fill="#f7931a"/>
+    <circle cx="360" cy="440" r="5" fill="#f7931a"/>
+    <circle cx="200" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="280" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="320" cy="490" r="4" fill="#f7931a"/>
+    <circle cx="400" cy="490" r="4" fill="#f7931a"/>
+  </g>
+  <text x="72" y="100" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="600" letter-spacing="3" fill="#f7931a">BITCOIN ML SERIES &#8226; ARTICLE 3 OF 7</text>
+  <text x="72" y="220" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">When 31 Features</text>
+  <text x="72" y="305" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="76" font-weight="800" fill="#f5f7fb">Lose to 3 Parameters.</text>
+  <text x="72" y="385" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">XGBoost trades point error for trading aggression.</text>
+  <text x="72" y="430" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="32" font-weight="500" fill="#cbd5e1">Worse MAE than naive. Best Sharpe in the series so far.</text>
+  <g font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif">
+    <text x="72" y="500" font-size="18" fill="#94a3b8">MAE</text>
+    <text x="72" y="535" font-size="36" font-weight="700" fill="#f5f7fb">$539</text>
+    <text x="220" y="500" font-size="18" fill="#94a3b8">CUM_RET</text>
+    <text x="220" y="535" font-size="36" font-weight="700" fill="#f5f7fb">50.42%</text>
+    <text x="430" y="500" font-size="18" fill="#94a3b8">SHARPE</text>
+    <text x="430" y="535" font-size="36" font-weight="700" fill="#f5f7fb">6.42</text>
+  </g>
+  <text x="72" y="595" font-family="'Inter Tight','Helvetica Neue',Arial,sans-serif" font-size="18" font-weight="500" fill="#64748b">jerome etienne &#8226; github.com/jeromeetienne/transformer_bitcoin_ai</text>
+</svg>
