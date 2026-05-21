@@ -14,9 +14,30 @@ The intended reader is a technical hiring manager or machine learning practition
 
 See [STYLE.md](STYLE.md) for writing conventions, tone, and title guidelines.
 
-## Linking requirement
+## Folder hierarchy
 
-All links in articles must point to GitHub at the head of the default branch — never to local file paths. Use the full `https://github.com/…/blob/HEAD/…` form for files and `https://github.com/…/tree/HEAD/…` for directories. A reader arriving from anywhere (Medium, a PDF, a forwarded email) must be able to follow every link without cloning the repository.
+- [README.md](README.md) - this file: series principles, goals, requirements.
+- [STYLE.md](STYLE.md) - writing conventions, tone, and title guidelines.
+- [article_generation.md](article_generation.md) - process for generating an article from its experiment report.
+- [report_generation.md](report_generation.md) - process for generating an experiment report from its results.
+- [socialmedia_generation.md](socialmedia_generation.md) - process for generating social media posts from an article.
+- [reports/](reports/) - one Markdown report per experiment (`NN_<name>.report.md`), plus `XX_global.report.md` for the cross-experiment synthesis. These are the source material the articles draw from.
+- [articles/](articles/) - one folder per article, named `N-<slug>/`, each containing:
+  - `<slug>.outline.md` - the article outline.
+  - `<slug>.md` - the article draft.
+  - `<slug>.socialmedia.md` - the matching social media posts.
+
+## Requirements
+
+### Linking Requirements
+In articles, all links to the code must point to GitHub at the head of the default branch — never to local file paths. Use the 
+full `https://github.com/…/blob/HEAD/…` form for files and `https://github.com/…/tree/HEAD/…` for directories. A reader arriving from 
+anywhere (Medium, a PDF, a forwarded email) must be able to follow every link without cloning the repository.
+
+### Formatting Requirements
+- Do not use markdown table, linkedin doesnt support them. Use a list instead.
+- Never use backquote inside a link. e.g. [`foobar`](https://example.com)
+- Never use `—` character, prefer `-` instead, as the former is not supported in LinkedIn.
 
 ## The eight articles
 
@@ -28,3 +49,4 @@ All links in articles must point to GitHub at the head of the default branch —
 5. **Transformer** ([`05_transformer`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/05_transformer)) — attention applied to time series, via the Temporal Fusion Transformer in Darts.
 6. **Pretrained foundation models** ([`06_pretrained`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/06_pretrained)) — zero-shot Chronos-2 and TimesFM 2.5. What it means that a model that has never seen Bitcoin has an opinion.
 7. **Fine-tuned foundation models** ([`07_finetuned`](https://github.com/jeromeetienne/transformer_bitcoin_ai/tree/HEAD/experiments/07_finetuned)) — the same backbones as article 6, but `fit()` updates weights against a held-out validation slice. When fine-tuning beats zero-shot, and the conditions that make it happen.
+
