@@ -77,6 +77,22 @@ transformer_bitcoin_ai/
     └── fetch_data.py           # CLI that pre-warms data cache from a config.yaml
 ```
 
+## Reports & Articles
+
+Each experiment has a detailed Markdown report in [docs_ml/reports/](docs_ml/reports/) and a companion article in [docs_ml/articles/](docs_ml/articles/). The reports are the raw source material drawn from `results/`; the articles are the polished write-ups for readers. See [docs_ml/README.md](docs_ml/README.md) for the series principles and [docs_ml/STYLE.md](docs_ml/STYLE.md) for writing conventions.
+
+| # | Experiment | Report | Article |
+|---|------------|--------|---------|
+| 0 | Project presentation | — | [0-presentation-of-the-project](docs_ml/articles/0-presentation-of-the-project/0-presentation-of-the-project.article.md) |
+| 1 | Baseline | [01_baseline.report.md](docs_ml/reports/01_baseline.report.md) | [1-baseline](docs_ml/articles/1-baseline/1-baseline.article.md) |
+| 2 | ARIMA | [02_arima.report.md](docs_ml/reports/02_arima.report.md) | [2-arima](docs_ml/articles/2-arima/2-arima.article.md) |
+| 3 | XGBoost | [03_xgboost.report.md](docs_ml/reports/03_xgboost.report.md) | [3-xgboost](docs_ml/articles/3-xgboost/3-xgboost.article.md) |
+| 4 | LSTM | [04_lstm.report.md](docs_ml/reports/04_lstm.report.md) | [4-lstm](docs_ml/articles/4-lstm/4-lstm.article.md) |
+| 5 | Transformer | [05_transformer.report.md](docs_ml/reports/05_transformer.report.md) | [5-transformer](docs_ml/articles/5-transformer/5-transformer.article.md) |
+| 6 | Pretrained foundation models | [06_pretrained.report.md](docs_ml/reports/06_pretrained.report.md) | [6-pretrained](docs_ml/articles/6-pretrained/6-pretrained.article.md) |
+| 7 | Fine-tuned foundation models | [07_finetuned.report.md](docs_ml/reports/07_finetuned.report.md) | [7-finetuned](docs_ml/articles/7-finetuned/7-finetuned.article.md) |
+| — | Cross-experiment synthesis | [XX_global.report.md](docs_ml/reports/XX_global.report.md) | — |
+
 ## Conventions
 
 - **Tooling is `uv`.** `uv init`, `uv add`, `uv run`. `uv.lock` is committed; `.venv/` is not.
