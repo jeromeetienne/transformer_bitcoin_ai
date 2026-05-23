@@ -79,7 +79,7 @@ transformer_bitcoin_ai/
 
 ## Reports & Articles
 
-Each experiment has a detailed Markdown report in [docs_ml/reports/](docs_ml/reports/) and a companion article in [docs_ml/articles/](docs_ml/articles/). The reports are the raw source material drawn from `results/`; the articles are the polished write-ups for readers. See [docs_ml/README.md](docs_ml/README.md) for the series principles and [docs_ml/STYLE.md](docs_ml/STYLE.md) for writing conventions.
+Each experiment has a detailed Markdown report in [docs_ml/reports/](docs_ml/reports/) and a companion article in [docs_ml/articles/](docs_ml/articles/). The reports are the raw source material drawn from `results/`; the articles are the polished write-ups for readers. The articles are also published on the blog: [jeromeetienne.github.io/blog/tags/bitcoin-ml.html](https://jeromeetienne.github.io/blog/tags/bitcoin-ml.html). See [docs_ml/README.md](docs_ml/README.md) for the series principles and [docs_ml/STYLE.md](docs_ml/STYLE.md) for writing conventions.
 
 | # | Experiment | Report | Article |
 |---|------------|--------|---------|
